@@ -1,0 +1,219 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
+import type { StoryCapsule } from "../../shared/schemas";
+import { StatusBadge } from "../components/status-badge";
+import { extractCapsule } from "../lib/api";
+import { compressImage } from "../lib/image";
+import { useRoomSocket } from "../lib/use-room-socket";
+
+const RADIO_MEMORY = "I used to repair radios around Queenstown in the 1970s.";
+const NO_MATCH_MEMORY = "I catalogued polar clouds in Antarctica in the 2010s.";
+
+type Stage = "welcome" | "capture" | "processing" | "review" | "waiting" | "result";
+
+export function JoinPage() {
+  const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
+  const participantId = useMemo(() => crypto.randomUUID(), []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [stage, setStage] = useState<Stage>("welcome");
+  const [memory, setMemory] = useState(RADIO_MEMORY);
+  const [fixture, setFixture] = useState<"radio" | "no-match">("radio");
+  const [photoData, setPhotoData] = useState<string | null>(null);
+  const [photoLabel, setPhotoLabel] = useState("Prepared fictional radio illustration");
+  const [capsule, setCapsule] = useState<StoryCapsule | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const room = useRoomSocket(roomCode, "join");
+
+  useEffect(() => {
+    if (stage === "waiting" && (room.snapshot?.phase === "matched" || room.snapshot?.phase === "no-match")) {
+      setStage("result");
+    }
+  }, [room.snapshot?.phase, stage]);
+
+  const chooseFixture = (next: "radio" | "no-match") => {
+    setFixture(next);
+    setMemory(next === "radio" ? RADIO_MEMORY : NO_MATCH_MEMORY);
+    setPhotoData(null);
+    setPhotoLabel(next === "radio" ? "Prepared fictional radio illustration" : "Text-only no-match fixture");
+    setCapsule(null);
+    setError(null);
+  };
+
+  const handleFile = async (file?: File) => {
+    if (!file) return;
+    setError(null);
+    try {
+      setPhotoData(await compressImage(file));
+      setPhotoLabel(`${file.name} · prepared in memory only`);
+      setFixture("radio");
+    } catch (imageError) {
+      setError(imageError instanceof Error ? imageError.message : "Use the prepared photo instead.");
+    }
+  };
+
+  const createCapsule = async () => {
+    setStage("processing");
+    setError(null);
+    room.submitted(participantId);
+    try {
+      const result = await extractCapsule({ roomCode, memory, photoData, fixture });
+      setCapsule(result);
+      setStage("review");
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Nothing was shared. Please try again.");
+      setStage("capture");
+    }
+  };
+
+  const approve = async () => {
+    if (!capsule) return;
+    setError(null);
+    try {
+      await room.approve(participantId, capsule);
+      setStage("waiting");
+    } catch (approvalError) {
+      setError(approvalError instanceof Error ? approvalError.message : "The safe capsule was not shared.");
+    }
+  };
+
+  const startAgain = () => {
+    room.reset();
+    setCapsule(null);
+    setStage("capture");
+    chooseFixture("radio");
+  };
+
+  return (
+    <main className="join-page">
+      <header className="mode-header">
+        <div>
+          <span className="wordmark">87K WINDOWS</span>
+          <span className="room-label">ROOM {roomCode.toUpperCase()}</span>
+        </div>
+        <StatusBadge connected={room.connected} provider={room.snapshot?.provider} />
+      </header>
+
+      <section className="join-shell" aria-live="polite">
+        <div className="step-rail" aria-label="Progress">
+          {["Share", "Review", "Connect"].map((label, index) => {
+            const activeIndex = stage === "welcome" || stage === "capture" || stage === "processing" ? 0 : stage === "review" ? 1 : 2;
+            return <span key={label} className={index <= activeIndex ? "is-active" : ""}>{label}</span>;
+          })}
+        </div>
+
+        {stage === "welcome" && (
+          <div className="join-panel welcome-panel">
+            <p className="eyebrow">Your memory stays yours until you approve</p>
+            <h1>One short memory is enough.</h1>
+            <p>Use the prepared fictional story. You will see exactly what enters matching before anything lights up.</p>
+            <button className="button button-primary button-block" onClick={() => setStage("capture")}>Share a prepared memory</button>
+            <p className="privacy-note">Synthetic demo only · No account · Nothing stored</p>
+          </div>
+        )}
+
+        {stage === "capture" && (
+          <div className="join-panel capture-panel">
+            <p className="eyebrow">Share</p>
+            <h1>Choose one picture and one sentence.</h1>
+            <div className="photo-preview">
+              {photoData ? <img src={photoData} alt="Chosen preview; it has not been shared" /> : fixture === "radio" ? <img src="/demo-radio.svg" alt="Prepared fictional illustration of a radio and repair tools" /> : <div className="text-fixture">NO PHOTO<br />TEXT FIXTURE</div>}
+              <span>{photoLabel}</span>
+            </div>
+            <input
+              ref={fileInputRef}
+              className="visually-hidden"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(event) => void handleFile(event.target.files?.[0])}
+            />
+            <div className="capture-actions">
+              <button className="button button-secondary" onClick={() => fileInputRef.current?.click()}>Take or choose photo</button>
+              <button className="text-button" onClick={() => chooseFixture("radio")}>Use prepared photo</button>
+            </div>
+            <p className="field-help">If camera access is denied, choose a file or keep the prepared illustration.</p>
+            <label className="memory-field">
+              <span>Your memory</span>
+              <textarea value={memory} maxLength={600} rows={4} onChange={(event) => setMemory(event.target.value)} />
+              <small>{memory.length}/600</small>
+            </label>
+            <button className="fixture-link" onClick={() => chooseFixture("no-match")}>Use no-match fixture</button>
+            {error && <div className="error-banner" role="alert">{error}</div>}
+            <button className="button button-primary button-block" disabled={memory.trim().length < 8} onClick={() => void createCapsule()}>Create my safe capsule</button>
+          </div>
+        )}
+
+        {stage === "processing" && (
+          <div className="join-panel processing-panel">
+            <div className="processing-window" aria-hidden="true"><span /><span /><span /><span /></div>
+            <p className="eyebrow">Observe → protect → connect</p>
+            <h1>Preparing only what can be shared.</h1>
+            <p>Mock Mode follows the same checked data contract as the later model providers.</p>
+          </div>
+        )}
+
+        {stage === "review" && capsule && (
+          <div className="join-panel review-panel">
+            <p className="eyebrow">Review the safe capsule</p>
+            <h1>You decide what enters matching.</h1>
+            <blockquote>{capsule.safeSummary}</blockquote>
+            <div className="capsule-evidence">
+              {capsule.place && <span><small>PLACE</small>{capsule.place}</span>}
+              {capsule.era && <span><small>ERA</small>{capsule.era}</span>}
+              {capsule.skills.map((skill) => <span key={skill}><small>SKILL</small>{skill}</span>)}
+            </div>
+            {capsule.redactions.length > 0 ? (
+              <div className="redaction-note"><strong>Removed before sharing</strong><p>{capsule.redactions.join(", ")}</p></div>
+            ) : (
+              <div className="redaction-note"><strong>No identifiers detected</strong><p>Only the safe summary and evidence above enter matching.</p></div>
+            )}
+            <details>
+              <summary>What is uncertain?</summary>
+              <ul>{capsule.uncertain.map((item) => <li key={item}>{item}</li>)}</ul>
+            </details>
+            {error && <div className="error-banner" role="alert">{error}</div>}
+            <button className="button button-primary button-block" onClick={() => void approve()}>Approve and light my window</button>
+            <button className="text-button button-block" onClick={() => setStage("capture")}>Go back and edit</button>
+          </div>
+        )}
+
+        {stage === "waiting" && (
+          <div className="join-panel waiting-panel">
+            <div className="window-beacon" aria-hidden="true" />
+            <p className="eyebrow">Your window is lit</p>
+            <h1>Looking for evidence, not coincidences.</h1>
+            <p>The wall is comparing this capsule with twelve clearly fictional prepared stories.</p>
+          </div>
+        )}
+
+        {stage === "result" && room.snapshot?.phase === "matched" && room.snapshot.match && room.snapshot.invite && (
+          <div className="join-panel result-panel">
+            <p className="eyebrow">A match with evidence</p>
+            <h1>{room.snapshot.invite.title}</h1>
+            <div className="evidence-path" aria-label="Evidence path">
+              {room.snapshot.match.evidencePath.map((evidence) => <span key={evidence}>{evidence}</span>)}
+            </div>
+            <p className="match-why">{room.snapshot.match.why}</p>
+            <article className="kopi-card">
+              <span className="mono-label">KOPI CARD · ROOM {roomCode.toUpperCase()}</span>
+              <h2>{room.snapshot.invite.invitation}</h2>
+              <p>{room.snapshot.invite.activity}</p>
+              <small>Both people choose whether to accept. No contact details are exchanged here.</small>
+            </article>
+            <button className="button button-secondary button-block" onClick={startAgain}>Run the demo again</button>
+          </div>
+        )}
+
+        {stage === "result" && room.snapshot?.phase === "no-match" && (
+          <div className="join-panel result-panel no-match-panel">
+            <p className="eyebrow">Honest by design</p>
+            <h1>NO MATCH YET</h1>
+            <p>{room.snapshot.match?.why}</p>
+            <div className="no-match-rule">No invitation was created. A weak link is not a friendship.</div>
+            <button className="button button-primary button-block" onClick={startAgain}>Try the prepared radio story</button>
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title description">
+  <title id="title">Prepared fictional radio repair evidence</title>
+  <desc id="description">An illustrated portable radio and two repair tools on a workbench. No real person appears.</desc>
+  <rect width="1200" height="800" fill="#0c1520"/>
+  <rect y="560" width="1200" height="240" fill="#1b1b1a"/>
+  <path d="M315 270 C440 105 760 105 885 270" fill="none" stroke="#c9c9c3" stroke-width="28"/>
+  <rect x="245" y="245" width="710" height="350" rx="8" fill="#e0a546" stroke="#f4f4f0" stroke-width="16"/>
+  <rect x="300" y="315" width="360" height="210" fill="#171717" stroke="#090909" stroke-width="12"/>
+  <g stroke="#90908b" stroke-width="8">
+    <line x1="325" y1="350" x2="635" y2="350"/><line x1="325" y1="385" x2="635" y2="385"/><line x1="325" y1="420" x2="635" y2="420"/><line x1="325" y1="455" x2="635" y2="455"/>
+  </g>
+  <circle cx="795" cy="420" r="86" fill="#0c1520" stroke="#f4f4f0" stroke-width="14"/>
+  <circle cx="795" cy="420" r="18" fill="#5b76ff"/>
+  <rect x="695" y="295" width="202" height="38" fill="#171717"/>
+  <path d="M145 625 l210 -45 18 40 -210 45z" fill="#5b76ff"/>
+  <path d="M910 655 l105 -140 30 22 -105 140z" fill="#5ecfb0"/>
+  <text x="600" y="715" text-anchor="middle" fill="#c9c9c3" font-family="monospace" font-size="30">FICTIONAL DEMO EVIDENCE · QUEENSTOWN RADIO REPAIR</text>
+</svg>
