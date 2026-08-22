@@ -41,7 +41,7 @@ Give an independent agent the same request plus the new skill. Verify that its p
 Run:
 
 ```bash
-python /Users/tanveerriaz/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/changing-87k-experience
+python "$CODEX_HOME/skills/.system/skill-creator/scripts/quick_validate.py" .agents/skills/changing-87k-experience
 ```
 
 Expected: `Skill is valid!`
