@@ -49,7 +49,7 @@ describe("OpenRouterGenAiClient", () => {
       temperature: 0.1,
       max_tokens: 600,
       stream: false,
-      provider: { require_parameters: true },
+      provider: { require_parameters: true, only: ["deepinfra"] },
       response_format: {
         type: "json_schema",
         json_schema: { name: "structured_response", strict: true, schema: responseSchema },
@@ -71,6 +71,18 @@ describe("OpenRouterGenAiClient", () => {
       vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ choices: [] }), { status: 200 })),
     );
     await expect(empty.models.generateContent(request())).rejects.toThrow("OpenRouter returned no message content");
+  });
+
+  it("keeps mandatory Gemini reasoning minimal so the short guide fits its output budget", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({
+      choices: [{ message: { content: "{\"introduction\":\"Hello\"}" } }],
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    const client = new OpenRouterGenAiClient("https://openrouter.ai/api/v1", "test-key", fetcher);
+
+    await client.models.generateContent({ ...request(), model: "google/gemini-3.6-flash" });
+
+    const body = JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body));
+    expect(body.reasoning).toEqual({ effort: "minimal", exclude: true });
   });
 
   it("preserves abort errors for the provider timeout mapping", async () => {

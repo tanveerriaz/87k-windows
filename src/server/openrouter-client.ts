@@ -46,7 +46,13 @@ export class OpenRouterGenAiClient {
         temperature: request.config?.temperature,
         max_tokens: request.config?.maxOutputTokens,
         stream: false,
-        provider: { require_parameters: true },
+        reasoning: request.model.includes("/gemini-")
+          ? { effort: "minimal", exclude: true }
+          : undefined,
+        provider: {
+          require_parameters: true,
+          only: request.model === "google/gemma-3-27b-it" ? ["deepinfra"] : undefined,
+        },
         response_format: {
           type: "json_schema",
           json_schema: {
