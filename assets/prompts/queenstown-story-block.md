@@ -1,11 +1,39 @@
 Create a production-quality coordinated web UI concept titled “The Queenstown Story Block” for 87K Windows, a live-room experience where an older participant shares one fictional memory, hosted Gemma prepares an evidence-grounded safe capsule, the participant approves it, and the projected wall reveals whether another fictional neighbour is ready to listen.
 
-Preserve warm editorial clarity, cream paper, heritage teal, brick red, very large typography, a simple four-step journey, explicit match evidence, consent copy, and a narrow companion result panel. Use archival Queenstown photographs only as architectural research. Do not reproduce, colourise, trace, or include any photograph, person, watermark, or archive text.
+Use the supplied selected UI concept as the layout and hierarchy reference. Preserve its warm editorial clarity, cream paper, heritage teal, brick red, very large typography, simple four-step journey, explicit match evidence, consent copy, and narrow companion result panel. Use the supplied archival Queenstown photographs only as architectural research. Do not reproduce, colourise, trace, or include any photograph, person, watermark, or archive text.
 
-Use an original graphic language derived from early Queenstown public housing: Forfar House’s long curved balcony bands, Duchess Estate’s shaded horizontal corridors and brick end walls, Princess House’s restrained 1950s modernism, rectangular window grids, concrete sunshades, breeze-block ventilation screens, shallow roof profiles, and tropical planting. Render these motifs as dignified screen-print and letterpress-style illustrations rather than a literal building.
+Replace generic colonial arches and shutters with an original graphic language derived from early Queenstown public housing: Forfar House’s long curved balcony bands, Duchess Estate’s shaded horizontal corridors and brick end walls, Princess House’s restrained 1950s modernism, rectangular window grids, concrete sunshades, breeze-block ventilation screens, shallow roof profiles, and tropical planting. Render these motifs as dignified screen-print and letterpress-style illustrations rather than a literal building.
 
 The result should feel like an old Singapore community exhibition poster and family scrapbook: softly faded cream paper, deep heritage teal, brick red, warm amber, charcoal ink, subtle halftone grain, old radio ephemera, and restrained weathering. Nostalgic but not shabby, colonial-luxury, sepia cliché, or theme-park retro.
 
-Use a 3:2 landscape composition. The projected wall experience occupies the broad left area; a clean mobile result surface occupies the narrow right area without a phone bezel or browser chrome. Make the central connection unmistakable: two illuminated rectangular HDB windows integrated into one Queenstown block façade, joined by a bold woven red thread. The left window contains the participant’s radio memory; the right window contains the listener’s interest. The evidence labels sit directly between them. The result panel repeats the positive human outcome and contains one primary and one secondary action.
+Use a 3:2 landscape composition. The projected wall experience occupies the broad left area; a clean mobile result surface occupies the narrow right area without a phone bezel or browser chrome.
 
-Use at most two fonts. Make all body text large and readable for older adults. Preserve explicit consent and explainable evidence. Do not show chain-of-thought, percentages, scores, analytics, chat bubbles, fake testimonials, portraits, identifiable people, an AI companion, glassmorphism, generic SaaS cards, ornate European arches, or colonial shutters. Keep the composition clean and feasible to implement with React, CSS, Canvas, and a small number of raster textures.
+Use these exact interface words with clear spelling:
+
+- 87K WINDOWS
+- Lives witnessed. Human threads revealed.
+- GEMMA API · LIVE
+- A neighbour would like to hear your story.
+- You both remember Queenstown through radio.
+- You shared
+- Gemma noticed
+- You approved
+- A listener answered
+- THIS IS WHAT CONNECTED YOU
+- YOUR MEMORY
+- Repairing radios in Queenstown, 1970s
+- THEIR INTEREST
+- Learning how old radios worked
+- QUEENSTOWN
+- 1970s
+- RADIO REPAIR
+- YOUR RESULT
+- A neighbour is ready to listen.
+- EVIDENCE YOU BOTH SHARED
+- You approved this story for sharing. You can withdraw at any time.
+- Share a kopi invitation
+- Keep my story private
+
+Make the central connection unmistakable: two illuminated rectangular HDB windows integrated into one Queenstown block façade, joined by a bold woven red thread. The left window contains the participant’s radio memory; the right window contains the listener’s interest. The three evidence labels sit directly between them. The result panel repeats the positive human outcome and contains one primary and one secondary action.
+
+Use at most two fonts. Make all body text large and readable for older adults. Preserve explicit consent and explainable evidence. Do not show chain-of-thought, percentages, scores, analytics, chat bubbles, fake testimonials, portraits, identifiable people, an AI companion, glassmorphism, generic SaaS cards, ornate European arches, or colonial shutters. Keep the composition clean, coherent, and feasible to implement with React, CSS, Canvas, and a small number of raster textures.
