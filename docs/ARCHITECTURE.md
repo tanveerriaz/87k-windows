@@ -33,6 +33,8 @@ Development runs Vite on port 5173 and proxies API and Socket.IO traffic to Expr
 
 All providers implement the same typed interface and must return the same Zod schema. The model interprets the memory; it does not decide who is safe to contact. Matching remains explainable application logic, and low evidence returns no match.
 
+The local Ollama path permits one in-flight extraction. A second submission receives `409 LOCAL_GEMMA_BUSY` and may retry when the first capsule is ready. This is an explicit prototype limit for the presentation Mac, not a scaling claim.
+
 ## Privacy and safety boundary
 
 - No authentication, contact exchange, database, object storage, analytics SDK or raw-input logging.

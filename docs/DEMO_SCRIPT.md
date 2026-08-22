@@ -54,6 +54,8 @@ Point briefly to the evidence path and suggested invitation. Make clear that the
 
 > Live judging uses open Gemma locally through Ollama, so the community controls where memories are interpreted and the demo can continue offline. Cloud Run uses hosted Gemma for online reviewers. Both paths are explicit real-model modes; neither falls back to simulation.
 
+> The local demo handles one story at a time by design. That keeps the experience reliable on a MacBook Air instead of pretending this prototype is a scaled service.
+
 ## 1:20–1:30 — Close
 
 **Show:** The completed wall with both windows glowing.

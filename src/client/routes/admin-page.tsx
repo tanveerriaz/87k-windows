@@ -79,7 +79,7 @@ export function AdminPage() {
                   {isHostedGemma
                     ? "Online review uses real hosted Gemma. It never falls back to simulated inference."
                     : activeProvider === "ollama"
-                      ? "Primary live judging mode: model inference stays on this Mac. Use a trusted private hotspot because phone traffic uses local HTTP."
+                      ? "Primary live judging mode: model inference stays on this Mac and serves one story at a time. Use a trusted private hotspot because phone traffic uses local HTTP."
                       : "Test harness active. This mode is for development and automated checks, never judging."}
                 </p>
               </div>

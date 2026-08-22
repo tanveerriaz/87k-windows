@@ -33,6 +33,11 @@ export function JoinPage() {
   const listenerStory = room.snapshot?.windows.findLast((window) => window.participantId === room.snapshot?.activeCandidateId);
 
   useEffect(() => {
+    if (stage === "result" && room.snapshot?.activeSourceId !== participantId) {
+      setError("This room has moved to another story. Your completed result is no longer active; review your memory and try again when the room is ready.");
+      setStage("capture");
+      return;
+    }
     if (stage === "waiting" && (room.snapshot?.phase === "matched" || room.snapshot?.phase === "no-match")) {
       if (room.snapshot.activeSourceId === participantId) {
         setStage("result");
