@@ -45,6 +45,28 @@ describe("GemmaApiProvider", () => {
     expect(capsule.wants).toEqual(["meet a learner"]);
   });
 
+  it("accepts markdown-fenced capsule JSON from a listening request", async () => {
+    const generateContent = vi.fn().mockResolvedValue({ text: `\`\`\`json\n${validCapsule}\n\`\`\`` });
+    const provider = new GemmaApiProvider("test-key", "gemma-4-26b-a4b-it", clientWith(generateContent));
+    const capsule = await provider.extract({
+      memory: "I can listen in English. I can offer one short conversation this week. I want to learn radio repair.",
+    });
+    expect(capsule.safeSummary).toContain("radio-repair");
+    expect(generateContent).toHaveBeenCalledOnce();
+  });
+
+  it("coerces omitted place and era to null instead of failing the capsule", async () => {
+    const incomplete = JSON.parse(validCapsule) as Record<string, unknown>;
+    delete incomplete.place;
+    delete incomplete.era;
+    const generateContent = vi.fn().mockResolvedValue({ text: JSON.stringify(incomplete) });
+    const provider = new GemmaApiProvider("test-key", "gemma-4-26b-a4b-it", clientWith(generateContent));
+    await expect(provider.extract({ memory: "I want to learn radio repair." })).resolves.toMatchObject({
+      place: null,
+      era: null,
+    });
+  });
+
   it("repairs invalid output once without asking for chain-of-thought", async () => {
     const generateContent = vi.fn()
       .mockResolvedValueOnce({ text: "not-json" })
