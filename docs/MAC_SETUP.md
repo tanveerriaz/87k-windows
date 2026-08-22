@@ -6,7 +6,8 @@ GitHub is the bridge between the build Mac Mini and the presentation MacBook Air
 
 1. **Cloud Run + hosted Gemma** — phones scan a QR; nothing is installed on them.
 2. **Ollama offline** — the MacBook Air runs native `gemma3:4b` with Apple Silicon acceleration.
-3. **Mock emergency** — prepared deterministic story; no model, key or network.
+
+If neither real model is available, stop the live demo and use the prerecorded real-Gemma video. Do not present the deterministic test harness.
 
 ## First setup on the MacBook Air
 
@@ -21,12 +22,11 @@ cd 87k-windows
 ./scripts/verify-demo-machine.sh
 ```
 
-Omit `--with-ollama` for Mock/Cloud-only preparation. The setup script runs `npm ci`; it does not install system software or create/overwrite environment files.
+Omit `--with-ollama` for Cloud-only preparation. The setup script runs `npm ci`; it does not install system software or create/overwrite environment files.
 
-## Run each safety net
+## Run the real local fallback
 
 ```bash
-npm run demo:mock
 npm run demo:local
 ```
 
@@ -67,7 +67,7 @@ Stop if local modifications appear. Review them rather than pulling over legitim
 
 - Complete one phone-to-wall flow on Cloud Run.
 - Disconnect Wi-Fi and complete the prepared Ollama flow.
-- Stop Ollama and complete the Mock flow.
+- Confirm the prerecorded real-Gemma video plays locally if both live model paths become unavailable.
 - Test the real projector at 1280 × 720.
 - Keep the Air awake and plugged in.
 - Bring the charger, display adapter and phone hotspot.

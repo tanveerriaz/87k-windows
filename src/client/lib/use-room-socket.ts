@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import type { ClientRole, ClientToServerEvents, ServerToClientEvents } from "../../shared/events";
-import type { Provider, RoomSnapshot, StoryCapsule } from "../../shared/schemas";
+import type { RoomSnapshot, StoryCapsule } from "../../shared/schemas";
 
 type RoomSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -66,10 +66,5 @@ export function useRoomSocket(roomCode: string, role: ClientRole) {
     [roomCode, socket],
   );
 
-  const selectProvider = useCallback(
-    (provider: Provider) => socket.emit("provider:changed", { roomCode, provider }),
-    [roomCode, socket],
-  );
-
-  return { snapshot, connected, message, setMessage, submitted, approve, reset, inject, selectProvider };
+  return { snapshot, connected, message, setMessage, submitted, approve, reset, inject };
 }

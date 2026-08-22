@@ -1,7 +1,7 @@
 import type { Server } from "socket.io";
 import { RoomSnapshotSchema, type LitWindow, type Provider, type RoomSnapshot, type StoryCapsule } from "../shared/schemas";
 import type { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "../shared/events";
-import { MockProvider } from "./inference/mock-provider";
+import type { InferenceProvider } from "./inference/provider";
 import type { StoryMatcher } from "./matching/matcher";
 
 export type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
@@ -14,6 +14,7 @@ export class RoomStore {
   constructor(
     private readonly ttlMinutes: number,
     private readonly matcher: StoryMatcher,
+    private readonly inferenceProvider: InferenceProvider,
     private readonly initialProvider: Provider = "mock",
   ) {}
 
@@ -134,7 +135,7 @@ export class RoomStore {
   }
 
   async inject(io: TypedServer, roomCode: string): Promise<void> {
-    const capsule = await new MockProvider(0).extract({
+    const capsule = await this.inferenceProvider.extract({
       memory: "I used to repair radios around Queenstown in the 1970s.",
       fixture: "radio",
     });

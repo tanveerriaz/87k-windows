@@ -37,7 +37,7 @@ Development runs Vite on port 5173 and proxies API and Socket.IO traffic to Expr
 |---|---|---|---|
 | `gemma-api` | `gemma-4-26b-a4b-it` | Judged primary path on Cloud Run | server-side `GEMINI_API_KEY` |
 | `ollama` | `gemma3:4b` | Native Apple Silicon fallback | no key; local network only |
-| `mock` | deterministic fixture | Emergency and reproducible tests | none |
+| `mock` | deterministic fixture | Automated tests and UI development only | none |
 
 All providers implement the same typed interface and must return the same Zod schema. The model interprets the memory; it does not decide who is safe to contact. Matching remains explainable application logic, and low evidence returns no match.
 
@@ -55,7 +55,7 @@ All providers implement the same typed interface and must return the same Zod sc
 - **Decision:** one public Cloud Run service in `asia-southeast1`, maximum one instance during the demo.
 - **Why:** phone and projector need one public origin, Socket.IO needs a shared room process, and the hackathon credit supports a short judging deployment.
 - **Trade-off:** the in-memory room cannot scale across replicas. This is deliberate for a live-room prototype; max instances stays one.
-- **Fallbacks:** native Ollama on the M4 MacBook Air, then deterministic Mock Mode.
+- **Fallback:** native Ollama on the M4 MacBook Air. If both real models fail, stop rather than simulate inference.
 - **Recovery:** redeploy the last public Git commit or switch the presenter to a local URL; no durable user data needs migration.
 - **Excluded:** Redis, databases, queues, vector stores, multi-region hosting, self-hosted GPUs and native mobile packaging.
 

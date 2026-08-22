@@ -15,7 +15,12 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
   cors: env.NODE_ENV === "development" ? { origin: "http://127.0.0.1:5173" } : undefined,
   maxHttpBufferSize: env.MAX_UPLOAD_BYTES,
 });
-const rooms = new RoomStore(env.ROOM_TTL_MINUTES, new StoryMatcher(undefined, env.MATCH_THRESHOLD), env.INFERENCE_PROVIDER);
+const rooms = new RoomStore(
+  env.ROOM_TTL_MINUTES,
+  new StoryMatcher(undefined, env.MATCH_THRESHOLD),
+  dependencies.provider,
+  env.INFERENCE_PROVIDER,
+);
 
 io.on("connection", (socket) => {
   socket.on("room:join", (payload, ack) => {

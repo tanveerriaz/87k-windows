@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import { useParams } from "react-router-dom";
-import type { Provider } from "../../shared/schemas";
 import { StatusBadge } from "../components/status-badge";
 import { useRoomSocket } from "../lib/use-room-socket";
 
@@ -9,6 +8,15 @@ export function AdminPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
   const room = useRoomSocket(roomCode, "admin");
   const joinUrl = useMemo(() => `${window.location.origin}/join/${roomCode}`, [roomCode]);
+  const activeProvider = room.snapshot?.provider;
+  const isHostedGemma = activeProvider === "gemma-api";
+  const activeProviderLabel = isHostedGemma
+    ? "Hosted Gemma 4 via Gemini API"
+    : activeProvider === "ollama"
+      ? "Local Gemma 3 through Ollama"
+      : activeProvider === "mock"
+        ? "Development test harness"
+        : "Connecting to inference";
   const [qrData, setQrData] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -50,27 +58,29 @@ export function AdminPage() {
 
           <article className="admin-section control-section">
             <span className="mono-label">DEMO CONTROLS</span>
-            <h2>Prepared and reversible.</h2>
-            <button className="button button-primary button-block" onClick={room.inject}>Inject guaranteed radio memory</button>
+            <h2>Real inference. Prepared words.</h2>
+            <button className="button button-primary button-block" onClick={room.inject}>
+              {isHostedGemma ? "Run prepared story through Gemma" : "Run prepared story"}
+            </button>
             <button className="button button-danger button-block" onClick={room.reset}>Reset room</button>
-            <p>Reset removes the current ephemeral room state for all connected tabs.</p>
+            <p>The prepared story is fictional, but it goes through the active model. Reset removes the ephemeral room state.</p>
           </article>
 
           <article className="admin-section provider-section">
-            <span className="mono-label">INFERENCE MODE</span>
-            <h2>One contract. Three honest modes.</h2>
-            <div className="provider-options">
-              {(["mock", "gemma-api", "ollama"] as Provider[]).map((provider) => (
-                <button
-                  key={provider}
-                  className={room.snapshot?.provider === provider ? "is-selected" : ""}
-                  aria-pressed={room.snapshot?.provider === provider}
-                  onClick={() => room.selectProvider(provider)}
-                >
-                  <strong>{provider === "gemma-api" ? "Cloud" : provider === "ollama" ? "Local" : "Mock"}</strong>
-                  <span>{room.snapshot?.provider === provider ? "Active in this process" : "Restart the server in this mode"}</span>
-                </button>
-              ))}
+            <span className="mono-label">JUDGING INFERENCE</span>
+            <h2>{isHostedGemma ? "Real Gemma is locked for judging." : activeProviderLabel}</h2>
+            <div className={`provider-lock ${isHostedGemma ? "is-live" : ""}`}>
+              <span className="status-dot is-online" aria-hidden="true" />
+              <div>
+                <strong>{activeProviderLabel}</strong>
+                <p>
+                  {isHostedGemma
+                    ? "No simulated fallback and no provider switch. If the hosted API fails, the room stops safely; relaunch local Ollama to continue with a real Gemma model."
+                    : activeProvider === "ollama"
+                      ? "Offline inference is active. This is a real Gemma model running on the presentation Mac."
+                      : "Test harness active. This mode is for development and automated checks, never judging."}
+                </p>
+              </div>
             </div>
             {(room.message || room.snapshot?.lastError) && <div className="admin-message" role="status">{room.message ?? room.snapshot?.lastError}</div>}
           </article>

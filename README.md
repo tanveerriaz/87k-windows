@@ -17,11 +17,12 @@ review safe capsule  ◀────  structured evidence           a bridge app
 approve to connect  ─────▶  deterministic matching  ───▶  a human invitation
 ```
 
-All committed stories are clearly fictional. Raw memory text is not placed in room state or persisted. The demo can run in three modes:
+All committed stories are clearly fictional. Raw memory text is not placed in room state or persisted. The hackathon runs with real Gemma in two modes:
 
 1. **Cloud Run + hosted Gemma 4** — primary judged experience.
 2. **Native Ollama + Gemma 3 4B** — offline MacBook Air fallback.
-3. **Deterministic Mock Mode** — zero-network emergency path.
+
+If neither real model is available, the demo stops honestly. A deterministic provider remains in the repository only for automated tests and UI development; it is not a judging mode.
 
 ## Run locally
 
@@ -31,10 +32,17 @@ Requirements: Node.js 22 and npm.
 git clone https://github.com/tanveerriaz/87k-windows.git
 cd 87k-windows
 npm ci
-npm run demo:mock
+npm test
 ```
 
-Open:
+Start either real-model path:
+
+```bash
+npm run demo:gemma  # requires GEMINI_API_KEY in the shell
+npm run demo:local  # requires native Ollama and gemma3:4b
+```
+
+Then open:
 
 - Join: `http://127.0.0.1:5173/join/demo87`
 - Wall: `http://127.0.0.1:5173/wall/demo87`
@@ -49,7 +57,7 @@ export GEMINI_API_KEY
 npm run demo:gemma
 ```
 
-The server uses `INFERENCE_PROVIDER=gemma-api` and defaults to `GEMMA_MODEL=gemma-4-26b-a4b-it`. It redacts obvious contact details before inference, requests schema-constrained JSON, validates it again with Zod, attempts one safe repair for malformed output, and times out without sharing anything. Mock and Ollama paths remain independently runnable.
+The server uses `INFERENCE_PROVIDER=gemma-api` and defaults to `GEMMA_MODEL=gemma-4-26b-a4b-it`. It redacts obvious contact details before inference, requests schema-constrained JSON, validates it again with Zod, attempts one safe repair for malformed output, and times out without sharing anything. It never silently falls back to simulated inference.
 
 ## Demonstrate the core loop
 
@@ -84,7 +92,7 @@ npm run test:e2e
 npm run verify:machine
 ```
 
-`verify:machine` intentionally requires Node 22 and reports the readiness of Cloud Run, native Ollama, Mock Mode and the physical projector check.
+`verify:machine` intentionally requires Node 22 and reports the readiness of Cloud Run, native Ollama, the deterministic test harness and the physical projector check.
 
 ## Licence
 
