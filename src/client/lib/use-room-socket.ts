@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import type { ClientRole, ClientToServerEvents, ServerToClientEvents } from "../../shared/events";
-import type { RoomSnapshot, StoryCapsule } from "../../shared/schemas";
+import type { ConsentDecision, RoomSnapshot, StoryCapsule } from "../../shared/schemas";
 
 type RoomSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -61,10 +61,21 @@ export function useRoomSocket(roomCode: string, role: ClientRole) {
     [roomCode, socket],
   );
 
+  const decide = useCallback(
+    (participantId: string, decision: Exclude<ConsentDecision, "pending">) =>
+      new Promise<void>((resolve, reject) => {
+        socket.emit("consent:decided", { roomCode, participantId, decision }, (result) => {
+          if (result.ok) resolve();
+          else reject(new Error(result.message ?? "Your choice could not be recorded."));
+        });
+      }),
+    [roomCode, socket],
+  );
+
   const inject = useCallback(
     () => socket.emit("demo:inject", { roomCode }),
     [roomCode, socket],
   );
 
-  return { snapshot, connected, message, setMessage, submitted, approve, reset, inject };
+  return { snapshot, connected, message, setMessage, submitted, approve, decide, reset, inject };
 }

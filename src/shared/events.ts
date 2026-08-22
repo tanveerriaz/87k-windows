@@ -1,5 +1,6 @@
 import type {
   KopiCard,
+  ConsentDecision,
   LitWindow,
   MatchResult,
   Provider,
@@ -29,6 +30,8 @@ export interface ServerToClientEvents {
   "match:started": (payload: { participantId: string }) => void;
   "match:found": (result: MatchResult) => void;
   "match:none": (result: MatchResult) => void;
+  "consent:requested": (payload: { sourceParticipantId: string; candidateParticipantId: string; match: MatchResult }) => void;
+  "consent:updated": (payload: RoomSnapshot["connectionConsent"]) => void;
   "bridge:animate": (result: MatchResult) => void;
   "invite:ready": (card: KopiCard) => void;
   "guide:ready": (guide: SeniorBridge) => void;
@@ -47,6 +50,10 @@ export interface ClientToServerEvents {
   "story:submitted": (payload: { roomCode: string; participantId: string }, ack?: (result: EventAck) => void) => void;
   "capsule:approved": (
     payload: { roomCode: string; participantId: string; capsule: StoryCapsule },
+    ack?: (result: EventAck) => void,
+  ) => void;
+  "consent:decided": (
+    payload: { roomCode: string; participantId: string; decision: Exclude<ConsentDecision, "pending"> },
     ack?: (result: EventAck) => void,
   ) => void;
   "demo:reset": (payload: { roomCode: string }, ack?: (result: EventAck) => void) => void;

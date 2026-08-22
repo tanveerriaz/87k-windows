@@ -1,6 +1,6 @@
 import type { Server } from "socket.io";
 import { PREPARED_RADIO_MEMORY } from "../shared/demo";
-import { RoomSnapshotSchema, type LitWindow, type Provider, type RoomSnapshot, type StoryCapsule } from "../shared/schemas";
+import { RoomSnapshotSchema, type ConsentDecision, type LitWindow, type Provider, type RoomSnapshot, type StoryCapsule } from "../shared/schemas";
 import type { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "../shared/events";
 import {
   DisabledFacilitator,
@@ -23,6 +23,7 @@ function providerName(provider: Provider): string {
 
 export class RoomStore {
   private readonly rooms = new Map<string, RoomRecord>();
+  private readonly capsules = new Map<string, Map<string, StoryCapsule>>();
 
   constructor(
     private readonly ttlMinutes: number,
@@ -47,6 +48,7 @@ export class RoomStore {
       windows: [],
       activeSourceId: null,
       activeCandidateId: null,
+      connectionConsent: null,
       match: null,
       invite: null,
       guide: null,
@@ -66,6 +68,7 @@ export class RoomStore {
 
   reset(roomCode: string): RoomSnapshot {
     this.rooms.delete(roomCode);
+    this.capsules.delete(roomCode);
     return this.get(roomCode);
   }
 
@@ -99,17 +102,30 @@ export class RoomStore {
 
   async approve(io: TypedServer, roomCode: string, participantId: string, capsule: StoryCapsule): Promise<void> {
     const room = this.mutable(roomCode);
+    const roomCapsules = this.capsules.get(roomCode) ?? new Map<string, StoryCapsule>();
+    if (!roomCapsules.has(participantId) && roomCapsules.size >= 2) {
+      room.lastError = "This room already has two participants. Start a new room for another conversation.";
+      room.updatedAt = new Date().toISOString();
+      io.to(roomCode).emit("room:error", { message: room.lastError });
+      io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
+      return;
+    }
+    roomCapsules.set(participantId, capsule);
+    this.capsules.set(roomCode, roomCapsules);
     const sourceWindow: LitWindow = {
       participantId,
-      windowId: 27,
+      windowId: room.windows.find((window) => window.participantId === participantId)?.windowId
+        ?? (room.windows.length === 0 ? 27 : 64 + room.windows.length - 1),
       colour: "amber",
       safeSummary: capsule.safeSummary,
     };
     room.windows = [...room.windows.filter((window) => window.participantId !== participantId), sourceWindow];
-    room.activeSourceId = participantId;
+    const otherParticipant = [...roomCapsules.entries()].find(([id]) => id !== participantId);
+    room.activeSourceId = otherParticipant?.[0] ?? participantId;
     room.activeCandidateId = null;
     room.phase = "matching";
     room.match = null;
+    room.connectionConsent = null;
     room.invite = null;
     room.guide = null;
     room.guideError = null;
@@ -122,9 +138,12 @@ export class RoomStore {
     io.to(roomCode).emit("match:started", { participantId });
     io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
 
+    if (!otherParticipant) return;
+
     await new Promise((resolve) => setTimeout(resolve, 700));
-    if (this.rooms.get(roomCode) !== room || room.activeSourceId !== participantId) return;
-    const result = this.matcher.match(capsule);
+    if (this.rooms.get(roomCode) !== room || !roomCapsules.has(participantId)) return;
+    const [sourceParticipantId, sourceCapsule] = otherParticipant;
+    const result = this.matcher.matchPair(sourceCapsule, capsule, sourceParticipantId, participantId);
     room.match = result;
     room.updatedAt = new Date().toISOString();
 
@@ -135,56 +154,65 @@ export class RoomStore {
       return;
     }
 
-    const candidate = result.candidateId ? this.matcher.getStory(result.candidateId) : undefined;
-    if (!candidate) {
-      room.phase = "no-match";
-      room.match = {
-        decision: "NO_MATCH",
-        candidateId: null,
-        confidence: 0,
-        evidencePath: [],
-        why: "The prepared story evidence was unavailable, so no connection was proposed.",
-        invitation: null,
-        scene: null,
-      };
-      io.to(roomCode).emit("match:none", room.match);
-      io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
-      return;
-    }
-
     if (this.facilitator.mode !== "disabled") {
       try {
-        room.guide = await this.facilitator.createGuide({ source: capsule, candidate, match: result });
+        room.guide = await this.facilitator.createGuide({ source: sourceCapsule, candidate: capsule, match: result });
       } catch (error) {
         room.guideError = error instanceof FacilitationUnavailableError
           ? error.message
           : "Gemini could not prepare the conversation guide. The evidence-backed match is still available.";
       }
-      if (this.rooms.get(roomCode) !== room || room.activeSourceId !== participantId) return;
+      if (this.rooms.get(roomCode) !== room) return;
     }
-
-    const targetWindow: LitWindow = {
-      participantId: result.candidateId ?? "prepared-story",
-      windowId: result.scene?.toWindow ?? 64,
-      colour: result.scene?.colour ?? "amber",
-      safeSummary: candidate.safeSummary,
+    room.activeSourceId = sourceParticipantId;
+    room.activeCandidateId = participantId;
+    room.connectionConsent = {
+      sourceParticipantId,
+      candidateParticipantId: participantId,
+      sourceDecision: "pending",
+      candidateDecision: "pending",
+      mutualYes: false,
     };
-    room.windows.push(targetWindow);
-    room.activeCandidateId = targetWindow.participantId;
-    room.phase = "matched";
-    room.invite = {
-      title: "A potential listener match was found.",
-      invitation: result.invitation ?? "Kopi and a shared story?",
-      activity: "Suggested next step: meet at the community table for 30 minutes. Bring the radio story; tools are optional.",
-      roomCode,
-    };
-
-    io.to(roomCode).emit("window:lit", targetWindow);
+    room.phase = "matching";
     io.to(roomCode).emit("match:found", result);
-    io.to(roomCode).emit("bridge:animate", result);
-    io.to(roomCode).emit("invite:ready", room.invite);
-    if (room.guide) io.to(roomCode).emit("guide:ready", room.guide);
+    io.to(roomCode).emit("consent:requested", { sourceParticipantId, candidateParticipantId: participantId, match: result });
     io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
+  }
+
+  decide(io: TypedServer, roomCode: string, participantId: string, decision: Exclude<ConsentDecision, "pending">): { ok: boolean; message?: string } {
+    const room = this.mutable(roomCode);
+    const consent = room.connectionConsent;
+    if (!consent || (participantId !== consent.sourceParticipantId && participantId !== consent.candidateParticipantId)) {
+      return { ok: false, message: "There is no consent request for this participant." };
+    }
+    if (participantId === consent.sourceParticipantId) consent.sourceDecision = decision;
+    else consent.candidateDecision = decision;
+    consent.mutualYes = consent.sourceDecision === "yes" && consent.candidateDecision === "yes";
+    room.updatedAt = new Date().toISOString();
+
+    if (consent.sourceDecision === "no" || consent.candidateDecision === "no") {
+      room.phase = "no-match";
+      room.invite = null;
+      room.guide = null;
+      room.guideError = null;
+      room.match = room.match ? { ...room.match, invitation: null, scene: null } : null;
+      room.lastError = "The proposed conversation did not receive two yes decisions. Nothing was connected.";
+    } else if (consent.mutualYes && room.match) {
+      room.phase = "matched";
+      room.invite = {
+        title: "You both said yes.",
+        invitation: room.match.invitation ?? "Listen and continue the story together?",
+        activity: "A gentle conversation can begin. Either person may pause or stop at any time.",
+        roomCode,
+      };
+      room.lastError = null;
+      io.to(roomCode).emit("bridge:animate", room.match);
+      io.to(roomCode).emit("invite:ready", room.invite);
+      if (room.guide) io.to(roomCode).emit("guide:ready", room.guide);
+    }
+    io.to(roomCode).emit("consent:updated", room.connectionConsent);
+    io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
+    return { ok: true };
   }
 
   async inject(io: TypedServer, roomCode: string): Promise<void> {
@@ -198,7 +226,10 @@ export class RoomStore {
   private deleteExpired(): void {
     const now = Date.now();
     for (const [roomCode, room] of this.rooms) {
-      if (room.expiresAt <= now) this.rooms.delete(roomCode);
+      if (room.expiresAt <= now) {
+        this.rooms.delete(roomCode);
+        this.capsules.delete(roomCode);
+      }
     }
   }
 }

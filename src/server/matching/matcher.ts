@@ -141,6 +141,34 @@ export class StoryMatcher {
     });
   }
 
+  matchPair(source: StoryCapsule, candidate: StoryCapsule, sourceParticipantId: string, candidateParticipantId: string): MatchResult {
+    const ranked = this.score(source, candidate);
+    if (ranked.score < this.threshold) {
+      return MatchResultSchema.parse({
+        decision: "NO_MATCH",
+        candidateId: null,
+        confidence: ranked.score,
+        evidencePath: [],
+        why: "These two approved memories do not contain enough shared and complementary evidence yet.",
+        invitation: null,
+        scene: null,
+      });
+    }
+    const skill = source.skills[0] ?? source.interests[0] ?? "a shared interest";
+    const hasComplement = ranked.evidencePath.includes("teach ↔ learn");
+    return MatchResultSchema.parse({
+      decision: "MATCH",
+      candidateId: candidateParticipantId,
+      confidence: ranked.score,
+      evidencePath: ranked.evidencePath,
+      why: hasComplement
+        ? `These memories connect through ${source.place ?? "a place"} and ${skill}. One person offered to share; the other asked to learn.`
+        : `These memories connect through ${source.place ?? "a place"}, ${source.era ?? "a shared era"} and ${skill}.`,
+      invitation: "Would you both like to listen and continue this story together?",
+      scene: { fromWindow: 27, toWindow: 64, colour: "amber" },
+    });
+  }
+
   getStory(id: string): StoryCapsule | undefined {
     return this.storiesById.get(id);
   }

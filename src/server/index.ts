@@ -56,6 +56,11 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("consent:decided", (payload, ack) => {
+    const result = rooms.decide(io, payload.roomCode, payload.participantId, payload.decision);
+    ack?.(result);
+  });
+
   socket.on("demo:reset", (payload, ack) => {
     const snapshot = rooms.reset(payload.roomCode);
     io.to(payload.roomCode).emit("demo:reset", snapshot);

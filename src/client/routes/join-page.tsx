@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import memoryObjects from "../../../assets/generated/memory-objects.jpg";
 import { PREPARED_NO_MATCH_MEMORY, PREPARED_RADIO_MEMORY } from "../../shared/demo";
 import type { StoryCapsule } from "../../shared/schemas";
@@ -11,13 +11,16 @@ import { useRoomSocket } from "../lib/use-room-socket";
 const MEMORY_QUESTION = "What small thing made you happy when you were young?";
 const JOURNEY_STEPS = ["You shared", "Gemma protected", "You approved", "A story matched"];
 
-type Stage = "welcome" | "capture" | "processing" | "review" | "waiting" | "result";
+type Stage = "welcome" | "capture" | "processing" | "review" | "waiting" | "result" | "listen-profile" | "listen-invitation" | "listen-processing" | "listen-requested" | "consent" | "mutual-yes";
 
 export function JoinPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
+  const [searchParams] = useSearchParams();
+  const listenerEntry = searchParams.get("role") === "listen";
+  const lastRoleEntryRef = useRef(listenerEntry);
   const participantId = useMemo(() => crypto.randomUUID(), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [stage, setStage] = useState<Stage>("welcome");
+  const [stage, setStage] = useState<Stage>(listenerEntry ? "listen-profile" : "welcome");
   const [memory, setMemory] = useState(PREPARED_RADIO_MEMORY);
   const [fixture, setFixture] = useState<"radio" | "no-match">("radio");
   const [photoData, setPhotoData] = useState<string | null>(null);
@@ -26,6 +29,9 @@ export function JoinPage() {
   const [error, setError] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [listenerLanguage, setListenerLanguage] = useState("English");
+  const [listenerTime, setListenerTime] = useState("One short conversation this week");
+  const [listenerReason, setListenerReason] = useState("I want to learn radio repair and hear what Queenstown was like in the 1970s.");
   const room = useRoomSocket(roomCode, "join");
   const preparedImageSelected = fixture === "radio" && photoData === null;
   const journeySteps = room.snapshot?.phase === "no-match"
@@ -35,14 +41,28 @@ export function JoinPage() {
       : JOURNEY_STEPS;
   const sourceStory = room.snapshot?.windows.findLast((window) => window.participantId === room.snapshot?.activeSourceId);
   const listenerStory = room.snapshot?.windows.findLast((window) => window.participantId === room.snapshot?.activeCandidateId);
+  const consent = room.snapshot?.connectionConsent;
+  const isConsentParticipant = consent?.sourceParticipantId === participantId || consent?.candidateParticipantId === participantId;
+  const myConsentDecision = consent?.sourceParticipantId === participantId
+    ? consent.sourceDecision
+    : consent?.candidateParticipantId === participantId
+      ? consent.candidateDecision
+      : null;
 
   useEffect(() => {
-    if (stage === "result" && room.snapshot?.activeSourceId !== participantId) {
+    if (lastRoleEntryRef.current === listenerEntry) return;
+    lastRoleEntryRef.current = listenerEntry;
+    setStage(listenerEntry ? "listen-profile" : "welcome");
+    setError(null);
+  }, [listenerEntry]);
+
+  useEffect(() => {
+    if (stage === "result" && !room.snapshot?.connectionConsent && room.snapshot?.activeSourceId !== participantId) {
       setError("This room has moved to another story. Your completed result is no longer active; review your memory and try again when the room is ready.");
       setStage("capture");
       return;
     }
-    if (stage === "waiting" && (room.snapshot?.phase === "matched" || room.snapshot?.phase === "no-match")) {
+    if (stage === "waiting" && !room.snapshot?.connectionConsent && (room.snapshot?.phase === "matched" || room.snapshot?.phase === "no-match")) {
       if (room.snapshot.activeSourceId === participantId) {
         setStage("result");
       } else {
@@ -50,7 +70,26 @@ export function JoinPage() {
         setStage("capture");
       }
     }
-  }, [participantId, room.snapshot?.activeSourceId, room.snapshot?.phase, stage]);
+  }, [participantId, room.snapshot?.activeSourceId, room.snapshot?.connectionConsent, room.snapshot?.phase, stage]);
+
+  useEffect(() => {
+    if (!isConsentParticipant || !consent) return;
+    if (consent.mutualYes && room.snapshot?.phase === "matched") {
+      setStage(listenerEntry ? "mutual-yes" : "result");
+      return;
+    }
+    if (room.snapshot?.phase === "no-match") {
+      setStage("result");
+      return;
+    }
+    setStage(myConsentDecision === "yes" ? "listen-requested" : "consent");
+  }, [consent, isConsentParticipant, listenerEntry, myConsentDecision, room.snapshot?.phase]);
+
+  useEffect(() => {
+    if (listenerEntry && stage === "listen-requested" && room.snapshot?.phase === "no-match" && !room.snapshot.connectionConsent) {
+      setStage("result");
+    }
+  }, [listenerEntry, room.snapshot?.connectionConsent, room.snapshot?.phase, stage]);
 
   useEffect(() => () => {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -132,6 +171,36 @@ export function JoinPage() {
     }
   };
 
+  const requestConversation = async () => {
+    const listenerMemory = [
+      `I can listen in ${listenerLanguage}.`,
+      `I can offer ${listenerTime.toLowerCase()}.`,
+      listenerReason.trim(),
+    ].join(" ");
+    setStage("listen-processing");
+    setError(null);
+    room.submitted(participantId);
+    try {
+      const listenerCapsule = await extractCapsule({ roomCode, memory: listenerMemory, photoData: null });
+      await room.approve(participantId, listenerCapsule);
+      setCapsule(listenerCapsule);
+      setStage("listen-requested");
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Your listening request could not be prepared.");
+      setStage("listen-invitation");
+    }
+  };
+
+  const decideConnection = async (decision: "yes" | "no") => {
+    setError(null);
+    try {
+      await room.decide(participantId, decision);
+      if (decision === "yes") setStage("listen-requested");
+    } catch (decisionError) {
+      setError(decisionError instanceof Error ? decisionError.message : "Your choice could not be recorded.");
+    }
+  };
+
   const startAgain = () => {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     setIsSpeaking(false);
@@ -193,6 +262,97 @@ export function JoinPage() {
           })}
         </div>
 
+        {listenerEntry && (stage === "listen-profile" || stage === "listen-invitation" || stage === "listen-processing" || stage === "listen-requested" || stage === "consent" || stage === "mutual-yes") && (
+          <div className="role-switch"><Link to={`/join/${roomCode}?role=share`}>I have a story</Link><span aria-hidden="true">/</span><strong>I would like to listen</strong></div>
+        )}
+
+        {stage === "listen-profile" && (
+          <div className="join-panel listener-panel">
+            <p className="eyebrow">Offer attention, not advice</p>
+            <h1>I would like to listen.</h1>
+            <p className="listener-intro">Start with what you can genuinely offer. You will only see a storyteller’s approved invitation—not their private memory or contact details.</p>
+            <label className="listener-field"><span>Language I am comfortable using</span><select value={listenerLanguage} onChange={(event) => setListenerLanguage(event.target.value)}><option>English</option><option>Mandarin</option><option>Malay</option><option>Tamil</option></select></label>
+            <label className="listener-field"><span>Time I can offer</span><select value={listenerTime} onChange={(event) => setListenerTime(event.target.value)}><option>One short conversation this week</option><option>15 minutes today</option><option>A visit at a partner centre</option></select></label>
+            <button className="button button-primary button-block" onClick={() => setStage("listen-invitation")}>See a safe story invitation</button>
+            <p className="privacy-note">A trusted community partner would verify listeners before real matching.</p>
+          </div>
+        )}
+
+        {stage === "listen-invitation" && (
+          <div className="join-panel listener-panel listener-invitation">
+            <p className="eyebrow">Approved story invitation</p>
+            <h1>{room.snapshot?.windows[0]?.safeSummary ?? "A storyteller has not lit a window yet."}</h1>
+            <article className="safe-invitation-card">
+              <img src={memoryObjects} alt="Fictional keepsakes including a radio and a kopi cup" />
+              <div><span className="mono-label">WHAT THEY CHOSE TO SHARE</span><p>{room.snapshot?.windows[0]?.safeSummary ?? "Ask the storyteller to share first, then return to this room."}</p><small>Approved safe capsule only · no raw words or identifiers</small></div>
+            </article>
+            <label className="memory-field"><span>Why would you like to listen?</span><textarea value={listenerReason} maxLength={240} rows={4} onChange={(event) => setListenerReason(event.target.value)} /><small>{listenerReason.length}/240</small></label>
+            <p className="listener-preference">You offered: <strong>{listenerLanguage}</strong> · <strong>{listenerTime}</strong></p>
+            {error && <div className="error-banner" role="alert">{error}</div>}
+            <button className="button button-primary button-block" disabled={listenerReason.trim().length < 12 || !room.snapshot?.windows[0]} onClick={() => void requestConversation()}>Prepare my listening request with Gemma</button>
+            <button className="text-button button-block" onClick={() => setStage("listen-profile")}>Change what I can offer</button>
+          </div>
+        )}
+
+        {stage === "listen-processing" && (
+          <div className="join-panel processing-panel">
+            <p className="eyebrow">Your reason stays yours until you approve</p>
+            <h1>Gemma is preparing a safe listening capsule.</h1>
+            <p>Only your language, time and reason to listen enter the evidence check. No contact details are shared.</p>
+          </div>
+        )}
+
+        {stage === "consent" && consent && isConsentParticipant && (
+          <div className="join-panel listener-panel consent-state-panel">
+            <p className="eyebrow">A possible human connection</p>
+            <h1>Would you like this conversation to begin?</h1>
+            <p>{room.snapshot?.match?.why}</p>
+            <div className="story-pair">
+              <article><span className="mono-label">STORYTELLER</span><p>{sourceStory?.safeSummary}</p></article>
+              <article><span className="mono-label">LISTENER</span><p>{listenerStory?.safeSummary}</p></article>
+            </div>
+            <p className="privacy-note">Your choice is private until both people have answered. Either person may say no.</p>
+            {error && <div className="error-banner" role="alert">{error}</div>}
+            <button className="button button-primary button-block" onClick={() => void decideConnection("yes")}>Yes, I would like to continue</button>
+            <button className="button button-secondary button-block" onClick={() => void decideConnection("no")}>No, not this time</button>
+          </div>
+        )}
+
+        {stage === "listen-requested" && (
+          <div className="join-panel listener-panel consent-state-panel">
+            <p className="eyebrow">Your choice is recorded</p>
+            <h1>Waiting for the other person.</h1>
+            <p>Nothing is arranged unless they independently say yes. You may close this page; the room keeps no contact details.</p>
+            <div className="consent-ledger"><span>Your choice</span><strong>{myConsentDecision === "yes" ? "Yes" : "Request sent"}</strong><span>The other person</span><strong>Waiting</strong></div>
+          </div>
+        )}
+
+        {stage === "mutual-yes" && (
+          <div className="join-panel listener-panel mutual-yes-panel">
+            <p className="eyebrow">Two independent yeses</p>
+            <h1>A listening conversation is ready.</h1>
+            <div className="mutual-cards"><article><span className="mono-label">STORYTELLER</span><strong>Yes, I would like to share.</strong></article><article><span className="mono-label">LISTENER</span><strong>Yes, I have time to listen.</strong></article></div>
+            <section className="conversation-starter">
+              <span className="mono-label">TWO OPTIONAL FIRST QUESTIONS</span>
+              {(room.snapshot?.guide?.questions ?? [
+                "What did you enjoy about fixing something that others had given up on?",
+                "What do you remember first when you think of Queenstown?",
+              ]).map((question) => <p key={question}>“{question}”</p>)}
+              <small>{room.snapshot?.guide ? "Gemini offers a beginning. Then it steps away." : "A simple beginning based only on the approved capsules."}</small>
+            </section>
+            <button className="button button-primary button-block" onClick={() => setStage("listen-profile")}>Offer another conversation</button>
+          </div>
+        )}
+
+        {stage === "result" && room.snapshot?.phase === "no-match" && (isConsentParticipant || listenerEntry) && (
+          <div className="join-panel result-panel no-match-panel">
+            <p className="eyebrow">Consent respected</p>
+            <h1>No connection was opened.</h1>
+            <p>One person said no, or the evidence was not strong enough. Both stories remain separate and no invitation was created.</p>
+            <Link className="button button-primary button-block" to="/">Return to the two chairs</Link>
+          </div>
+        )}
+
         {stage === "welcome" && (
           <div className="join-panel welcome-panel">
             <p className="eyebrow">Your words stay private until you choose to light a window</p>
@@ -200,6 +360,7 @@ export function JoinPage() {
             <p>{MEMORY_QUESTION}</p>
             <p className="welcome-support">You can speak, type, or bring an old photo. First, you will see what Gemma noticed—and what remains only your words.</p>
             <button className="button button-primary button-block" onClick={() => setStage("capture")}>Share a prepared memory</button>
+            <Link className="text-link role-cross-link" to={`/join/${roomCode}?role=listen`}>I would like to listen instead</Link>
             <p className="privacy-note">Synthetic demo only · No account · Nothing stored</p>
           </div>
         )}
@@ -309,7 +470,7 @@ export function JoinPage() {
                 <p>{sourceStory?.safeSummary}</p>
               </article>
               <article>
-                <span className="mono-label">PREPARED FICTIONAL INTEREST</span>
+                <span className="mono-label">LISTENER’S APPROVED REASON</span>
                 <p>{listenerStory?.safeSummary}</p>
               </article>
             </div>
@@ -338,13 +499,13 @@ export function JoinPage() {
               <span className="mono-label">SUGGESTED KOPI CARD · FICTIONAL DEMO</span>
               <h2>{room.snapshot.invite.invitation}</h2>
               <p>{room.snapshot.invite.activity}</p>
-              <small>This prepared story has not accepted. In a real room, both people would choose whether to listen. No contact details are exchanged here.</small>
+              <small>Both people independently chose yes. No contact details are exchanged here, and either person may pause or stop.</small>
             </article>
             <button className="button button-secondary button-block" onClick={startAgain}>Run the demo again</button>
           </div>
         )}
 
-        {stage === "result" && room.snapshot?.phase === "no-match" && room.snapshot.activeSourceId === participantId && (
+        {stage === "result" && room.snapshot?.phase === "no-match" && !room.snapshot.connectionConsent && room.snapshot.activeSourceId === participantId && (
           <div className="join-panel result-panel no-match-panel">
             <p className="eyebrow">Honest by design</p>
             <h1>NO MATCH YET</h1>

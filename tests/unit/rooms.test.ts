@@ -1,161 +1,145 @@
 import { describe, expect, it, vi } from "vitest";
+import type { ConnectionFacilitator } from "../../src/server/facilitation/provider";
 import { buildMockCapsule } from "../../src/server/inference/mock-provider";
 import type { InferenceProvider } from "../../src/server/inference/provider";
 import { StoryMatcher } from "../../src/server/matching/matcher";
 import { RoomStore, type TypedServer } from "../../src/server/rooms";
 import { PREPARED_RADIO_MEMORY } from "../../src/shared/demo";
-import type { ConnectionFacilitator } from "../../src/server/facilitation/provider";
 
-describe("RoomStore prepared story", () => {
-  it("reports OpenRouter as the active cloud mode", () => {
-    const provider: InferenceProvider = { extract: vi.fn() };
-    const rooms = new RoomStore(120, new StoryMatcher(), provider, "openrouter");
+function testIo() {
+  const emit = vi.fn();
+  return { emit, io: { to: vi.fn(() => ({ emit })) } as unknown as TypedServer };
+}
 
-    expect(rooms.providerRequest("router87", "openrouter")).toMatchObject({
-      available: true,
-      message: "OpenRouter Mode is active.",
-      snapshot: { provider: "openrouter", lastError: null },
+function radioCapsules() {
+  const source = buildMockCapsule({ memory: PREPARED_RADIO_MEMORY, fixture: "radio" });
+  const candidate = {
+    ...source,
+    id: "listener-capsule",
+    offers: [],
+    wants: ["learn basic radio repair"],
+    safeSummary: "A fictional memory from someone who wants to learn radio repair in Queenstown.",
+  };
+  return { source, candidate };
+}
+
+describe("RoomStore mutual consent", () => {
+  it("keeps one approved memory witnessed without fabricating a listener", async () => {
+    const { io, emit } = testIo();
+    const rooms = new RoomStore(120, new StoryMatcher(), { extract: vi.fn() }, "gemma-api");
+    const { source } = radioCapsules();
+    await rooms.approve(io, "one87", "person-a", source);
+    expect(rooms.get("one87")).toMatchObject({
+      phase: "matching", activeSourceId: "person-a", activeCandidateId: null,
+      match: null, connectionConsent: null, windows: [{ participantId: "person-a" }],
     });
+    expect(emit).not.toHaveBeenCalledWith("bridge:animate", expect.anything());
   });
 
-  it("asks the facilitator only after a grounded match", async () => {
+  it("connects only after two independent yes decisions", async () => {
     vi.useFakeTimers();
-    const emit = vi.fn();
-    const io = { to: vi.fn(() => ({ emit })) } as unknown as TypedServer;
-    const provider: InferenceProvider = { extract: vi.fn() };
-    const createGuide = vi.fn().mockResolvedValue({
-      introduction: "You both have a radio story to explore.",
-      questions: ["Would you like to share first?", "Would you like to hear what the other person hopes to learn?"],
-      consentReminder: "Either person may pause or stop.",
-    });
-    const facilitator: ConnectionFacilitator = { mode: "gemini", createGuide };
-    const rooms = new RoomStore(120, new StoryMatcher(), provider, "ollama", facilitator);
-    const capsule = buildMockCapsule({ memory: PREPARED_RADIO_MEMORY, fixture: "radio" });
-
-    const approval = rooms.approve(io, "dual87", "participant-one", capsule);
+    const { io, emit } = testIo();
+    const rooms = new RoomStore(120, new StoryMatcher(), { extract: vi.fn() }, "gemma-api");
+    const { source, candidate } = radioCapsules();
+    await rooms.approve(io, "pair87", "person-a", source);
+    const second = rooms.approve(io, "pair87", "person-b", candidate);
     await vi.advanceTimersByTimeAsync(700);
-    await approval;
-
-    expect(createGuide).toHaveBeenCalledOnce();
-    expect(createGuide).toHaveBeenCalledWith(expect.objectContaining({
-      source: capsule,
-      candidate: expect.objectContaining({ id: "story-07" }),
-      match: expect.objectContaining({ decision: "MATCH" }),
-    }));
-    expect(rooms.get("dual87")).toMatchObject({
-      facilitator: "gemini",
-      phase: "matched",
-      guide: { introduction: "You both have a radio story to explore." },
-      guideError: null,
+    await second;
+    expect(rooms.get("pair87")).toMatchObject({
+      phase: "matching", match: { decision: "MATCH", candidateId: "person-b" },
+      connectionConsent: { sourceDecision: "pending", candidateDecision: "pending", mutualYes: false },
     });
+    expect(emit).not.toHaveBeenCalledWith("bridge:animate", expect.anything());
+    expect(rooms.decide(io, "pair87", "person-a", "yes")).toEqual({ ok: true });
+    expect(rooms.get("pair87")).toMatchObject({ phase: "matching", connectionConsent: { mutualYes: false } });
+    expect(rooms.decide(io, "pair87", "person-b", "yes")).toEqual({ ok: true });
+    expect(rooms.get("pair87")).toMatchObject({
+      phase: "matched", connectionConsent: { sourceDecision: "yes", candidateDecision: "yes", mutualYes: true },
+      invite: { title: "You both said yes." },
+    });
+    expect(emit).toHaveBeenCalledWith("bridge:animate", expect.objectContaining({ decision: "MATCH" }));
     vi.useRealTimers();
   });
 
-  it("never asks the facilitator to manufacture a no-match bridge", async () => {
+  it("honours either person's no without creating a bridge", async () => {
     vi.useFakeTimers();
-    const emit = vi.fn();
-    const io = { to: vi.fn(() => ({ emit })) } as unknown as TypedServer;
-    const provider: InferenceProvider = { extract: vi.fn() };
-    const facilitator: ConnectionFacilitator = { mode: "gemini", createGuide: vi.fn() };
-    const rooms = new RoomStore(120, new StoryMatcher(), provider, "ollama", facilitator);
-    const capsule = buildMockCapsule({ memory: "I catalogued polar clouds in Antarctica in the 2010s.", fixture: "no-match" });
-
-    const approval = rooms.approve(io, "none87", "participant-one", capsule);
+    const { io, emit } = testIo();
+    const rooms = new RoomStore(120, new StoryMatcher(), { extract: vi.fn() }, "ollama");
+    const { source, candidate } = radioCapsules();
+    await rooms.approve(io, "no87", "person-a", source);
+    const second = rooms.approve(io, "no87", "person-b", candidate);
     await vi.advanceTimersByTimeAsync(700);
-    await approval;
-
-    expect(facilitator.createGuide).not.toHaveBeenCalled();
-    expect(rooms.get("none87")).toMatchObject({ phase: "no-match", guide: null });
+    await second;
+    rooms.decide(io, "no87", "person-b", "no");
+    expect(rooms.get("no87")).toMatchObject({
+      phase: "no-match", invite: null, connectionConsent: { candidateDecision: "no", mutualYes: false },
+    });
+    expect(emit).not.toHaveBeenCalledWith("bridge:animate", expect.anything());
     vi.useRealTimers();
   });
 
-  it("keeps the grounded match when Gemini guidance is unavailable", async () => {
+  it("returns no match for two weakly related approved memories", async () => {
     vi.useFakeTimers();
-    const emit = vi.fn();
-    const io = { to: vi.fn(() => ({ emit })) } as unknown as TypedServer;
-    const provider: InferenceProvider = { extract: vi.fn() };
+    const { io } = testIo();
+    const rooms = new RoomStore(120, new StoryMatcher(), { extract: vi.fn() });
+    const { source } = radioCapsules();
+    const unrelated = buildMockCapsule({ memory: "I catalogued polar clouds in Antarctica in the 2010s.", fixture: "no-match" });
+    await rooms.approve(io, "weak87", "person-a", source);
+    const second = rooms.approve(io, "weak87", "person-b", unrelated);
+    await vi.advanceTimersByTimeAsync(700);
+    await second;
+    expect(rooms.get("weak87")).toMatchObject({ phase: "no-match", connectionConsent: null, match: { decision: "NO_MATCH" } });
+    vi.useRealTimers();
+  });
+
+  it("asks the facilitator only for a grounded two-person proposal", async () => {
+    vi.useFakeTimers();
+    const { io } = testIo();
+    const { source, candidate } = radioCapsules();
     const facilitator: ConnectionFacilitator = {
       mode: "gemini",
-      createGuide: vi.fn().mockRejectedValue(new Error("network details must not leak")),
+      createGuide: vi.fn().mockResolvedValue({
+        introduction: "You both have a radio story to explore.",
+        questions: ["Would you like to share first?", "Would you like to listen next?"],
+        consentReminder: "Either person may pause or stop.",
+      }),
     };
-    const rooms = new RoomStore(120, new StoryMatcher(), provider, "ollama", facilitator);
-    const capsule = buildMockCapsule({ memory: PREPARED_RADIO_MEMORY, fixture: "radio" });
-
-    const approval = rooms.approve(io, "fallback87", "participant-one", capsule);
+    const rooms = new RoomStore(120, new StoryMatcher(), { extract: vi.fn() }, "ollama", facilitator);
+    await rooms.approve(io, "guide87", "person-a", source);
+    const second = rooms.approve(io, "guide87", "person-b", candidate);
     await vi.advanceTimersByTimeAsync(700);
-    await approval;
-
-    expect(rooms.get("fallback87")).toMatchObject({
-      phase: "matched",
-      match: { decision: "MATCH" },
-      guide: null,
-      guideError: "Gemini could not prepare the conversation guide. The evidence-backed match is still available.",
-    });
-    expect(JSON.stringify(rooms.get("fallback87"))).not.toContain("network details must not leak");
+    await second;
+    expect(facilitator.createGuide).toHaveBeenCalledWith(expect.objectContaining({ source, candidate }));
+    expect(rooms.get("guide87")).toMatchObject({ phase: "matching", guide: { introduction: expect.any(String) } });
     vi.useRealTimers();
   });
 
-  it("uses the process inference provider instead of constructing a mock provider", async () => {
-    vi.useFakeTimers();
-    const capsule = buildMockCapsule({
-      memory: PREPARED_RADIO_MEMORY,
-      fixture: "radio",
-    });
-    const provider: InferenceProvider = { extract: vi.fn().mockResolvedValue(capsule) };
-    const emit = vi.fn();
-    const io = { to: vi.fn(() => ({ emit })) } as unknown as TypedServer;
+  it("uses the configured process provider and never silently switches", async () => {
+    const { io } = testIo();
+    const { source } = radioCapsules();
+    const provider: InferenceProvider = { extract: vi.fn().mockResolvedValue(source) };
     const rooms = new RoomStore(120, new StoryMatcher(), provider, "gemma-api");
-
-    const injection = rooms.inject(io, "real87");
-    await vi.advanceTimersByTimeAsync(700);
-    await injection;
-
+    await rooms.inject(io, "real87");
     expect(provider.extract).toHaveBeenCalledOnce();
-    expect(provider.extract).toHaveBeenCalledWith({
-      memory: PREPARED_RADIO_MEMORY,
-      fixture: "radio",
+    expect(rooms.providerRequest("real87", "ollama")).toMatchObject({ available: false, snapshot: { provider: "gemma-api" } });
+  });
+
+  it("rejects outsiders and clears ephemeral state on reset", async () => {
+    vi.useFakeTimers();
+    const { io } = testIo();
+    const rooms = new RoomStore(120, new StoryMatcher(), { extract: vi.fn() });
+    const { source, candidate } = radioCapsules();
+    await rooms.approve(io, "reset87", "person-a", source);
+    const second = rooms.approve(io, "reset87", "person-b", candidate);
+    await vi.advanceTimersByTimeAsync(700);
+    await second;
+    expect(rooms.decide(io, "reset87", "stranger", "yes")).toMatchObject({ ok: false });
+    await rooms.approve(io, "reset87", "person-c", source);
+    expect(rooms.get("reset87")).toMatchObject({
+      lastError: "This room already has two participants. Start a new room for another conversation.",
+      windows: [{ participantId: "person-a" }, { participantId: "person-b" }],
     });
-    expect(rooms.get("real87")).toMatchObject({ provider: "gemma-api", phase: "matched" });
-    vi.useRealTimers();
-  });
-
-  it("keeps simultaneous approvals bound to the latest active participant", async () => {
-    vi.useFakeTimers();
-    const emit = vi.fn();
-    const io = { to: vi.fn(() => ({ emit })) } as unknown as TypedServer;
-    const provider: InferenceProvider = { extract: vi.fn() };
-    const rooms = new RoomStore(120, new StoryMatcher(), provider, "gemma-api");
-    const first = buildMockCapsule({ memory: PREPARED_RADIO_MEMORY, fixture: "radio" });
-    const second = { ...first, id: "second-capsule", safeSummary: "The latest approved fictional radio story." };
-
-    const firstApproval = rooms.approve(io, "busy87", "participant-one", first);
-    const secondApproval = rooms.approve(io, "busy87", "participant-two", second);
-    await vi.advanceTimersByTimeAsync(700);
-    await Promise.all([firstApproval, secondApproval]);
-
-    const snapshot = rooms.get("busy87");
-    expect(snapshot.activeSourceId).toBe("participant-two");
-    expect(snapshot.activeCandidateId).toBe("story-07");
-    expect(snapshot.windows.findLast((window) => window.participantId === snapshot.activeSourceId)?.safeSummary)
-      .toBe("The latest approved fictional radio story.");
-    vi.useRealTimers();
-  });
-
-  it("does not emit a ghost match after the presenter resets the room", async () => {
-    vi.useFakeTimers();
-    const emit = vi.fn();
-    const io = { to: vi.fn(() => ({ emit })) } as unknown as TypedServer;
-    const provider: InferenceProvider = { extract: vi.fn() };
-    const rooms = new RoomStore(120, new StoryMatcher(), provider, "gemma-api");
-    const capsule = buildMockCapsule({ memory: PREPARED_RADIO_MEMORY, fixture: "radio" });
-
-    const approval = rooms.approve(io, "reset87", "participant-one", capsule);
-    rooms.reset("reset87");
-    await vi.advanceTimersByTimeAsync(700);
-    await approval;
-
-    expect(rooms.get("reset87")).toMatchObject({ phase: "idle", activeSourceId: null, activeCandidateId: null });
-    expect(emit).not.toHaveBeenCalledWith("match:found", expect.anything());
+    expect(rooms.reset("reset87")).toMatchObject({ phase: "idle", windows: [], connectionConsent: null });
     vi.useRealTimers();
   });
 });

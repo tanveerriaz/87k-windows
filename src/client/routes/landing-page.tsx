@@ -1,40 +1,45 @@
 import { Link } from "react-router-dom";
-import windowsArtwork from "../../../assets/generated/photographic-hdb-wall.png";
 
 export function LandingPage() {
   return (
-    <main className="landing-page">
+    <main className="landing-page two-chairs-page">
       <nav className="landing-nav">
         <span className="wordmark">87K WINDOWS</span>
-        <span className="mono-label">A LIVING WALL OF MEMORIES</span>
+        <span className="mono-label">A SAFE PLACE TO BEGIN</span>
       </nav>
-      <section className="landing-hero">
-        <p className="eyebrow">Ask before it is too late</p>
-        <h1>Every life is a window.</h1>
-        <p className="landing-thesis">Gemini helps seniors turn a shared memory into a human beginning.</p>
-        <p className="landing-copy">
-          Local Gemma keeps raw memories private. After the evidence holds, Gemini prepares two gentle questions that can be read aloud—so people, not AI, make the connection.
-        </p>
-        <div className="landing-actions">
-          <Link className="button button-primary" to="/join/demo87">Start the demo</Link>
-          <Link className="text-link" to="/wall/demo87">Open Wall Mode</Link>
+      <section className="two-chairs-hero">
+        <div className="two-chairs-intro">
+          <p className="eyebrow">A story needs a willing listener</p>
+          <h1>What story should not disappear?</h1>
+        </div>
+        <figure className="two-chairs-visual">
+          <img src="/assets/two-chairs-hero.png" alt="Two empty chairs facing a small lamp in a quiet community room" />
+          <figcaption><span>ONE PERSON READY TO SPEAK</span><i aria-hidden="true" /><span>ONE PERSON READY TO LISTEN</span></figcaption>
+        </figure>
+        <div className="two-chairs-copy">
+          <p className="landing-copy">87K Windows helps one person share a memory and another choose to listen. Gemma protects the story. Gemini helps the conversation begin, then steps away.</p>
+          <div className="role-choices" aria-label="Choose how you want to take part">
+            <Link className="role-choice role-choice-share" to="/join/demo87?role=share">
+              <span>
+                <strong>I have a story to share</strong>
+                <small>Share your memories. Be heard.</small>
+              </span>
+            </Link>
+            <Link className="role-choice role-choice-listen" to="/join/demo87?role=listen">
+              <span>
+                <strong>I would like to listen</strong>
+                <small>Offer your time. Listen with care.</small>
+              </span>
+            </Link>
+          </div>
+          <p className="landing-assurance"><strong>No contact details are shared.</strong><br />Both people choose yes.</p>
         </div>
       </section>
-      <figure className="landing-visual">
-        <img
-          src={windowsArtwork}
-          alt="A fictional Singapore housing block waiting for its windows to light up"
-        />
-        <figcaption>
-          <strong>Two windows. One human thread.</strong>
-          <span>Fictional generated artwork</span>
-        </figcaption>
-      </figure>
-      <aside className="landing-proof" aria-label="How the demo works">
-        <div><span>ASK</span><p>One small question, asked with patience.</p></div>
-        <div><span>PROTECT</span><p>Gemma makes a safe capsule on the room’s Mac.</p></div>
-        <div><span>BEGIN</span><p>Gemini offers a slow, consent-first way to start talking.</p></div>
-      </aside>
+      <footer className="two-chairs-footer">
+        <span>GEMMA PROTECTS THE STORY</span>
+        <span>GEMINI HELPS THE FIRST MINUTE</span>
+        <Link to="/wall/demo87">View the living wall</Link>
+      </footer>
     </main>
   );
 }

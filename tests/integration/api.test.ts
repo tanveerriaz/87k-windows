@@ -41,6 +41,11 @@ describe("Express API", () => {
       facilitator: "disabled",
       geminiModel: null,
       mode: "test",
+      inference: {
+        configured: true,
+        selected: "mock",
+        fallback: "explicit-process-restart-only",
+      },
     });
     expect(JSON.stringify(body)).not.toContain("GEMINI_API_KEY");
   });

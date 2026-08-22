@@ -89,6 +89,11 @@ export function createApp(dependencies: AppDependencies): express.Express {
         : null,
       mode: env.NODE_ENV,
       uptimeSeconds: Math.round(process.uptime()),
+      inference: {
+        configured: true,
+        selected: env.INFERENCE_PROVIDER,
+        fallback: "explicit-process-restart-only",
+      },
     });
   });
 

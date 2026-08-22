@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { SeniorBridgeSchema, type SeniorBridge, type StoryCapsule } from "../../shared/schemas";
 import { redactMemory } from "../inference/mock-provider";
 import { FacilitationUnavailableError, type ConnectionFacilitator, type FacilitationInput } from "./provider";
@@ -77,9 +77,10 @@ Approved evidence: ${JSON.stringify(evidence)}`;
         contents: this.prompt(input),
         config: {
           abortSignal: AbortSignal.timeout(this.timeoutMs),
-          maxOutputTokens: 320,
+          maxOutputTokens: 640,
           responseMimeType: "application/json",
           responseJsonSchema: GUIDE_JSON_SCHEMA,
+          thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
         },
       });
       if (!response.text?.trim()) throw new FacilitationUnavailableError();

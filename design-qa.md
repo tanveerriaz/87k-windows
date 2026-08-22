@@ -113,3 +113,64 @@ The generated source is a richer exhibition-poster illustration. The implementat
 ## Final result
 
 final result: passed
+---
+
+## Two Chairs mobile reframe
+
+### Comparison target
+
+- Source visual truth: `docs/images/two-chairs-reference.png`
+- Source pixels: 853 x 1844; normalized to 390 x 843 for comparison
+- Rendered implementation: `docs/images/two-chairs-mobile-final.png`
+- Implementation pixels and CSS viewport: 390 x 1136 full-page capture at a 390 x 844 viewport and device scale 1
+- Combined comparison: `docs/images/two-chairs-comparison-final.png`
+- State: mobile landing, default state, fully loaded
+- Density normalization: both source and implementation use equal 390 px columns; black padding appears only below the shorter normalized source
+
+### Full-view comparison
+
+The final implementation preserves the selected direction's hierarchy and emotional thesis: dark HDB context, a large ivory question, a real Two Chairs image with one warm lamp, two cobalt human-role actions, and an explicit two-yes privacy promise. The working product replaces the concept image's date footer with accurate model provenance and a living-wall link.
+
+### Focused region comparison
+
+A separate crop was unnecessary because the title wrapping, hero subjects, action labels, supporting copy, borders and assurance text remain readable at 390 px in the combined comparison.
+
+### Required fidelity surfaces
+
+- Fonts and typography: display serif hierarchy, sans-serif body, uppercase mono labels, readable 18 px body copy and a three-line mobile title match the source intent.
+- Spacing and layout rhythm: the final sequence is question, Two Chairs image, explanation, two role actions and consent promise. Touch targets exceed 48 px and no horizontal overflow is present.
+- Colors and visual tokens: carbon and ivory foundation, amber lamp, cobalt role actions and restrained blue secondary text match the selected direction with accessible contrast.
+- Image quality and asset fidelity: the hero is a dedicated text-free raster generated for the selected direction, not CSS or placeholder art. It is sharp at the target viewport and cropped around both chairs and the lamp.
+- Copy and content: the two role labels and safety contract are preserved. The implementation adds accurate Gemma and Gemini role copy and removes the concept image's date and option label.
+
+### Comparison history
+
+#### Iteration 1 — blocked
+
+- P1: the implementation placed the chairs before the question, reversing the selected narrative hierarchy.
+- P2: role actions were thin outline rows rather than visually dominant cobalt choices.
+- P2: the privacy promise was visually weak and longer than the selected source.
+- Fix: reordered the mobile composition, strengthened the title, changed the actions to filled controls and restored the concise contact/two-yes promise.
+
+#### Iteration 2 — blocked
+
+- P2: the full-page façade continued behind every section and reduced the dark-room focus.
+- P2: fake text glyphs were used as action icons.
+- Fix: limited the HDB photograph to the opening context, removed fake glyphs and kept the dedicated raster hero as the primary image.
+
+#### Final iteration — passed
+
+- No actionable P0, P1 or P2 visual differences remain.
+- Browser console warnings/errors: none.
+- Storyteller and listener routes opened from their respective actions.
+- Real hosted-Gemma extraction completed for both participants.
+- Real Gemini 3.6 Flash facilitation returned two structured, senior-friendly questions after minimal-thinking configuration was applied.
+- The first yes remained waiting; the second yes opened Mutual Yes.
+- No contact details were shown or exchanged.
+
+### Follow-up polish
+
+- P3: a future icon-library pass could add a chair and listening-ear icon if it preserves the current label width and accessibility.
+- P3: desktop could enlarge the wordmark to echo the concept poster more strongly without changing mobile hierarchy.
+
+final result: passed

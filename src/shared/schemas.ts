@@ -57,6 +57,16 @@ export const LitWindowSchema = z.object({
   safeSummary: z.string(),
 });
 
+export const ConsentDecisionSchema = z.enum(["pending", "yes", "no"]);
+
+export const ConnectionConsentSchema = z.object({
+  sourceParticipantId: z.string().min(1),
+  candidateParticipantId: z.string().min(1),
+  sourceDecision: ConsentDecisionSchema,
+  candidateDecision: ConsentDecisionSchema,
+  mutualYes: z.boolean(),
+});
+
 export const RoomSnapshotSchema = z.object({
   roomCode: z.string(),
   provider: ProviderSchema,
@@ -65,6 +75,7 @@ export const RoomSnapshotSchema = z.object({
   windows: z.array(LitWindowSchema),
   activeSourceId: z.string().nullable(),
   activeCandidateId: z.string().nullable(),
+  connectionConsent: ConnectionConsentSchema.nullable().optional(),
   match: MatchResultSchema.nullable(),
   invite: KopiCardSchema.nullable(),
   guide: SeniorBridgeSchema.nullable(),
@@ -97,4 +108,6 @@ export type StoryCapsule = z.infer<typeof StoryCapsuleSchema>;
 export type MatchResult = z.infer<typeof MatchResultSchema>;
 export type KopiCard = z.infer<typeof KopiCardSchema>;
 export type LitWindow = z.infer<typeof LitWindowSchema>;
+export type ConsentDecision = z.infer<typeof ConsentDecisionSchema>;
+export type ConnectionConsent = z.infer<typeof ConnectionConsentSchema>;
 export type RoomSnapshot = z.infer<typeof RoomSnapshotSchema>;
