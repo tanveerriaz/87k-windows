@@ -17,9 +17,9 @@
 
 </div>
 
-![Photorealistic fictional Singapore housing block at night, designed for windows to illuminate during a live match](assets/generated/photographic-hdb-wall.png)
+![Current 87K Windows landing page with the photographic Singapore housing block and warm amber entrance](assets/video/captures/01-landing-photographic-1920x1080.png)
 
-<p align="center"><sub>The building is generated fictional artwork. Live Canvas light—not a fabricated façade—shows when approved evidence connects two lives.</sub></p>
+<p align="center"><sub>The current photographic night experience. The building is fictional generated artwork; live Canvas light shows when approved evidence connects two lives.</sub></p>
 
 ## Why this exists
 
@@ -37,6 +37,8 @@ The story direction is informed by Singapore seniors who continue contributing t
 | --- | --- | --- | --- | --- |
 | One short memory, spoken or typed | A local safe capsule with uncertainty | Nothing enters matching without consent | Transparent code returns a match or `NO MATCH YET` | Two gentle questions can be read aloud slowly |
 
+![Current Join Mode with photographic memory objects, carbon surfaces and warm amber controls](assets/video/captures/02-join-memory-objects-1920x1080.png)
+
 The prepared demo is intentionally simple:
 
 - **Your memory:** repairing radios in Queenstown in the 1970s, with an explicit offer to teach.
@@ -44,17 +46,21 @@ The prepared demo is intentionally simple:
 - **Evidence:** `Queenstown` · `1970s` · `radio repair` · `teach ↔ learn`.
 - **Human outcome:** **A potential listener match was found.** The shipped listener is a clearly labelled fictional fixture, not a simulated acceptance from a real person.
 
-![Real Gemma result at 1280 by 720: two fictional Queenstown radio memories connected by visible evidence](docs/images/real-gemma-wall-result.jpg)
+![Current matched Wall Mode: two amber windows connected by a fine blue evidence thread](assets/video/captures/04-wall-matched-two-lights-1920x1080.png)
 
-<p align="center"><sub>Proof, not a mockup: the real-model flow produced this evidence-backed result. Synthetic stories only.</sub></p>
+<p align="center"><sub>Two lights and the blue thread appear only after the Queenstown radio evidence clears the deterministic threshold.</sub></p>
+
+![Current honest no-match state: one amber window and no connecting thread](assets/video/captures/05-wall-no-match-one-light-1920x1080.png)
+
+<p align="center"><sub>Weak evidence keeps one light and returns <code>NO MATCH YET</code>. No connection is fabricated.</sub></p>
 
 <details>
-<summary><strong>See the Queenstown visual direction</strong></summary>
+<summary><strong>See the consent-first review step</strong></summary>
 <br />
 
-![Queenstown Story Block concept: two fictional memories connected through radio repair](assets/generated/queenstown-story-block.jpg)
+![Current consent review screen showing exactly what may enter matching](assets/video/captures/03-join-consent-review-1920x1080.png)
 
-<sub>Original synthetic visual direction generated with Gemini 3.1 Flash Image; implemented with accessible React, semantic HTML and Canvas.</sub>
+<sub>The participant remains the author: extracted evidence is reviewed before it can light a window or enter matching.</sub>
 </details>
 
 ## Where Gemini and Gemma are used
