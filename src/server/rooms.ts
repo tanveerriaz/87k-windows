@@ -122,7 +122,7 @@ export class RoomStore {
     room.windows.push(targetWindow);
     room.phase = "matched";
     room.invite = {
-      title: "A small bridge, ready when you are",
+      title: "A neighbour is ready to listen.",
       invitation: result.invitation ?? "Kopi and a shared story?",
       activity: "Meet at the community table for 30 minutes. Bring the radio story; tools are optional.",
       roomCode,

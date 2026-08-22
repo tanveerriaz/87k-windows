@@ -8,6 +8,7 @@ import { compressImage } from "../lib/image";
 import { useRoomSocket } from "../lib/use-room-socket";
 
 const MEMORY_QUESTION = "What small thing made you happy when you were young?";
+const JOURNEY_STEPS = ["You shared", "Gemma noticed", "You approved", "A listener answered"];
 
 type Stage = "welcome" | "capture" | "processing" | "review" | "waiting" | "result";
 
@@ -24,6 +25,7 @@ export function JoinPage() {
   const [error, setError] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const room = useRoomSocket(roomCode, "join");
+  const preparedImageSelected = fixture === "radio" && photoData === null;
 
   useEffect(() => {
     if (stage === "waiting" && (room.snapshot?.phase === "matched" || room.snapshot?.phase === "no-match")) {
@@ -50,6 +52,11 @@ export function JoinPage() {
     } catch (imageError) {
       setError(imageError instanceof Error ? imageError.message : "Use the prepared photo instead.");
     }
+  };
+
+  const restorePreparedImage = () => {
+    chooseFixture("radio");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const createCapsule = async () => {
@@ -121,8 +128,14 @@ export function JoinPage() {
 
       <section className="join-shell" aria-live="polite">
         <div className="step-rail" aria-label="Progress">
-          {["Share", "Review", "Connect"].map((label, index) => {
-            const activeIndex = stage === "welcome" || stage === "capture" || stage === "processing" ? 0 : stage === "review" ? 1 : 2;
+          {JOURNEY_STEPS.map((label, index) => {
+            const activeIndex = stage === "welcome" || stage === "capture"
+              ? 0
+              : stage === "processing" || stage === "review"
+                ? 1
+                : stage === "waiting"
+                  ? 2
+                  : 3;
             return <span key={label} className={index <= activeIndex ? "is-active" : ""}>{label}</span>;
           })}
         </div>
@@ -157,7 +170,11 @@ export function JoinPage() {
             />
             <div className="capture-actions">
               <button className="button button-secondary" onClick={() => fileInputRef.current?.click()}>Add an old photo</button>
-              <button className="text-button" onClick={() => chooseFixture("radio")}>Use prepared photo</button>
+              {preparedImageSelected ? (
+                <span className="prepared-image-status" role="status">Prepared demo image selected</span>
+              ) : (
+                <button className="text-button" onClick={restorePreparedImage}>Restore prepared demo image</button>
+              )}
             </div>
             <p className="field-help">A photo is an optional memory cue. It stays in this browser and is never sent to Gemma. If camera access is denied, choose a file or keep the prepared illustration.</p>
             <label className="memory-field">
@@ -201,6 +218,8 @@ export function JoinPage() {
               {capsule.place && <span><small>PLACE</small>{capsule.place}</span>}
               {capsule.era && <span><small>ERA</small>{capsule.era}</span>}
               {capsule.skills.map((skill) => <span key={skill}><small>SKILL</small>{skill}</span>)}
+              {capsule.offers.map((offer) => <span key={offer}><small>OFFER</small>{offer}</span>)}
+              {capsule.wants.map((want) => <span key={want}><small>WANTS</small>{want}</span>)}
             </div>
             {capsule.redactions.length > 0 ? (
               <div className="redaction-note"><strong>Removed before sharing</strong><p>{capsule.redactions.join(", ")}</p></div>
@@ -228,12 +247,22 @@ export function JoinPage() {
 
         {stage === "result" && room.snapshot?.phase === "matched" && room.snapshot.match && room.snapshot.invite && (
           <div className="join-panel result-panel">
-            <p className="eyebrow">A match with evidence</p>
+            <p className="eyebrow">Your result</p>
             <h1>{room.snapshot.invite.title}</h1>
+            <p className="result-summary">{room.snapshot.match.why}</p>
+            <div className="story-pair">
+              <article>
+                <span className="mono-label">YOUR MEMORY</span>
+                <p>{room.snapshot.windows[0]?.safeSummary}</p>
+              </article>
+              <article>
+                <span className="mono-label">THEIR INTEREST</span>
+                <p>{room.snapshot.windows[1]?.safeSummary}</p>
+              </article>
+            </div>
             <div className="evidence-path" aria-label="Evidence path">
               {room.snapshot.match.evidencePath.map((evidence) => <span key={evidence}>{evidence}</span>)}
             </div>
-            <p className="match-why">{room.snapshot.match.why}</p>
             <article className="kopi-card">
               <span className="mono-label">KOPI CARD · ROOM {roomCode.toUpperCase()}</span>
               <h2>{room.snapshot.invite.invitation}</h2>
@@ -248,8 +277,9 @@ export function JoinPage() {
           <div className="join-panel result-panel no-match-panel">
             <p className="eyebrow">Honest by design</p>
             <h1>NO MATCH YET</h1>
+            <p className="no-match-human">We haven’t found the right listener yet.</p>
             <p>{room.snapshot.match?.why}</p>
-            <div className="no-match-rule">No invitation was created. A weak link is not a friendship.</div>
+            <div className="no-match-rule">No invitation was created, and your story remains safe.</div>
             <button className="button button-primary button-block" onClick={startAgain}>Try the prepared radio story</button>
           </div>
         )}

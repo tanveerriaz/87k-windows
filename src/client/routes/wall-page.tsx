@@ -37,20 +37,36 @@ export function WallPage() {
         )}
         {snapshot?.phase === "matched" && snapshot.match && (
           <div className="wall-reveal">
-            <div className="wall-evidence">
-              <span className="mono-label">THE THREAD BETWEEN THESE TWO WINDOWS</span>
-              <div className="evidence-path">
-                {snapshot.match.evidencePath.map((item, index) => (
-                  <span key={item} style={{ animationDelay: `${index * 180}ms` }}>{item}</span>
-                ))}
+            <div className="wall-result-main">
+              <p className="eyebrow">This is what connected you</p>
+              <h1>A neighbour would like to hear your story.</h1>
+              <p className="wall-result-summary">{snapshot.match.why}</p>
+              <div className="wall-story-pair">
+                <article>
+                  <span className="mono-label">YOUR MEMORY</span>
+                  <p>{snapshot.windows[0]?.safeSummary}</p>
+                </article>
+                <div className="wall-evidence">
+                  <span className="mono-label">EVIDENCE YOU BOTH SHARED</span>
+                  <div className="evidence-path">
+                    {snapshot.match.evidencePath.map((item, index) => (
+                      <span key={item} style={{ animationDelay: `${index * 180}ms` }}>{item}</span>
+                    ))}
+                  </div>
+                </div>
+                <article>
+                  <span className="mono-label">THEIR INTEREST</span>
+                  <p>{snapshot.windows[1]?.safeSummary}</p>
+                </article>
               </div>
-              <p>{snapshot.match.why}</p>
             </div>
             {snapshot.invite && (
               <article className="wall-invite">
-                <span className="mono-label">KOPI CARD</span>
-                <h2>{snapshot.invite.invitation}</h2>
+                <span className="mono-label">YOUR RESULT</span>
+                <h2>{snapshot.invite.title}</h2>
+                <p>{snapshot.invite.invitation}</p>
                 <p>{snapshot.invite.activity}</p>
+                <small>You approved this story for sharing. No contact details are exchanged.</small>
               </article>
             )}
           </div>
@@ -59,7 +75,8 @@ export function WallPage() {
           <div className="wall-no-match">
             <span className="mono-label">EVIDENCE CHECK COMPLETE</span>
             <h1>NO MATCH YET</h1>
-            <p>No bridge was drawn because the prepared stories did not contain enough evidence.</p>
+            <h2>We haven’t found the right listener yet.</h2>
+            <p>No invitation was created, and the approved story remains safe.</p>
           </div>
         )}
       </section>
