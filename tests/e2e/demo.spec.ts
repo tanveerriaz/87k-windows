@@ -9,7 +9,7 @@ test("landing page leads with the 87K Windows artwork and a working demo action"
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/");
 
-  await expect(page.getByAltText("Two illuminated windows connected across a Singapore housing block at night")).toBeVisible();
+  await expect(page.getByAltText("A fictional Singapore housing block waiting for its windows to light up")).toBeVisible();
   await expect(page.getByText("Two windows. One human thread.")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
 
@@ -42,6 +42,7 @@ test("two tabs complete the match, reconnect and honest no-match flow", async ({
   await expect(wall.getByText("Scan. Share. Watch the wall light up.")).toBeVisible();
   await join.getByRole("button", { name: "Share a prepared memory" }).click();
   await expect(join.getByText("Prepared demo image selected")).toBeVisible();
+  await expect(join.getByAltText("Fictional memory objects including a radio, kopi cup and keepsakes")).toBeVisible();
   await expect(join.getByText("Your words", { exact: true })).toBeInViewport();
   await expect(join.getByText("If camera access is denied")).toBeVisible();
 

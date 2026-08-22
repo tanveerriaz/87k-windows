@@ -2,30 +2,30 @@
 
 # 87K Windows
 
-### Lives witnessed. Human threads revealed.
+### One life remembers. Another life needs it. A human connection begins.
 
-Gemini helps seniors begin a real conversation; local Gemma keeps the raw memory private.
+87K Windows helps older people turn joyful lived experience into a consented offer—something another person can hear, learn from or share—so memory becomes social connection.
 
-[**Open the live demo**](https://windows-87k-985493069617.asia-southeast1.run.app/join/demo87) · [Wall Mode](https://windows-87k-985493069617.asia-southeast1.run.app/wall/demo87) · [Architecture](docs/ARCHITECTURE.md) · [90-second demo](docs/DEMO_SCRIPT.md)
+[**Open the Cloud Run app**](https://windows-87k-985493069617.asia-southeast1.run.app/) · [Join Mode](https://windows-87k-985493069617.asia-southeast1.run.app/join/demo87) · [Wall Mode](https://windows-87k-985493069617.asia-southeast1.run.app/wall/demo87) · [Architecture](docs/ARCHITECTURE.md) · [Demo story](docs/DEMO_SCRIPT.md)
 
 [![Quality gates](https://github.com/tanveerriaz/87k-windows/actions/workflows/ci.yml/badge.svg)](https://github.com/tanveerriaz/87k-windows/actions/workflows/ci.yml)
-![TypeScript](https://img.shields.io/badge/TypeScript-6-073b39?logo=typescript&logoColor=white)
-![Gemma](https://img.shields.io/badge/Gemma-real%20inference-b6402d)
-![Gemini](https://img.shields.io/badge/Gemini%203.6-senior%20facilitator-65bca7)
-![Cloud Run](https://img.shields.io/badge/Cloud%20Run-Singapore-e3a43a?logo=googlecloud&logoColor=073b39)
-![Data](https://img.shields.io/badge/demo%20data-fictional-65bca7)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-0b1118?logo=typescript&logoColor=white)
+![Gemma](https://img.shields.io/badge/Gemma-real%20inference-c86c43)
+![Gemini](https://img.shields.io/badge/Gemini%203.6-senior%20facilitator-82b6e8)
+![Cloud Run](https://img.shields.io/badge/Cloud%20Run-Singapore-eda94b?logo=googlecloud&logoColor=0b1118)
+![Data](https://img.shields.io/badge/demo%20data-fictional-83b9a0)
 
 </div>
 
-![Two illuminated windows connected across a Singapore housing block at night](assets/generated/submission-thumbnail.jpg)
+![Photorealistic fictional Singapore housing block at night, designed for windows to illuminate during a live match](assets/generated/photographic-hdb-wall.png)
 
-<p align="center"><sub>The core metaphor: two lives become visible when a grounded human thread connects them. Fictional generated artwork.</sub></p>
+<p align="center"><sub>The building is generated fictional artwork. Live Canvas light—not a fabricated façade—shows when approved evidence connects two lives.</sub></p>
 
 ## Why this exists
 
-Older people are not profiles to complete or companions to simulate. They are witnesses, makers and teachers. Many still have craft, humour and hard-won knowledge to pass on; what is often missing is a clear signal that somebody is genuinely ready to listen.
+Older people are not only people who may need support. They carry knowledge, skills and experiences that somebody else may need. They are witnesses, makers and teachers; what is often missing is a clear signal that somebody is genuinely ready to listen, learn or share the joy.
 
-87K Windows asks one gentle question, lets the participant approve exactly what can be shared, and makes the resulting human bridge visible on a shared Singapore housing block.
+87K Windows asks one gentle question, turns lived experience into a consented offer, and lets the participant approve exactly what can be shared. A real-looking Singapore housing block then makes the result visible: one warm light when a story has been witnessed; two lights and a thread only when the evidence holds.
 
 > Not an AI companion. Gemini creates a safe beginning, then gets out of the way so two people can talk.
 

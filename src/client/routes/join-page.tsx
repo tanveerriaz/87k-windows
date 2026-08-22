@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import memoryObjects from "../../../assets/generated/memory-objects.jpg";
 import { PREPARED_NO_MATCH_MEMORY, PREPARED_RADIO_MEMORY } from "../../shared/demo";
 import type { StoryCapsule } from "../../shared/schemas";
 import { StatusBadge } from "../components/status-badge";
@@ -209,7 +210,7 @@ export function JoinPage() {
             <h1>{MEMORY_QUESTION}</h1>
             <p className="capture-intro">There is no right answer. A small detail is enough.</p>
             <div className="photo-preview">
-              {photoData ? <img src={photoData} alt="Chosen preview; it has not been shared" /> : fixture === "radio" ? <img src="/demo-radio.svg" alt="Prepared fictional illustration of a radio and repair tools" /> : <div className="text-fixture">NO PHOTO<br />TEXT FIXTURE</div>}
+              {photoData ? <img src={photoData} alt="Chosen preview; it has not been shared" /> : fixture === "radio" ? <img src={memoryObjects} alt="Fictional memory objects including a radio, kopi cup and keepsakes" /> : <div className="text-fixture">NO PHOTO<br />TEXT FIXTURE</div>}
               <span>{photoLabel}</span>
             </div>
             <input

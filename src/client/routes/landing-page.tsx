@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import windowsArtwork from "../../../assets/generated/submission-thumbnail.jpg";
+import windowsArtwork from "../../../assets/generated/photographic-hdb-wall.png";
 
 export function LandingPage() {
   return (
@@ -23,7 +23,7 @@ export function LandingPage() {
       <figure className="landing-visual">
         <img
           src={windowsArtwork}
-          alt="Two illuminated windows connected across a Singapore housing block at night"
+          alt="A fictional Singapore housing block waiting for its windows to light up"
         />
         <figcaption>
           <strong>Two windows. One human thread.</strong>
