@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import express, { type NextFunction, type Request, type Response } from "express";
-import { rateLimit } from "express-rate-limit";
+import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import {
   ExtractRequestSchema,
@@ -52,6 +52,10 @@ export function createApp(dependencies: AppDependencies): express.Express {
   const app = express();
 
   app.disable("x-powered-by");
+  // Cloud Run is the single trusted proxy in front of this service. Trusting
+  // exactly one hop lets Express recover the visitor address without trusting
+  // arbitrary client-supplied forwarding chains.
+  app.set("trust proxy", 1);
   app.use(express.json({ limit: Math.ceil(env.MAX_UPLOAD_BYTES * 1.45) }));
   app.use((request: Request, response: Response, next: NextFunction) => {
     const requestId = randomUUID();
@@ -69,6 +73,7 @@ export function createApp(dependencies: AppDependencies): express.Express {
     limit: 30,
     standardHeaders: "draft-8",
     legacyHeaders: false,
+    keyGenerator: (request) => ipKeyGenerator(request.ip ?? request.socket.remoteAddress ?? "unknown"),
     message: { code: "RATE_LIMITED", message: "Too many demo requests. Wait a moment and try again." },
   });
 
