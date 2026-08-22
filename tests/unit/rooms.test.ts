@@ -29,4 +29,26 @@ describe("RoomStore prepared story", () => {
     expect(rooms.get("real87")).toMatchObject({ provider: "gemma-api", phase: "matched" });
     vi.useRealTimers();
   });
+
+  it("keeps simultaneous approvals bound to the latest active participant", async () => {
+    vi.useFakeTimers();
+    const emit = vi.fn();
+    const io = { to: vi.fn(() => ({ emit })) } as unknown as TypedServer;
+    const provider: InferenceProvider = { extract: vi.fn() };
+    const rooms = new RoomStore(120, new StoryMatcher(), provider, "gemma-api");
+    const first = buildMockCapsule({ memory: PREPARED_RADIO_MEMORY, fixture: "radio" });
+    const second = { ...first, id: "second-capsule", safeSummary: "The latest approved fictional radio story." };
+
+    const firstApproval = rooms.approve(io, "busy87", "participant-one", first);
+    const secondApproval = rooms.approve(io, "busy87", "participant-two", second);
+    await vi.advanceTimersByTimeAsync(700);
+    await Promise.all([firstApproval, secondApproval]);
+
+    const snapshot = rooms.get("busy87");
+    expect(snapshot.activeSourceId).toBe("participant-two");
+    expect(snapshot.activeCandidateId).toBe("story-07");
+    expect(snapshot.windows.findLast((window) => window.participantId === snapshot.activeSourceId)?.safeSummary)
+      .toBe("The latest approved fictional radio story.");
+    vi.useRealTimers();
+  });
 });

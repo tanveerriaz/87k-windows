@@ -4,7 +4,7 @@ GitHub is the bridge between the build Mac Mini and the presentation MacBook Air
 
 ## Day-of-event ladder
 
-1. **Local Gemma + Ollama** — primary private judging path; phones join the Mac over local Wi-Fi.
+1. **Local Gemma + Ollama** — primary on-device judging path; phones join the Mac through a trusted private hotspot.
 2. **Cloud Run + hosted Gemma** — public online-review path and explicit recovery option.
 
 If neither real model is available, stop the live demo and use the prerecorded real-Gemma video. Do not present the deterministic test harness.
@@ -30,7 +30,7 @@ Omit `--with-ollama` for Cloud-only preparation. The setup script runs `npm ci`;
 npm run demo:local
 ```
 
-The launcher builds the production app and serves it on port 3000. Use the Mac's local-network IP in the Admin, Wall and Join URLs so phones on the same Wi-Fi can participate.
+The launcher builds the production app and serves it on port 3000. Use the Mac's hotspot IP in the Admin, Wall and Join URLs. The prototype uses local HTTP, so never connect participant phones through shared event Wi-Fi.
 
 For a local hosted-Gemma check, keep the key out of shell history:
 
@@ -68,7 +68,7 @@ Stop if local modifications appear. Review them rather than pulling over legitim
 ## Presentation checklist
 
 - Complete one phone-to-wall flow through local Ollama.
-- Disconnect internet access and repeat the prepared Ollama flow over local Wi-Fi.
+- Disconnect internet access and repeat the prepared Ollama flow over the trusted hotspot.
 - Confirm the hosted Cloud Run review URL separately.
 - Confirm the prerecorded real-Gemma video plays locally if both live model paths become unavailable.
 - Test the real projector at 1280 × 720.

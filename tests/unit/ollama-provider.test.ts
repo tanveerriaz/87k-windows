@@ -32,7 +32,21 @@ describe("OllamaProvider", () => {
     expect(capsule.place).toBe("Queenstown");
     expect(capsule.containsPII).toBe(true);
     expect(capsule.redactions).toContain("exact address");
+    expect(capsule.offers).toEqual([]);
+    expect(capsule.wants).toEqual([]);
     expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("keeps an offer only when the participant explicitly volunteers it", async () => {
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ response: validLocalCapsule }), { status: 200 }),
+    ) as typeof fetch;
+    const provider = new OllamaProvider("http://127.0.0.1:11434", "gemma3:4b", fetcher, 1000);
+    const capsule = await provider.extract({
+      memory: "I repaired radios in Queenstown, and I would be happy to teach basic radio repair.",
+    });
+    expect(capsule.offers).toEqual(["teach radio repair"]);
+    expect(capsule.wants).toEqual([]);
   });
 
   it("repairs invalid JSON once", async () => {

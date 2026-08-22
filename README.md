@@ -73,7 +73,9 @@ Gemma does **not** choose a friend, invent a biography, analyse the optional pho
 
 ## Why open Gemma matters
 
-The physical judging demo runs `gemma3:4b` locally through Ollama. An elder's words stay on a community-operated Mac, the experience works without internet access, and one laptop can serve phones over local Wi-Fi. Openness is therefore part of the privacy and access model—not a model swap inside a generic cloud workflow.
+The physical judging demo runs `gemma3:4b` locally through Ollama. Model inference stays on a community-operated Mac, the experience works without internet access, and one laptop can serve phones over a trusted private hotspot. Openness is therefore part of community control—not a model swap inside a generic cloud workflow.
+
+The local prototype uses HTTP between each phone and the Mac, so it must not run on shared event Wi-Fi. `LOCAL GEMMA · ON-DEVICE` describes where inference runs; it is not a claim of encrypted transport.
 
 The public Cloud Run demo uses hosted Gemma through the Gemini API so remote reviewers can try the same typed provider contract. Both modes are labelled; neither silently falls back to simulated inference.
 
@@ -136,7 +138,7 @@ unset GEMINI_API_KEY
 
 | Mode | Model | Role |
 | --- | --- | --- |
-| Presentation Mac | `gemma3:4b` through native Ollama | Primary judging path: private, local and offline-capable |
+| Presentation Mac | `gemma3:4b` through native Ollama | Primary judging path: on-device and offline-capable |
 | Cloud Run | hosted Gemma 4 through the Gemini API | Public path for online reviewers |
 | Deterministic harness | synthetic fixture provider | Automated tests and UI development only |
 

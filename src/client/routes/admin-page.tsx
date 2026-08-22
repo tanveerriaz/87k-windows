@@ -70,7 +70,7 @@ export function AdminPage() {
 
           <article className="admin-section provider-section">
             <span className="mono-label">JUDGING INFERENCE</span>
-            <h2>{isLocalGemma ? "Open Gemma is running privately." : isHostedGemma ? "Hosted Gemma is ready for online review." : activeProviderLabel}</h2>
+            <h2>{isLocalGemma ? "Open Gemma is running on-device." : isHostedGemma ? "Hosted Gemma is ready for online review." : activeProviderLabel}</h2>
             <div className={`provider-lock ${isRealGemma ? "is-live" : ""}`}>
               <span className="status-dot is-online" aria-hidden="true" />
               <div>
@@ -79,7 +79,7 @@ export function AdminPage() {
                   {isHostedGemma
                     ? "Online review uses real hosted Gemma. It never falls back to simulated inference."
                     : activeProvider === "ollama"
-                      ? "Primary live judging mode: memories are interpreted by open Gemma on this Mac and do not leave the local network."
+                      ? "Primary live judging mode: model inference stays on this Mac. Use a trusted private hotspot because phone traffic uses local HTTP."
                       : "Test harness active. This mode is for development and automated checks, never judging."}
                 </p>
               </div>

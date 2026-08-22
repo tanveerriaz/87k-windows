@@ -49,7 +49,7 @@ The generated source is a richer exhibition-poster illustration. The implementat
 ### Pass 3 — passed
 
 - Replaced simulated acceptance language with `A story matched` and a clearly labelled prepared fictional interest.
-- Bound both result cards to the latest active pair and removed hard-coded details from Wall Mode.
+- Bound both result cards to explicit active source/candidate IDs and removed hard-coded details from Wall Mode.
 - Raised remaining mobile review body copy to at least 18 px.
 - Re-captured the final wall at 1280 x 720 through real hosted Gemma; all revised truthfulness copy fits without overflow.
 

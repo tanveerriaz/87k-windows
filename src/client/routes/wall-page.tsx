@@ -9,7 +9,8 @@ export function WallPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
   const room = useRoomSocket(roomCode, "wall");
   const snapshot = room.snapshot;
-  const activePair = snapshot?.windows.slice(-2) ?? [];
+  const sourceStory = snapshot?.windows.findLast((window) => window.participantId === snapshot.activeSourceId);
+  const listenerStory = snapshot?.windows.findLast((window) => window.participantId === snapshot.activeCandidateId);
 
   return (
     <main className="wall-page">
@@ -52,7 +53,7 @@ export function WallPage() {
               <div className="wall-story-pair">
                 <article>
                   <span className="mono-label">YOUR MEMORY</span>
-                  <p>{activePair[0]?.safeSummary}</p>
+                  <p>{sourceStory?.safeSummary}</p>
                 </article>
                 <div className="wall-evidence">
                   <span className="mono-label">EVIDENCE YOU BOTH SHARED</span>
@@ -64,7 +65,7 @@ export function WallPage() {
                 </div>
                 <article>
                   <span className="mono-label">PREPARED FICTIONAL INTEREST</span>
-                  <p>{activePair[1]?.safeSummary}</p>
+                  <p>{listenerStory?.safeSummary}</p>
                 </article>
               </div>
             </div>

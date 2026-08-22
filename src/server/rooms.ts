@@ -31,6 +31,8 @@ export class RoomStore {
       provider: this.initialProvider,
       phase: "idle",
       windows: [],
+      activeSourceId: null,
+      activeCandidateId: null,
       match: null,
       invite: null,
       lastError: null,
@@ -88,6 +90,8 @@ export class RoomStore {
       safeSummary: capsule.safeSummary,
     };
     room.windows = [...room.windows.filter((window) => window.participantId !== participantId), sourceWindow];
+    room.activeSourceId = participantId;
+    room.activeCandidateId = null;
     room.phase = "matching";
     room.match = null;
     room.invite = null;
@@ -101,6 +105,7 @@ export class RoomStore {
     io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
 
     await new Promise((resolve) => setTimeout(resolve, 700));
+    if (room.activeSourceId !== participantId) return;
     const result = this.matcher.match(capsule);
     room.match = result;
     room.updatedAt = new Date().toISOString();
@@ -120,6 +125,7 @@ export class RoomStore {
       safeSummary: candidate?.safeSummary ?? "A prepared fictional story.",
     };
     room.windows.push(targetWindow);
+    room.activeCandidateId = targetWindow.participantId;
     room.phase = "matched";
     room.invite = {
       title: "A potential listener match was found.",

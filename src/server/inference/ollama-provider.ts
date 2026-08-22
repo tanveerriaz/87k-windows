@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { StoryCapsuleSchema, type StoryCapsule } from "../../shared/schemas";
+import { keepExplicitConsent } from "./consent-evidence";
 import { redactMemory } from "./mock-provider";
 import { ProviderOutputError, ProviderTimeoutError, type ExtractInput, type InferenceProvider } from "./provider";
 
@@ -65,18 +66,15 @@ Memory: ${JSON.stringify(memory)}${repair}`;
       id: randomUUID(),
       containsPII: sourceRedaction.containsPII,
       redactions: sourceRedaction.redactions,
+      ...keepExplicitConsent(
+        input.memory,
+        (parsed as Record<string, unknown>).offers,
+        (parsed as Record<string, unknown>).wants,
+      ),
     });
-    const suggestedOffer = candidate.offers.length === 0 && candidate.skills[0]
-      ? [`share ${candidate.skills[0]} experience`]
-      : candidate.offers;
-    const suggestionNote = candidate.offers.length === 0 && candidate.skills[0]
-      ? ["Sharing this skill is a suggested consent choice, not a stated fact."]
-      : [];
     const summaryRedaction = redactMemory(candidate.safeSummary);
     return StoryCapsuleSchema.parse({
       ...candidate,
-      offers: suggestedOffer,
-      uncertain: [...candidate.uncertain, ...suggestionNote],
       safeSummary: summaryRedaction.safeText,
       containsPII: candidate.containsPII || summaryRedaction.containsPII,
       redactions: [...new Set([...candidate.redactions, ...summaryRedaction.redactions])],

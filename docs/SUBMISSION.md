@@ -27,7 +27,7 @@ The phone is the quiet doorway. The projected wall is the shared experience. Gem
 
 ## Why Gemma is essential
 
-The primary judging path runs open `gemma3:4b` locally through Ollama on the presentation Mac. An elder's words stay on the community-operated machine, phones join over local Wi-Fi, and the experience remains available without internet access. This makes Gemma's openness essential to privacy, resilience and community control.
+The primary judging path runs open `gemma3:4b` locally through Ollama on the presentation Mac. Model inference stays on the community-operated machine, phones join through a trusted private hotspot, and the experience remains available without internet access. This makes Gemma's openness essential to resilience and community control. The prototype's phone-to-Mac HTTP transport is not encrypted, so shared event Wi-Fi is explicitly out of scope.
 
 The online-review path calls hosted Gemma server-side through the Gemini API. Its key never enters browser code or a public fixture. Both providers return the same constrained capsule, which the server validates before anything can enter matching.
 
@@ -59,7 +59,7 @@ The interaction is designed for an older participant: one question at a time, la
 
 | Mode | Purpose | Credential requirement |
 | --- | --- | --- |
-| Local Gemma | Primary private presentation path through Ollama | Local `gemma3:4b`; no API key or internet required |
+| Local Gemma | Primary on-device presentation path through Ollama | Local `gemma3:4b`; trusted hotspot; no API key or internet required |
 | Cloud / hosted Gemma | Public online-review path on Cloud Run | Server-side `GEMINI_API_KEY` |
 
 The deterministic provider is restricted to automated tests and UI development. It is not part of the hackathon presentation.

@@ -28,7 +28,7 @@ Submit the memory and show the capsule review. Point out the observed evidence, 
 
 **Say:**
 
-> Open Gemma runs here on the presentation Mac. The elder's words do not leave the local network. It is not writing a personality or inventing a biography. It extracts only what the memory supports, keeps uncertainty visible, and gives the matcher evidence it can explain.
+> Open Gemma runs here on the presentation Mac. Model inference stays on this device, connected through our private hotspot. It is not writing a personality or inventing a biography. It extracts only what the memory supports, keeps uncertainty visible, and gives the matcher evidence it can explain.
 
 If asked about credentials, say:
 
@@ -66,7 +66,7 @@ Point briefly to the evidence path and suggested invitation. Make clear that the
 
 - [ ] Use fictional fixtures only; remove real photos and recordings from the demo.
 - [ ] Confirm the displayed provider matches the actual server mode.
-- [ ] Confirm the status reads `LOCAL GEMMA · PRIVATE` and Ollama has `gemma3:4b` loaded.
+- [ ] Confirm the status reads `LOCAL GEMMA · ON-DEVICE`, Ollama has `gemma3:4b` loaded, and phones use a trusted private hotspot—not shared event Wi-Fi.
 - [ ] Open Wall Mode before Join Mode so the first glow is visible.
 - [ ] Keep the prepared radio story and no-match fixture ready.
 - [ ] Test the positive match and `NO MATCH YET` paths once.

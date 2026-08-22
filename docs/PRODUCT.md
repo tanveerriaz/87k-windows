@@ -20,7 +20,7 @@ The demo begins with a clearly fictional memory about repairing radios in Queens
 
 Gemma handles the ambiguity that rules cannot: a short, conversational memory may contain place, era, a practical skill, something the person can offer and something they miss. It turns this into a strict, reviewable structure without inventing contact details or exposing hidden reasoning.
 
-Because Gemma is open, that interpretation can run privately on a community-centre Mac through Ollama. The primary live demo therefore keeps an elder's words on the local network and remains usable without internet access; hosted Gemma is the separate public-review path.
+Because Gemma is open, that interpretation can run on a community-centre Mac through Ollama. The primary live demo keeps model inference on-device and remains usable without internet access; hosted Gemma is the separate public-review path. Phones use a trusted private hotspot because the prototype's local HTTP transport is not encrypted.
 
 The application then uses deterministic retrieval and scoring. This division is intentional:
 

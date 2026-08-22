@@ -29,7 +29,8 @@ export function JoinPage() {
   const journeySteps = room.snapshot?.phase === "no-match"
     ? [...JOURNEY_STEPS.slice(0, 3), "Still listening"]
     : JOURNEY_STEPS;
-  const activePair = room.snapshot?.windows.slice(-2) ?? [];
+  const sourceStory = room.snapshot?.windows.findLast((window) => window.participantId === room.snapshot?.activeSourceId);
+  const listenerStory = room.snapshot?.windows.findLast((window) => window.participantId === room.snapshot?.activeCandidateId);
 
   useEffect(() => {
     if (stage === "waiting" && (room.snapshot?.phase === "matched" || room.snapshot?.phase === "no-match")) {
@@ -257,11 +258,11 @@ export function JoinPage() {
             <div className="story-pair">
               <article>
                 <span className="mono-label">YOUR MEMORY</span>
-                <p>{activePair[0]?.safeSummary}</p>
+                <p>{sourceStory?.safeSummary}</p>
               </article>
               <article>
                 <span className="mono-label">PREPARED FICTIONAL INTEREST</span>
-                <p>{activePair[1]?.safeSummary}</p>
+                <p>{listenerStory?.safeSummary}</p>
               </article>
             </div>
             <div className="evidence-path" aria-label="Evidence path">

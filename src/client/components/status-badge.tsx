@@ -5,7 +5,7 @@ type StatusBadgeProps = {
 
 export function StatusBadge({ connected, provider }: StatusBadgeProps) {
   const providerLabel = provider === "ollama"
-    ? "LOCAL GEMMA · PRIVATE"
+    ? "LOCAL GEMMA · ON-DEVICE"
     : provider === "gemma-api"
       ? "HOSTED GEMMA · ONLINE"
       : provider === "mock"

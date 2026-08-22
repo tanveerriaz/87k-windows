@@ -1507,6 +1507,12 @@ p {
     font-size: 18px;
   }
 
+  .voice-button small,
+  .error-banner,
+  .admin-message {
+    font-size: 18px;
+  }
+
   .capture-actions {
     grid-template-columns: 1fr;
     gap: 0;

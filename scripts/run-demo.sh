@@ -25,9 +25,9 @@ if [[ "$MODE" == "local" ]]; then
     || { echo "$MODEL is missing. Run ./scripts/setup-macos.sh --with-ollama." >&2; exit 1; }
   curl -fsS --max-time 4 "${OLLAMA_BASE_URL:-http://127.0.0.1:11434}/api/tags" >/dev/null \
     || { echo "Ollama is not responding. Open the native Ollama app, then retry." >&2; exit 1; }
-  echo "Building 87K Windows for LOCAL GEMMA · PRIVATE judging mode with $MODEL."
+  echo "Building 87K Windows for LOCAL GEMMA · ON-DEVICE judging mode with $MODEL."
   npm run build
-  echo "Open this Mac's local-network address on participant phones; the server listens on port ${PORT:-3000}."
+  echo "Use a trusted private hotspot, never shared event Wi-Fi. Open this Mac's hotspot address on participant phones; the server listens on port ${PORT:-3000}."
   exec env NODE_ENV=production INFERENCE_PROVIDER=ollama OLLAMA_MODEL="$MODEL" npm start
 fi
 

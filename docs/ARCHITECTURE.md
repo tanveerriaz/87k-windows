@@ -3,7 +3,7 @@
 ## One room, three surfaces
 
 ```text
-Participant phone ── local Wi-Fi ──▶ Presentation Mac
+Participant phone ── private hotspot ──▶ Presentation Mac
 Projected wall   ◀── room events ───  Express + Socket.IO + Zod
 Presenter admin  ─── controls ─────▶  Open Gemma via Ollama
                                       MiniSearch + score
@@ -27,7 +27,7 @@ Development runs Vite on port 5173 and proxies API and Socket.IO traffic to Expr
 
 | Mode | Model | Purpose | Secret/network |
 |---|---|---|---|
-| `ollama` | `gemma3:4b` | Primary private judging path on Apple Silicon | no key; local network only |
+| `ollama` | `gemma3:4b` | Primary on-device judging path on Apple Silicon | no key; trusted hotspot only |
 | `gemma-api` | `gemma-4-26b-a4b-it` | Public online-review path on Cloud Run | server-side `GEMINI_API_KEY` |
 | `mock` | deterministic fixture | Automated tests and UI development only | none |
 
@@ -36,6 +36,7 @@ All providers implement the same typed interface and must return the same Zod sc
 ## Privacy and safety boundary
 
 - No authentication, contact exchange, database, object storage, analytics SDK or raw-input logging.
+- Local inference stays on the Mac, but phone-to-Mac traffic is plain HTTP; use a trusted private hotspot, never shared event Wi-Fi.
 - Memory and optional compressed image exist only for the request; room state stores only an approved capsule.
 - The Gemini key exists only in the server process or Secret Manager.
 - Logs contain request ID, method, path, status and duration—not the memory or model response.
