@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { StoryCapsuleSchema, type StoryCapsule } from "../../shared/schemas";
 import { keepExplicitConsent } from "./consent-evidence";
 import { redactMemory } from "./mock-provider";
-import { ProviderOutputError, ProviderTimeoutError, type ExtractInput, type InferenceProvider } from "./provider";
+import { ProviderBusyError, ProviderOutputError, ProviderTimeoutError, type ExtractInput, type InferenceProvider } from "./provider";
 
 type FetchLike = typeof fetch;
 
@@ -13,6 +13,8 @@ type OllamaResponse = {
 const JSON_FENCE = /^```(?:json)?\s*|\s*```$/gi;
 
 export class OllamaProvider implements InferenceProvider {
+  private busy = false;
+
   constructor(
     private readonly baseUrl: string,
     private readonly model: string,
@@ -82,17 +84,23 @@ Memory: ${JSON.stringify(memory)}${repair}`;
   }
 
   async extract(input: ExtractInput): Promise<StoryCapsule> {
-    const safeInput = redactMemory(input.memory).safeText;
-    const firstOutput = await this.generate(this.prompt(safeInput));
+    if (this.busy) throw new ProviderBusyError();
+    this.busy = true;
     try {
-      return this.parse(firstOutput, input);
-    } catch {
-      const repairedOutput = await this.generate(this.prompt(safeInput, firstOutput));
+      const safeInput = redactMemory(input.memory).safeText;
+      const firstOutput = await this.generate(this.prompt(safeInput));
       try {
-        return this.parse(repairedOutput, input);
+        return this.parse(firstOutput, input);
       } catch {
-        throw new ProviderOutputError("Local Gemma returned invalid capsule JSON twice.");
+        const repairedOutput = await this.generate(this.prompt(safeInput, firstOutput));
+        try {
+          return this.parse(repairedOutput, input);
+        } catch {
+          throw new ProviderOutputError("Local Gemma returned invalid capsule JSON twice.");
+        }
       }
+    } finally {
+      this.busy = false;
     }
   }
 }

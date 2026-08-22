@@ -2,7 +2,8 @@ import { createServer, type Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../../src/server/app";
 import { readEnv } from "../../src/server/env";
-import { buildMockCapsule, MockProvider } from "../../src/server/inference/mock-provider";
+import { MockProvider } from "../../src/server/inference/mock-provider";
+import { ProviderBusyError } from "../../src/server/inference/provider";
 import type { InferenceProvider } from "../../src/server/inference/provider";
 import { StoryMatcher } from "../../src/server/matching/matcher";
 import { PREPARED_RADIO_MEMORY } from "../../src/shared/demo";
@@ -75,13 +76,9 @@ describe("Express API", () => {
     }
   });
 
-  it("allows only one local Gemma extraction at a time", async () => {
-    let releaseExtraction: () => void = () => undefined;
+  it("returns a recoverable busy response from the shared local provider", async () => {
     const provider: InferenceProvider = {
-      extract: vi.fn(async () => {
-        await new Promise<void>((resolve) => { releaseExtraction = resolve; });
-        return buildMockCapsule({ memory: PREPARED_RADIO_MEMORY, fixture: "radio" });
-      }),
+      extract: vi.fn().mockRejectedValue(new ProviderBusyError()),
     };
     const localEnv = readEnv({ NODE_ENV: "test", PORT: "3000", INFERENCE_PROVIDER: "ollama" });
     const localServer = createServer(createApp({ env: localEnv, provider, matcher: new StoryMatcher() }));
@@ -90,13 +87,6 @@ describe("Express API", () => {
     if (!address || typeof address === "string") throw new Error("Local test server did not bind to a TCP port.");
     const localUrl = `http://127.0.0.1:${address.port}`;
 
-    const first = fetch(`${localUrl}/api/extract`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomCode: "local87", memory: PREPARED_RADIO_MEMORY }),
-    });
-    await vi.waitFor(() => expect(provider.extract).toHaveBeenCalledOnce());
-
     const busy = await fetch(`${localUrl}/api/extract`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -104,9 +94,6 @@ describe("Express API", () => {
     });
     expect(busy.status).toBe(409);
     await expect(busy.json()).resolves.toMatchObject({ code: "LOCAL_GEMMA_BUSY" });
-
-    releaseExtraction();
-    await expect(first.then((response) => response.status)).resolves.toBe(200);
     await new Promise<void>((resolve, reject) => localServer.close((error) => (error ? reject(error) : resolve())));
   });
 });

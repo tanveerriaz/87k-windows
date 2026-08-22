@@ -14,7 +14,7 @@ import type { AppEnv } from "./env";
 import { MockProvider } from "./inference/mock-provider";
 import { OllamaProvider } from "./inference/ollama-provider";
 import { GemmaApiProvider } from "./inference/gemma-api-provider";
-import { ProviderOutputError, ProviderTimeoutError, type InferenceProvider } from "./inference/provider";
+import { ProviderBusyError, ProviderOutputError, ProviderTimeoutError, type InferenceProvider } from "./inference/provider";
 import { StoryMatcher } from "./matching/matcher";
 
 export type AppDependencies = {
@@ -24,6 +24,9 @@ export type AppDependencies = {
 };
 
 function errorPayload(error: unknown): { status: number; code: string; message: string } {
+  if (error instanceof ProviderBusyError) {
+    return { status: 409, code: "LOCAL_GEMMA_BUSY", message: error.message };
+  }
   if (error instanceof ProviderOutputError) {
     return { status: 502, code: "INVALID_MODEL_OUTPUT", message: `${error.message} Nothing was shared. Please try again.` };
   }
@@ -39,7 +42,6 @@ function errorPayload(error: unknown): { status: number; code: string; message: 
 export function createApp(dependencies: AppDependencies): express.Express {
   const { env, provider, matcher } = dependencies;
   const app = express();
-  let localInferenceBusy = false;
 
   app.disable("x-powered-by");
   app.use(express.json({ limit: Math.ceil(env.MAX_UPLOAD_BYTES * 1.45) }));
@@ -67,12 +69,6 @@ export function createApp(dependencies: AppDependencies): express.Express {
   });
 
   app.post("/api/extract", inferenceLimiter, async (request, response) => {
-    if (env.INFERENCE_PROVIDER === "ollama" && localInferenceBusy) {
-      return response.status(409).json({
-        code: "LOCAL_GEMMA_BUSY",
-        message: "Local Gemma is helping one participant. Wait for that story to finish, then try again.",
-      });
-    }
     try {
       const input = ExtractRequestSchema.parse(request.body);
       if (input.photoData) {
@@ -81,14 +77,11 @@ export function createApp(dependencies: AppDependencies): express.Express {
           return response.status(413).json({ code: "IMAGE_TOO_LARGE", message: "Choose an image smaller than 5 MB." });
         }
       }
-      if (env.INFERENCE_PROVIDER === "ollama") localInferenceBusy = true;
       const capsule = StoryCapsuleSchema.parse(await provider.extract({ memory: input.memory, fixture: input.fixture }));
       return response.json({ capsule, provider: env.INFERENCE_PROVIDER });
     } catch (error) {
       const payload = errorPayload(error);
       return response.status(payload.status).json({ code: payload.code, message: payload.message });
-    } finally {
-      localInferenceBusy = false;
     }
   });
 

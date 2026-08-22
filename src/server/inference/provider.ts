@@ -22,3 +22,10 @@ export class ProviderTimeoutError extends Error {
     this.name = "ProviderTimeoutError";
   }
 }
+
+export class ProviderBusyError extends Error {
+  constructor(message = "Local Gemma is helping one participant. Wait for that story to finish, then try again.") {
+    super(message);
+    this.name = "ProviderBusyError";
+  }
+}
