@@ -6,6 +6,8 @@
 
 ![Two illuminated windows connected by a blue thread in a fictional Singapore housing block](assets/generated/submission-thumbnail.jpg)
 
+**Live demo:** [windows-87k-985493069617.asia-southeast1.run.app](https://windows-87k-985493069617.asia-southeast1.run.app)
+
 It is built for the **Best Use of Gemma** and **Best Elderly Hack** tracks. The phone is the doorway, the projected building is the shared moment, and Gemma is the private listener between them.
 
 ```text
