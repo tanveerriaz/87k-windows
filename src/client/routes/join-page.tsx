@@ -6,12 +6,11 @@ import type { StoryCapsule } from "../../shared/schemas";
 import { StatusBadge } from "../components/status-badge";
 import { extractCapsule } from "../lib/api";
 import { compressImage } from "../lib/image";
+import { resolveJoinDisplacement, type JoinStage } from "../lib/join-stage";
 import { useRoomSocket } from "../lib/use-room-socket";
 
 const MEMORY_QUESTION = "What small thing made you happy when you were young?";
 const JOURNEY_STEPS = ["You shared", "Gemma protected", "You approved", "A story matched"];
-
-type Stage = "welcome" | "capture" | "processing" | "review" | "waiting" | "result" | "listen-profile" | "listen-invitation" | "listen-processing" | "listen-requested" | "consent" | "mutual-yes";
 
 export function JoinPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
@@ -20,7 +19,7 @@ export function JoinPage() {
   const lastRoleEntryRef = useRef(listenerEntry);
   const participantId = useMemo(() => crypto.randomUUID(), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [stage, setStage] = useState<Stage>(listenerEntry ? "listen-profile" : "welcome");
+  const [stage, setStage] = useState<JoinStage>(listenerEntry ? "listen-profile" : "welcome");
   const [memory, setMemory] = useState(PREPARED_RADIO_MEMORY);
   const [fixture, setFixture] = useState<"radio" | "no-match">("radio");
   const [photoData, setPhotoData] = useState<string | null>(null);
@@ -57,20 +56,16 @@ export function JoinPage() {
   }, [listenerEntry]);
 
   useEffect(() => {
-    if (stage === "result" && !room.snapshot?.connectionConsent && room.snapshot?.activeSourceId !== participantId) {
-      setError("This room has moved to another story. Your completed result is no longer active; review your memory and try again when the room is ready.");
-      setStage("capture");
-      return;
-    }
-    if (stage === "waiting" && !room.snapshot?.connectionConsent && (room.snapshot?.phase === "matched" || room.snapshot?.phase === "no-match")) {
-      if (room.snapshot.activeSourceId === participantId) {
-        setStage("result");
-      } else {
-        setError("Another participant shared after you. Your story was not matched; review it and try again when the room is ready.");
-        setStage("capture");
-      }
-    }
-  }, [participantId, room.snapshot?.activeSourceId, room.snapshot?.connectionConsent, room.snapshot?.phase, stage]);
+    const next = resolveJoinDisplacement({
+      stage,
+      listenerEntry,
+      participantId,
+      snapshot: room.snapshot,
+    });
+    if (!next) return;
+    if (next.error) setError(next.error);
+    if (next.stage !== stage) setStage(next.stage);
+  }, [listenerEntry, participantId, room.snapshot, stage]);
 
   useEffect(() => {
     if (!isConsentParticipant || !consent) return;
@@ -84,12 +79,6 @@ export function JoinPage() {
     }
     setStage(myConsentDecision === "yes" ? "listen-requested" : "consent");
   }, [consent, isConsentParticipant, listenerEntry, myConsentDecision, room.snapshot?.phase]);
-
-  useEffect(() => {
-    if (listenerEntry && stage === "listen-requested" && room.snapshot?.phase === "no-match" && !room.snapshot.connectionConsent) {
-      setStage("result");
-    }
-  }, [listenerEntry, room.snapshot?.connectionConsent, room.snapshot?.phase, stage]);
 
   useEffect(() => () => {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -273,6 +262,7 @@ export function JoinPage() {
             <p className="listener-intro">Start with what you can genuinely offer. You will only see a storyteller’s approved invitation—not their private memory or contact details.</p>
             <label className="listener-field"><span>Language I am comfortable using</span><select value={listenerLanguage} onChange={(event) => setListenerLanguage(event.target.value)}><option>English</option><option>Mandarin</option><option>Malay</option><option>Tamil</option></select></label>
             <label className="listener-field"><span>Time I can offer</span><select value={listenerTime} onChange={(event) => setListenerTime(event.target.value)}><option>One short conversation this week</option><option>15 minutes today</option><option>A visit at a partner centre</option></select></label>
+            {error && <div className="error-banner" role="alert">{error}</div>}
             <button className="button button-primary button-block" onClick={() => setStage("listen-invitation")}>See a safe story invitation</button>
             <p className="privacy-note">A trusted community partner would verify listeners before real matching.</p>
           </div>

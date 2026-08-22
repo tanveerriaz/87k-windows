@@ -114,6 +114,8 @@ test("storyteller no-match remains honest", async ({ page }) => {
   await expect(wall.getByRole("heading", { name: "NO MATCH YET" })).toBeVisible({ timeout: 15_000 });
   await expect(wall.getByText("No invitation was created, and the approved story remains safe.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "NO MATCH YET" })).toBeVisible();
+  await expect(listener.getByRole("heading", { name: "No connection was opened." })).toBeVisible();
+  await expect(listener.getByRole("button", { name: "Create my safe capsule" })).toHaveCount(0);
   await expect(page.getByText("You both said yes.")).toHaveCount(0);
   await storytellerContext.close();
   await listenerContext.close();
