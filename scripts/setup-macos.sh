@@ -90,7 +90,7 @@ if [[ "$WITH_OLLAMA" == "1" ]]; then
   if ollama list 2>/dev/null | awk 'NR > 1 {print $1}' | grep -qx "$MODEL"; then
     echo "$MODEL is already present; no model download is needed."
   else
-    echo "Pulling the approved MacBook Air fallback model: $MODEL"
+    echo "Pulling the approved local judging model: $MODEL"
     ollama pull "$MODEL"
   fi
 fi

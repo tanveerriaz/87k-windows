@@ -28,7 +28,7 @@ Submit the memory and show the capsule review. Point out the observed evidence, 
 
 **Say:**
 
-> Gemma runs on the server through the Gemini API. It is not writing a personality or inventing a biography. It extracts only what the memory supports, keeps uncertainty visible, and gives the matcher evidence it can explain.
+> Open Gemma runs here on the presentation Mac. The elder's words do not leave the local network. It is not writing a personality or inventing a biography. It extracts only what the memory supports, keeps uncertainty visible, and gives the matcher evidence it can explain.
 
 If asked about credentials, say:
 
@@ -44,7 +44,7 @@ If asked about credentials, say:
 
 > One person remembers how. Another wants to learn. That is the bridge.
 
-Point briefly to the evidence path and invitation. If using the no-match fixture, show `NO MATCH YET` and say that the system refuses to force a weak connection.
+Point briefly to the evidence path and suggested invitation. Make clear that the second story is a fictional fixture, not a person who has already accepted. In a real community room, both people would still choose whether to listen. If using the no-match fixture, show `NO MATCH YET` and say that the system refuses to force a weak connection.
 
 ## 1:05–1:20 — Explain reliability and access
 
@@ -52,7 +52,7 @@ Point briefly to the evidence path and invitation. If using the no-match fixture
 
 **Say:**
 
-> The judging deployment runs on Google Cloud Run. If the hosted model is unavailable, the same server contract can use local Ollama Gemma on the Mac. Both paths are real Gemma inference. If neither works, we stop rather than simulate the AI.
+> Live judging uses open Gemma locally through Ollama, so the community controls where memories are interpreted and the demo can continue offline. Cloud Run uses hosted Gemma for online reviewers. Both paths are explicit real-model modes; neither falls back to simulation.
 
 ## 1:20–1:30 — Close
 
@@ -66,10 +66,10 @@ Point briefly to the evidence path and invitation. If using the no-match fixture
 
 - [ ] Use fictional fixtures only; remove real photos and recordings from the demo.
 - [ ] Confirm the displayed provider matches the actual server mode.
-- [ ] Confirm the hosted Gemma key is configured server-side and is not in frontend code.
+- [ ] Confirm the status reads `LOCAL GEMMA · PRIVATE` and Ollama has `gemma3:4b` loaded.
 - [ ] Open Wall Mode before Join Mode so the first glow is visible.
 - [ ] Keep the prepared radio story and no-match fixture ready.
 - [ ] Test the positive match and `NO MATCH YET` paths once.
-- [ ] Record the core loop first; explain Cloud Run and fallback modes afterward.
+- [ ] Record the core loop first; explain the separate Cloud Run online-review path afterward.
 - [ ] Check that the public repository URL is included in the submission.
 - [ ] Run lint, typecheck, tests, build and E2E before uploading.

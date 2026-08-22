@@ -25,15 +25,18 @@ if [[ "$MODE" == "local" ]]; then
     || { echo "$MODEL is missing. Run ./scripts/setup-macos.sh --with-ollama." >&2; exit 1; }
   curl -fsS --max-time 4 "${OLLAMA_BASE_URL:-http://127.0.0.1:11434}/api/tags" >/dev/null \
     || { echo "Ollama is not responding. Open the native Ollama app, then retry." >&2; exit 1; }
-  echo "Starting 87K Windows in OLLAMA OFFLINE mode with $MODEL."
-  exec env INFERENCE_PROVIDER=ollama OLLAMA_MODEL="$MODEL" npm run dev
+  echo "Building 87K Windows for LOCAL GEMMA · PRIVATE judging mode with $MODEL."
+  npm run build
+  echo "Open this Mac's local-network address on participant phones; the server listens on port ${PORT:-3000}."
+  exec env NODE_ENV=production INFERENCE_PROVIDER=ollama OLLAMA_MODEL="$MODEL" npm start
 fi
 
 if [[ "$MODE" == "gemma" ]]; then
   [[ -n "${GEMINI_API_KEY:-}" ]] \
     || { echo "GEMINI_API_KEY is missing. Export it from a private shell or ignored .env; never commit it." >&2; exit 1; }
-  echo "Starting 87K Windows in HOSTED GEMMA mode. The key remains server-side."
-  exec env INFERENCE_PROVIDER=gemma-api npm run dev
+  echo "Building 87K Windows in HOSTED GEMMA · ONLINE mode. The key remains server-side."
+  npm run build
+  exec env NODE_ENV=production INFERENCE_PROVIDER=gemma-api npm start
 fi
 
 echo "Starting the deterministic TEST HARNESS. Never use this mode during judging."

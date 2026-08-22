@@ -733,7 +733,7 @@ p {
 .meaning-card p {
   margin: 0;
   color: var(--silver);
-  font-size: 17px;
+  font-size: 18px;
 }
 
 .capsule-evidence {
@@ -754,7 +754,7 @@ p {
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   color: var(--silver);
-  font-size: 15px;
+  font-size: 18px;
 }
 
 .capsule-evidence small {
@@ -770,13 +770,13 @@ p {
 }
 
 .redaction-note strong {
-  font-size: 15px;
+  font-size: 18px;
 }
 
 .redaction-note p {
   margin: 4px 0 0;
   color: var(--smoke);
-  font-size: 14px;
+  font-size: 18px;
 }
 
 .review-panel details {
@@ -795,7 +795,7 @@ p {
 .review-panel ul {
   padding-left: 20px;
   color: var(--smoke);
-  font-size: 14px;
+  font-size: 18px;
 }
 
 .window-beacon {

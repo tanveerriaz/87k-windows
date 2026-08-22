@@ -32,7 +32,7 @@ The story direction is informed by Singapore seniors who continue contributing t
 
 ## The four-beat experience
 
-| 01 — You shared | 02 — Gemma noticed | 03 — You approved | 04 — A listener answered |
+| 01 — You shared | 02 — Gemma noticed | 03 — You approved | 04 — A story matched |
 | --- | --- | --- | --- |
 | One short memory, spoken or typed | A safe capsule with evidence and uncertainty | Nothing enters matching without consent | A grounded invitation, or `NO MATCH YET` |
 
@@ -41,7 +41,7 @@ The prepared demo is intentionally simple:
 - **Your memory:** repairing radios in Queenstown in the 1970s, with an explicit offer to teach.
 - **Their interest:** learning how old radios worked.
 - **Evidence:** `Queenstown` · `1970s` · `radio repair` · `teach ↔ learn`.
-- **Human outcome:** **A neighbour is ready to listen.**
+- **Human outcome:** **A potential listener match was found.** The shipped listener is a clearly labelled fictional fixture, not a simulated acceptance from a real person.
 
 <details>
 <summary><strong>See the Queenstown visual direction</strong></summary>
@@ -60,7 +60,7 @@ Gemma has one narrow, visible job: turn natural language into a reviewable story
 YOUR WORDS
     │
     ▼
-server-side redaction → hosted Gemma → Zod validation
+server-side redaction → open Gemma on the local Mac → Zod validation
     │
     ▼
 place · era · skill · offer/want · safe summary · uncertainty
@@ -71,13 +71,19 @@ your approval → transparent deterministic matcher → invitation or NO MATCH Y
 
 Gemma does **not** choose a friend, invent a biography, analyse the optional photo, exchange contact details or imitate companionship. Matching is ordinary application logic with visible evidence and a hard threshold.
 
+## Why open Gemma matters
+
+The physical judging demo runs `gemma3:4b` locally through Ollama. An elder's words stay on a community-operated Mac, the experience works without internet access, and one laptop can serve phones over local Wi-Fi. Openness is therefore part of the privacy and access model—not a model swap inside a generic cloud workflow.
+
+The public Cloud Run demo uses hosted Gemma through the Gemini API so remote reviewers can try the same typed provider contract. Both modes are labelled; neither silently falls back to simulated inference.
+
 ## Architecture
 
 ```mermaid
 flowchart LR
     Phone[Participant phone\nShare · Review · Approve]
-    Server[One Node process\nExpress · Socket.IO · Zod]
-    Gemma[Hosted Gemma\nGemini API]
+    Server[Community Mac\nExpress · Socket.IO · Zod]
+    Gemma[Open Gemma\nOllama · local inference]
     Match[MiniSearch +\ntransparent scorer]
     Wall[Projected HDB wall\nLight · Evidence · Invitation]
 
@@ -89,7 +95,7 @@ flowchart LR
     Server -->|live room events| Wall
 ```
 
-One Cloud Run instance owns the ephemeral room. There is no account system, database, queue, vector store, analytics SDK or permanent upload storage.
+For the live presentation, one local Node process owns the ephemeral room and serves phones over local Wi-Fi. Cloud Run hosts the same process for online review. There is no account system, database, queue, vector store, analytics SDK or permanent upload storage.
 
 ## Run locally
 
@@ -105,17 +111,17 @@ npm test
 Start one real-model path:
 
 ```bash
-npm run demo:gemma  # hosted Gemma; GEMINI_API_KEY stays server-side
-npm run demo:local  # native Ollama with gemma3:4b
+npm run demo:local  # primary live demo: native Ollama with gemma3:4b
+npm run demo:gemma  # online path: hosted Gemma; key stays server-side
 ```
 
 Open the three surfaces:
 
 | Surface | Local route | Purpose |
 | --- | --- | --- |
-| Join | `http://127.0.0.1:5173/join/demo87` | Share, review and approve |
-| Wall | `http://127.0.0.1:5173/wall/demo87` | Project the collective moment |
-| Admin | `http://127.0.0.1:5173/admin/demo87` | Reset and run the prepared story |
+| Join | `http://<MAC-LAN-IP>:3000/join/demo87` | Share, review and approve |
+| Wall | `http://<MAC-LAN-IP>:3000/wall/demo87` | Project the collective moment |
+| Admin | `http://<MAC-LAN-IP>:3000/admin/demo87` | Reset and run the prepared story |
 
 For the hosted path, provide the key without putting it in shell history, browser code or any `VITE_*` variable:
 
@@ -130,8 +136,8 @@ unset GEMINI_API_KEY
 
 | Mode | Model | Role |
 | --- | --- | --- |
-| Cloud Run | hosted Gemma 4 through the Gemini API | Primary judged experience |
-| Offline Mac | `gemma3:4b` through native Ollama | Real-model fallback |
+| Presentation Mac | `gemma3:4b` through native Ollama | Primary judging path: private, local and offline-capable |
+| Cloud Run | hosted Gemma 4 through the Gemini API | Public path for online reviewers |
 | Deterministic harness | synthetic fixture provider | Automated tests and UI development only |
 
 If neither real model is available, the judged demo stops honestly. It never silently falls back to simulated inference.
@@ -177,7 +183,6 @@ The critical browser test uses two contexts: participant submission must update 
 - [Architecture](docs/ARCHITECTURE.md)
 - [90-second demo script](docs/DEMO_SCRIPT.md)
 - [Google Cloud Run deployment](docs/GCP_DEPLOYMENT.md)
-- [MacBook Air presentation setup](docs/MAC_SETUP.md)
 - [Generated asset provenance](docs/ASSET_PROVENANCE.md)
 
 ## Licence

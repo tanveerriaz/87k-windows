@@ -4,7 +4,13 @@ type StatusBadgeProps = {
 };
 
 export function StatusBadge({ connected, provider }: StatusBadgeProps) {
-  const providerLabel = provider?.toUpperCase() ?? "CONNECTING";
+  const providerLabel = provider === "ollama"
+    ? "LOCAL GEMMA · PRIVATE"
+    : provider === "gemma-api"
+      ? "HOSTED GEMMA · ONLINE"
+      : provider === "mock"
+        ? "TEST HARNESS"
+        : "CONNECTING";
   return (
     <div className="status-badge" aria-label={`${providerLabel} provider, ${connected ? "connected" : "reconnecting"}`}>
       <span className={`status-dot ${connected ? "is-online" : ""}`} aria-hidden="true" />

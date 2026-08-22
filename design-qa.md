@@ -18,7 +18,7 @@ The generated source is a richer exhibition-poster illustration. The implementat
 ## Focused region comparison
 
 - Headline and journey: serif scale, teal/brick/cream palette and four beats now match the source intent.
-- Memory and listener: long model summaries were replaced on the wall with the concise prepared-story titles while the full safe summaries remain available on the participant result.
+- Memory and listener: the wall shows the active pair's safe summaries and labels the prepared listener as fictional, so it never adds unsupported details or implies a real acceptance.
 - Evidence: Queenstown, 1970s, radio repair and teach-to-learn are equally weighted and readable from projector distance.
 - Result panel: the positive human outcome and consent boundary are visible without a score or hidden reasoning.
 
@@ -37,7 +37,7 @@ The generated source is a richer exhibition-poster illustration. The implementat
 
 - P1: the wall read like a system report because it omitted the four human journey beats.
 - P1: the two wall cards repeated long model summaries, weakening projector readability.
-- Fix: added You shared, Gemma noticed, You approved and A listener answered; replaced the prepared radio wall summaries with concise memory/listener titles.
+- Fix: added You shared, Gemma noticed, You approved and A story matched; kept the active pair's evidence-backed summaries visible.
 
 ### Pass 2 — passed
 
@@ -45,6 +45,13 @@ The generated source is a richer exhibition-poster illustration. The implementat
 - The real hosted Gemma flow produced the positive match in both presenter injection and participant approval paths.
 - The real hosted no-match fixture displayed `NO MATCH YET`, `Still listening` and no invitation.
 - Browser console errors: none.
+
+### Pass 3 — passed
+
+- Replaced simulated acceptance language with `A story matched` and a clearly labelled prepared fictional interest.
+- Bound both result cards to the latest active pair and removed hard-coded details from Wall Mode.
+- Raised remaining mobile review body copy to at least 18 px.
+- Re-captured the final wall at 1280 x 720 through real hosted Gemma; all revised truthfulness copy fits without overflow.
 
 ## Follow-up polish
 

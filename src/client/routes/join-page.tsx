@@ -8,7 +8,7 @@ import { compressImage } from "../lib/image";
 import { useRoomSocket } from "../lib/use-room-socket";
 
 const MEMORY_QUESTION = "What small thing made you happy when you were young?";
-const JOURNEY_STEPS = ["You shared", "Gemma noticed", "You approved", "A listener answered"];
+const JOURNEY_STEPS = ["You shared", "Gemma noticed", "You approved", "A story matched"];
 
 type Stage = "welcome" | "capture" | "processing" | "review" | "waiting" | "result";
 
@@ -29,6 +29,7 @@ export function JoinPage() {
   const journeySteps = room.snapshot?.phase === "no-match"
     ? [...JOURNEY_STEPS.slice(0, 3), "Still listening"]
     : JOURNEY_STEPS;
+  const activePair = room.snapshot?.windows.slice(-2) ?? [];
 
   useEffect(() => {
     if (stage === "waiting" && (room.snapshot?.phase === "matched" || room.snapshot?.phase === "no-match")) {
@@ -256,21 +257,21 @@ export function JoinPage() {
             <div className="story-pair">
               <article>
                 <span className="mono-label">YOUR MEMORY</span>
-                <p>{room.snapshot.windows[0]?.safeSummary}</p>
+                <p>{activePair[0]?.safeSummary}</p>
               </article>
               <article>
-                <span className="mono-label">THEIR INTEREST</span>
-                <p>{room.snapshot.windows[1]?.safeSummary}</p>
+                <span className="mono-label">PREPARED FICTIONAL INTEREST</span>
+                <p>{activePair[1]?.safeSummary}</p>
               </article>
             </div>
             <div className="evidence-path" aria-label="Evidence path">
               {room.snapshot.match.evidencePath.map((evidence) => <span key={evidence}>{evidence}</span>)}
             </div>
             <article className="kopi-card">
-              <span className="mono-label">KOPI CARD · ROOM {roomCode.toUpperCase()}</span>
+              <span className="mono-label">SUGGESTED KOPI CARD · FICTIONAL DEMO</span>
               <h2>{room.snapshot.invite.invitation}</h2>
               <p>{room.snapshot.invite.activity}</p>
-              <small>Both people choose whether to accept. No contact details are exchanged here.</small>
+              <small>This prepared story has not accepted. In a real room, both people would choose whether to listen. No contact details are exchanged here.</small>
             </article>
             <button className="button button-secondary button-block" onClick={startAgain}>Run the demo again</button>
           </div>

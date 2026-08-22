@@ -3,19 +3,13 @@ import { HdbWallCanvas } from "../components/hdb-wall-canvas";
 import { StatusBadge } from "../components/status-badge";
 import { useRoomSocket } from "../lib/use-room-socket";
 
-const RESULT_STEPS = ["You shared", "Gemma noticed", "You approved", "A listener answered"];
+const RESULT_STEPS = ["You shared", "Gemma noticed", "You approved", "A story matched"];
 
 export function WallPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
   const room = useRoomSocket(roomCode, "wall");
   const snapshot = room.snapshot;
-  const isRadioDemo = snapshot?.match?.evidencePath.includes("radio repair") ?? false;
-  const sourceStory = isRadioDemo
-    ? "Repairing radios in Queenstown, 1970s"
-    : snapshot?.windows[0]?.safeSummary;
-  const listenerStory = isRadioDemo
-    ? "Learning how old radios worked"
-    : snapshot?.windows[1]?.safeSummary;
+  const activePair = snapshot?.windows.slice(-2) ?? [];
 
   return (
     <main className="wall-page">
@@ -48,7 +42,7 @@ export function WallPage() {
           <div className="wall-reveal">
             <div className="wall-result-main">
               <p className="eyebrow">This is what connected you</p>
-              <h1>A neighbour would like to hear your story.</h1>
+              <h1>A potential listener match was found.</h1>
               <p className="wall-result-summary">{snapshot.match.why}</p>
               <div className="wall-journey" aria-label="How the connection was made">
                 {RESULT_STEPS.map((step, index) => (
@@ -58,7 +52,7 @@ export function WallPage() {
               <div className="wall-story-pair">
                 <article>
                   <span className="mono-label">YOUR MEMORY</span>
-                  <p>{sourceStory}</p>
+                  <p>{activePair[0]?.safeSummary}</p>
                 </article>
                 <div className="wall-evidence">
                   <span className="mono-label">EVIDENCE YOU BOTH SHARED</span>
@@ -69,18 +63,18 @@ export function WallPage() {
                   </div>
                 </div>
                 <article>
-                  <span className="mono-label">THEIR INTEREST</span>
-                  <p>{listenerStory}</p>
+                  <span className="mono-label">PREPARED FICTIONAL INTEREST</span>
+                  <p>{activePair[1]?.safeSummary}</p>
                 </article>
               </div>
             </div>
             {snapshot.invite && (
               <article className="wall-invite">
                 <span className="mono-label">YOUR RESULT</span>
-                <h2>{snapshot.invite.title}</h2>
+                <h2>Prepared fictional match</h2>
                 <p>{snapshot.invite.invitation}</p>
                 <p>{snapshot.invite.activity}</p>
-                <small>You approved this story for sharing. No contact details are exchanged.</small>
+                <small>This prepared story has not accepted. In a real room, both people would still choose whether to listen. No contact details are exchanged.</small>
               </article>
             )}
           </div>

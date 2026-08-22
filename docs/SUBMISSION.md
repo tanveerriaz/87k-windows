@@ -27,7 +27,9 @@ The phone is the quiet doorway. The projected wall is the shared experience. Gem
 
 ## Why Gemma is essential
 
-The hosted path calls Gemma server-side through the Gemini API using `GEMINI_API_KEY`. The key never enters browser code or a public fixture. The model is asked for a constrained story capsule rather than an open-ended chat response. The server validates the result, preserves the source evidence, and rejects malformed output.
+The primary judging path runs open `gemma3:4b` locally through Ollama on the presentation Mac. An elder's words stay on the community-operated machine, phones join over local Wi-Fi, and the experience remains available without internet access. This makes Gemma's openness essential to privacy, resilience and community control.
+
+The online-review path calls hosted Gemma server-side through the Gemini API. Its key never enters browser code or a public fixture. Both providers return the same constrained capsule, which the server validates before anything can enter matching.
 
 Gemma's role is deliberately narrow and visible:
 
@@ -37,7 +39,7 @@ Gemma's role is deliberately narrow and visible:
 - provide the evidence that the matcher can use to find a connection;
 - return a safe failure when the model times out or produces invalid output.
 
-The same interface supports a local Ollama Gemma fallback on the presentation Mac. Both judging paths use a real Gemma model and display the active provider. If neither is available, the live demo stops rather than simulating inference.
+Both paths use a real Gemma model and display the active provider. There is no automatic provider switching; if the selected real model is unavailable, the demo stops rather than simulating inference.
 
 ## Why it fits the Elderly Hack
 
@@ -57,8 +59,8 @@ The interaction is designed for an older participant: one question at a time, la
 
 | Mode | Purpose | Credential requirement |
 | --- | --- | --- |
-| Cloud / hosted Gemma | Primary judging path on Google Cloud Run using the Gemini API | Server-side `GEMINI_API_KEY` |
-| Local Gemma | Offline/private presentation fallback through Ollama | Local Ollama with the configured Gemma model |
+| Local Gemma | Primary private presentation path through Ollama | Local `gemma3:4b`; no API key or internet required |
+| Cloud / hosted Gemma | Public online-review path on Cloud Run | Server-side `GEMINI_API_KEY` |
 
 The deterministic provider is restricted to automated tests and UI development. It is not part of the hackathon presentation.
 
