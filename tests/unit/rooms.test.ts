@@ -51,4 +51,22 @@ describe("RoomStore prepared story", () => {
       .toBe("The latest approved fictional radio story.");
     vi.useRealTimers();
   });
+
+  it("does not emit a ghost match after the presenter resets the room", async () => {
+    vi.useFakeTimers();
+    const emit = vi.fn();
+    const io = { to: vi.fn(() => ({ emit })) } as unknown as TypedServer;
+    const provider: InferenceProvider = { extract: vi.fn() };
+    const rooms = new RoomStore(120, new StoryMatcher(), provider, "gemma-api");
+    const capsule = buildMockCapsule({ memory: PREPARED_RADIO_MEMORY, fixture: "radio" });
+
+    const approval = rooms.approve(io, "reset87", "participant-one", capsule);
+    rooms.reset("reset87");
+    await vi.advanceTimersByTimeAsync(700);
+    await approval;
+
+    expect(rooms.get("reset87")).toMatchObject({ phase: "idle", activeSourceId: null, activeCandidateId: null });
+    expect(emit).not.toHaveBeenCalledWith("match:found", expect.anything());
+    vi.useRealTimers();
+  });
 });

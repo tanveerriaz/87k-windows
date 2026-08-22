@@ -34,9 +34,14 @@ export function JoinPage() {
 
   useEffect(() => {
     if (stage === "waiting" && (room.snapshot?.phase === "matched" || room.snapshot?.phase === "no-match")) {
-      setStage("result");
+      if (room.snapshot.activeSourceId === participantId) {
+        setStage("result");
+      } else {
+        setError("Another participant shared after you. Your story was not matched; review it and try again when the room is ready.");
+        setStage("capture");
+      }
     }
-  }, [room.snapshot?.phase, stage]);
+  }, [participantId, room.snapshot?.activeSourceId, room.snapshot?.phase, stage]);
 
   const chooseFixture = (next: "radio" | "no-match") => {
     setFixture(next);
@@ -250,7 +255,7 @@ export function JoinPage() {
           </div>
         )}
 
-        {stage === "result" && room.snapshot?.phase === "matched" && room.snapshot.match && room.snapshot.invite && (
+        {stage === "result" && room.snapshot?.phase === "matched" && room.snapshot.activeSourceId === participantId && room.snapshot.match && room.snapshot.invite && (
           <div className="join-panel result-panel">
             <p className="eyebrow">Your result</p>
             <h1>{room.snapshot.invite.title}</h1>
@@ -278,7 +283,7 @@ export function JoinPage() {
           </div>
         )}
 
-        {stage === "result" && room.snapshot?.phase === "no-match" && (
+        {stage === "result" && room.snapshot?.phase === "no-match" && room.snapshot.activeSourceId === participantId && (
           <div className="join-panel result-panel no-match-panel">
             <p className="eyebrow">Honest by design</p>
             <h1>NO MATCH YET</h1>

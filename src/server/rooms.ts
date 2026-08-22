@@ -105,7 +105,7 @@ export class RoomStore {
     io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
 
     await new Promise((resolve) => setTimeout(resolve, 700));
-    if (room.activeSourceId !== participantId) return;
+    if (this.rooms.get(roomCode) !== room || room.activeSourceId !== participantId) return;
     const result = this.matcher.match(capsule);
     room.match = result;
     room.updatedAt = new Date().toISOString();
