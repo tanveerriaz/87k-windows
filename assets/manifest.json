@@ -37,6 +37,17 @@
         "NHB Roots: 3-storey flats in Duchess Estate",
         "NHB Roots: Princess House"
       ]
+    },
+    {
+      "file": "assets/generated/photographic-hdb-wall.png",
+      "prompt": "assets/prompts/photographic-hdb-wall.md",
+      "model": "openai-imagegen-built-in",
+      "mimeType": "image/png",
+      "sha256": "0133db1a7b548e3c74429eb807733ec38a1aaf03a5a5bc6a9453255c2ca1a4f0",
+      "generatedAt": "2026-08-22T06:48:54Z",
+      "references": [
+        "User-supplied fictional night housing-block concept used for mood and composition only"
+      ]
     }
   ],
   "policy": "Fictional, non-identifying build-time assets only. Review before moving an output into public/generated/."
