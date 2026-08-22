@@ -1,42 +1,140 @@
 import { useEffect, useRef } from "react";
+import facadeArtwork from "../../../assets/generated/photographic-hdb-wall.png";
 import type { RoomSnapshot } from "../../shared/schemas";
+import { deriveWallVisualState } from "../lib/wall-visual-state";
 
-const COLOURS = {
-  amber: "#e3a43a",
-  mint: "#65bca7",
-  violet: "#c65c43",
+type WindowRect = { x: number; y: number; width: number; height: number };
+type ImagePlacement = { x: number; y: number; width: number; height: number };
+
+const WINDOW_COLOURS = {
+  amber: { core: "#ffd79a", edge: "#e8912f", glow: "rgba(255, 168, 67, .72)" },
+  mint: { core: "#d4f4dc", edge: "#75b99d", glow: "rgba(117, 185, 157, .62)" },
+  violet: { core: "#f0c3b5", edge: "#be7765", glow: "rgba(190, 119, 101, .62)" },
 };
-const THREAD_COLOUR = "#b6402d";
 
-type Point = { x: number; y: number };
+// Coordinates are normalized to the reviewed generated façade, not the viewport.
+const HERO_WINDOWS = new Map<number, WindowRect>([
+  [27, { x: 0.356, y: 0.386, width: 0.047, height: 0.056 }],
+  [64, { x: 0.648, y: 0.386, width: 0.047, height: 0.056 }],
+]);
 
-function pointForWindow(id: number, columns: number, rows: number, width: number, height: number): Point {
+function fallbackWindow(id: number): WindowRect {
+  const columns = 14;
+  const rows = 7;
   const index = Math.abs(id) % (columns * rows);
-  const column = index % columns;
-  const row = Math.floor(index / columns);
-  const gutterX = width * 0.105;
-  const top = height * 0.14;
-  const fieldWidth = width - gutterX * 2;
-  const fieldHeight = height * 0.63;
   return {
-    x: gutterX + ((column + 0.5) / columns) * fieldWidth,
-    y: top + ((row + 0.5) / rows) * fieldHeight,
+    x: 0.075 + (index % columns) * 0.061,
+    y: 0.115 + Math.floor(index / columns) * 0.095,
+    width: 0.042,
+    height: 0.052,
   };
+}
+
+function windowRect(id: number): WindowRect {
+  return HERO_WINDOWS.get(id) ?? fallbackWindow(id);
+}
+
+function coverPlacement(image: HTMLImageElement, width: number, height: number): ImagePlacement {
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  const imageWidth = image.naturalWidth * scale;
+  const imageHeight = image.naturalHeight * scale;
+  return {
+    x: (width - imageWidth) / 2,
+    y: (height - imageHeight) / 2,
+    width: imageWidth,
+    height: imageHeight,
+  };
+}
+
+function placedWindow(rect: WindowRect, placement: ImagePlacement): WindowRect {
+  return {
+    x: placement.x + rect.x * placement.width,
+    y: placement.y + rect.y * placement.height,
+    width: rect.width * placement.width,
+    height: rect.height * placement.height,
+  };
+}
+
+function easeOutCubic(value: number): number {
+  return 1 - Math.pow(1 - Math.min(1, Math.max(0, value)), 3);
+}
+
+function drawFallback(context: CanvasRenderingContext2D, width: number, height: number) {
+  const concrete = context.createLinearGradient(0, 0, 0, height);
+  concrete.addColorStop(0, "#071018");
+  concrete.addColorStop(0.58, "#101a22");
+  concrete.addColorStop(1, "#030607");
+  context.fillStyle = concrete;
+  context.fillRect(0, 0, width, height);
+}
+
+function drawWindowLight(
+  context: CanvasRenderingContext2D,
+  rect: WindowRect,
+  palette: (typeof WINDOW_COLOURS)[keyof typeof WINDOW_COLOURS],
+  reveal: number,
+  pulse: number,
+) {
+  if (reveal <= 0) return;
+  const revealWidth = rect.width * reveal;
+  const revealX = rect.x + (rect.width - revealWidth) / 2;
+
+  context.save();
+  context.globalCompositeOperation = "screen";
+  context.shadowColor = palette.glow;
+  context.shadowBlur = Math.max(22, rect.width * 0.72) * pulse;
+  const light = context.createLinearGradient(rect.x, rect.y, rect.x, rect.y + rect.height);
+  light.addColorStop(0, palette.core);
+  light.addColorStop(0.56, palette.edge);
+  light.addColorStop(1, "#7a3d16");
+  context.fillStyle = light;
+  context.fillRect(revealX, rect.y, revealWidth, rect.height);
+  context.shadowBlur = 0;
+
+  context.globalAlpha = 0.34;
+  context.fillStyle = "#fff5dc";
+  context.fillRect(revealX + revealWidth * 0.1, rect.y + rect.height * 0.08, revealWidth * 0.8, rect.height * 0.08);
+  context.globalAlpha = 0.42;
+  context.fillStyle = "#331b0f";
+  context.fillRect(rect.x + rect.width * 0.49, rect.y, Math.max(1, rect.width * 0.025), rect.height);
+  context.restore();
+
+  context.save();
+  context.globalCompositeOperation = "screen";
+  const bloom = context.createRadialGradient(
+    rect.x + rect.width / 2,
+    rect.y + rect.height / 2,
+    0,
+    rect.x + rect.width / 2,
+    rect.y + rect.height / 2,
+    rect.width * 1.8,
+  );
+  bloom.addColorStop(0, `rgba(255, 169, 76, ${0.22 * reveal * pulse})`);
+  bloom.addColorStop(1, "rgba(255, 169, 76, 0)");
+  context.fillStyle = bloom;
+  context.fillRect(rect.x - rect.width * 1.6, rect.y - rect.height, rect.width * 4.2, rect.height * 3);
+  context.restore();
 }
 
 export function HdbWallCanvas({ snapshot }: { snapshot: RoomSnapshot | null }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const matchStartedAt = useRef(performance.now());
+  const sceneStartedAt = useRef(performance.now());
+  const visual = deriveWallVisualState(snapshot);
 
   useEffect(() => {
-    matchStartedAt.current = performance.now();
-  }, [snapshot?.phase, snapshot?.match?.candidateId]);
+    sceneStartedAt.current = performance.now();
+  }, [visual.state, snapshot?.match?.candidateId]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const context = canvas.getContext("2d");
     if (!context) return;
+
+    const image = new Image();
+    image.decoding = "async";
+    image.src = facadeArtwork;
+    let imageReady = false;
     let frame = 0;
     let animationFrame = 0;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -53,97 +151,75 @@ export function HdbWallCanvas({ snapshot }: { snapshot: RoomSnapshot | null }) {
       const height = bounds.height;
       context.clearRect(0, 0, width, height);
 
-      context.fillStyle = "#e9ddc7";
-      context.fillRect(0, 0, width, height);
-
-      const left = width * 0.075;
-      const top = height * 0.075;
-      const facadeWidth = width * 0.85;
-      const facadeHeight = height * 0.76;
-      context.fillStyle = "#174d49";
-      context.fillRect(left, top, facadeWidth, facadeHeight);
-      context.fillStyle = "#a94430";
-      context.fillRect(left + facadeWidth * 0.91, top, facadeWidth * 0.09, facadeHeight);
-      context.fillStyle = "rgba(239,225,200,.2)";
-      for (let y = top + 18; y < top + facadeHeight; y += 44) context.fillRect(left, y, facadeWidth, 5);
-      context.strokeStyle = "#082f2e";
-      context.lineWidth = 2;
-      context.strokeRect(left, top, facadeWidth, facadeHeight);
-
-      const columns = width < 700 ? 7 : 12;
-      const rows = width < 700 ? 8 : 9;
-      const fieldLeft = width * 0.105;
-      const fieldTop = height * 0.14;
-      const fieldWidth = width * 0.79;
-      const fieldHeight = height * 0.63;
-      const cellWidth = fieldWidth / columns;
-      const cellHeight = fieldHeight / rows;
-
-      for (let row = 0; row < rows; row += 1) {
-        for (let column = 0; column < columns; column += 1) {
-          const x = fieldLeft + column * cellWidth + cellWidth * 0.16;
-          const y = fieldTop + row * cellHeight + cellHeight * 0.17;
-          context.fillStyle = "#082f2e";
-          context.fillRect(x - 2, y - 2, cellWidth * 0.68 + 4, cellHeight * 0.60 + 4);
-          context.fillStyle = "#d7c7ac";
-          context.fillRect(x, y, cellWidth * 0.68, cellHeight * 0.60);
-          context.fillStyle = "rgba(255,255,255,.28)";
-          context.fillRect(x, y, cellWidth * 0.68, 1);
-        }
+      let placement: ImagePlacement = { x: 0, y: 0, width, height };
+      if (imageReady) {
+        placement = coverPlacement(image, width, height);
+        context.drawImage(image, placement.x, placement.y, placement.width, placement.height);
+      } else {
+        drawFallback(context, width, height);
       }
 
-      const lit = snapshot?.windows ?? [];
-      for (const windowState of lit) {
-        const point = pointForWindow(windowState.windowId, columns, rows, width, height);
-        const pulse = reducedMotion ? 1 : 0.85 + Math.sin(frame / 14 + windowState.windowId) * 0.15;
+      const elapsed = performance.now() - sceneStartedAt.current;
+      for (const windowState of snapshot?.windows ?? []) {
+        const rect = placedWindow(windowRect(windowState.windowId), placement);
+        const isCandidate = windowState.participantId === snapshot?.activeCandidateId;
+        const reveal = reducedMotion
+          ? 1
+          : easeOutCubic((elapsed - (isCandidate ? 280 : 0)) / (isCandidate ? 760 : 560));
+        const pulse = reducedMotion || visual.state !== "matching"
+          ? 1
+          : 0.9 + Math.sin(frame / 18) * 0.1;
+        drawWindowLight(context, rect, WINDOW_COLOURS[windowState.colour], reveal, pulse);
+      }
+
+      if (visual.hasThread && snapshot?.match?.scene) {
+        const fromRect = placedWindow(windowRect(snapshot.match.scene.fromWindow), placement);
+        const toRect = placedWindow(windowRect(snapshot.match.scene.toWindow), placement);
+        const from = { x: fromRect.x + fromRect.width / 2, y: fromRect.y + fromRect.height / 2 };
+        const to = { x: toRect.x + toRect.width / 2, y: toRect.y + toRect.height / 2 };
+        const progress = reducedMotion ? 1 : easeOutCubic((elapsed - 720) / 1100);
+        const current = { x: from.x + (to.x - from.x) * progress, y: from.y + (to.y - from.y) * progress };
         context.save();
-        context.shadowColor = COLOURS[windowState.colour];
-        context.shadowBlur = 20 * pulse;
-        context.fillStyle = COLOURS[windowState.colour];
-        context.fillRect(point.x - cellWidth * 0.27, point.y - cellHeight * 0.24, cellWidth * 0.54, cellHeight * 0.48);
-        context.restore();
-      }
-
-      if (snapshot?.phase === "matching" && lit[0]) {
-        const point = pointForWindow(lit[0].windowId, columns, rows, width, height);
-        const radius = reducedMotion ? 28 : 18 + ((frame * 1.2) % 42);
-        context.strokeStyle = `rgba(182,64,45,${reducedMotion ? 0.55 : Math.max(0, 0.8 - radius / 65)})`;
-        context.lineWidth = 2;
-        context.beginPath();
-        context.arc(point.x, point.y, radius, 0, Math.PI * 2);
-        context.stroke();
-      }
-
-      if (snapshot?.match?.scene && snapshot.match.decision === "MATCH") {
-        const from = pointForWindow(snapshot.match.scene.fromWindow, columns, rows, width, height);
-        const to = pointForWindow(snapshot.match.scene.toWindow, columns, rows, width, height);
-        const elapsed = performance.now() - matchStartedAt.current;
-        const progress = reducedMotion ? 1 : Math.min(1, elapsed / 1100);
-        const currentX = from.x + (to.x - from.x) * progress;
-        const currentY = from.y + (to.y - from.y) * progress;
-        context.save();
-        context.strokeStyle = THREAD_COLOUR;
-        context.shadowColor = THREAD_COLOUR;
-        context.shadowBlur = 14;
-        context.lineWidth = 3;
-        context.setLineDash([7, 8]);
+        context.globalCompositeOperation = "screen";
+        context.strokeStyle = "rgba(155, 205, 255, .9)";
+        context.shadowColor = "rgba(89, 167, 255, .8)";
+        context.shadowBlur = 12;
+        context.lineWidth = 1.5;
         context.beginPath();
         context.moveTo(from.x, from.y);
-        context.quadraticCurveTo(width * 0.5, Math.min(from.y, to.y) - height * 0.12, currentX, currentY);
+        context.quadraticCurveTo(width * 0.5, Math.min(from.y, to.y) - height * 0.045, current.x, current.y);
         context.stroke();
         context.restore();
       }
 
-      context.fillStyle = "rgba(8,47,46,.72)";
-      context.font = "600 10px Arial, sans-serif";
-      context.fillText("EVERY DARK WINDOW HOLDS A LIFE WE HAVEN'T ASKED ABOUT YET.", left + 12, top + facadeHeight + 25);
+      const vignette = context.createRadialGradient(width / 2, height / 2, height * 0.18, width / 2, height / 2, width * 0.7);
+      vignette.addColorStop(0, "rgba(0, 0, 0, 0)");
+      vignette.addColorStop(1, "rgba(0, 0, 0, .44)");
+      context.fillStyle = vignette;
+      context.fillRect(0, 0, width, height);
 
       frame += 1;
       animationFrame = requestAnimationFrame(draw);
     };
+
+    image.addEventListener("load", () => {
+      imageReady = true;
+    });
+    image.addEventListener("error", () => {
+      imageReady = false;
+    });
     draw();
     return () => cancelAnimationFrame(animationFrame);
-  }, [snapshot]);
+  }, [snapshot, visual.hasThread, visual.state]);
 
-  return <canvas ref={canvasRef} className="wall-canvas" aria-label="An HDB façade with illuminated windows showing live room activity" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="wall-canvas"
+      data-wall-state={visual.state}
+      data-lit-count={visual.litWindowIds.length}
+      data-has-thread={String(visual.hasThread)}
+      aria-label={`A photographic housing façade with ${visual.litWindowIds.length} lit ${visual.litWindowIds.length === 1 ? "window" : "windows"} showing live room activity`}
+    />
+  );
 }

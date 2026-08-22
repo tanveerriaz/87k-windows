@@ -78,7 +78,11 @@ test("two tabs complete the match, reconnect and honest no-match flow", async ({
   await expect(join.getByRole("button", { name: "Read this aloud" })).toBeVisible();
   await expect(wall.getByText("GEMINI · SENIOR CONNECTION GUIDE", { exact: true })).toBeVisible();
   await expect(join.getByText("This prepared story has not accepted.", { exact: false })).toBeVisible();
-  await expect(wall.locator("canvas")).toHaveCount(1);
+  const wallCanvas = wall.locator("canvas");
+  await expect(wallCanvas).toHaveCount(1);
+  await expect(wallCanvas).toHaveAttribute("data-wall-state", "matched");
+  await expect(wallCanvas).toHaveAttribute("data-lit-count", "2");
+  await expect(wallCanvas).toHaveAttribute("data-has-thread", "true");
 
   await wall.reload();
   await expect(wall.getByRole("heading", { name: "A potential listener match was found." })).toBeVisible();
@@ -95,6 +99,9 @@ test("two tabs complete the match, reconnect and honest no-match flow", async ({
   await expect(join.getByText("GEMINI · SENIOR CONNECTION GUIDE", { exact: true })).toHaveCount(0);
   await expect(wall.getByRole("heading", { name: "NO MATCH YET" })).toBeVisible();
   await expect(wall.getByText("We haven’t found the right listener yet.")).toBeVisible();
+  await expect(wallCanvas).toHaveAttribute("data-wall-state", "no-match");
+  await expect(wallCanvas).toHaveAttribute("data-lit-count", "1");
+  await expect(wallCanvas).toHaveAttribute("data-has-thread", "false");
 
   await join.setViewportSize({ width: 320, height: 568 });
   expect(await join.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
