@@ -12,7 +12,7 @@ export function providerPresentation(provider?: Provider): ProviderPresentation 
     return {
       label: "Local Gemma 3 through Ollama",
       heading: "Local Gemma is the room's judging model.",
-      detail: "Private inference runs on the presentation Mac. Participant phones install nothing; they only open this room over local Wi-Fi.",
+      detail: "Private inference runs on the presentation Mac. Participant phones install nothing; they open this room over local HTTP, so use a trusted private hotspot.",
       realGemma: true,
     };
   }

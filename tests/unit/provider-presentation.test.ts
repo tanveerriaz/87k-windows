@@ -8,6 +8,7 @@ describe("judging provider presentation", () => {
     expect(presentation.heading).toContain("room's judging model");
     expect(presentation.detail).toContain("presentation Mac");
     expect(presentation.detail).toContain("install nothing");
+    expect(presentation.detail).toContain("local HTTP");
   });
 
   it("identifies the hosted API as the remote fallback", () => {
