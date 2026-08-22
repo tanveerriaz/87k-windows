@@ -18,6 +18,7 @@ CLOUD_RUN_STATUS="NOT READY"
 OLLAMA_STATUS="NOT READY"
 MOCK_STATUS="NOT READY"
 PROJECTOR_STATUS="NOT TESTED"
+ROOM_NETWORK_STATUS="NOT READY"
 VERIFY_LOG="$(mktemp -t 87k-windows-verify.XXXXXX)"
 SERVER_PID=""
 
@@ -59,6 +60,11 @@ if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "arm64" ]] && command -v oll
   fi
 fi
 
+if [[ -x node_modules/.bin/tsx ]] \
+  && ROOM_HOST="${ROOM_HOST:-}" node_modules/.bin/tsx scripts/show-room-urls.ts 3000 demo87 "${ROOM_HOST:-}" >/dev/null 2>&1; then
+  ROOM_NETWORK_STATUS="READY"
+fi
+
 NODE_VERSION="$(node --version 2>/dev/null || true)"
 NODE_MAJOR="${NODE_VERSION#v}"
 NODE_MAJOR="${NODE_MAJOR%%.*}"
@@ -88,8 +94,9 @@ if [[ "$PROJECTOR_TESTED" == "1" || "${PROJECTOR_TESTED_1280X720:-0}" == "1" ]];
   PROJECTOR_STATUS="READY"
 fi
 
-printf 'LOCAL GEMMA JUDGING: %s\n' "$OLLAMA_STATUS"
-printf 'HOSTED GEMMA ONLINE: %s\n' "$CLOUD_RUN_STATUS"
+printf 'LOCAL GEMMA PRIMARY: %s\n' "$OLLAMA_STATUS"
+printf 'ROOM PHONE NETWORK: %s\n' "$ROOM_NETWORK_STATUS"
+printf 'HOSTED GEMMA FALLBACK: %s\n' "$CLOUD_RUN_STATUS"
 printf 'DETERMINISTIC TEST HARNESS: %s\n' "$MOCK_STATUS"
 printf 'PROJECTOR 1280x720: %s\n' "$PROJECTOR_STATUS"
 

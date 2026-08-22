@@ -39,7 +39,8 @@ export function buildRoomUrls(addresses: string[], port: number, roomCode: strin
 function printRoomUrls(): void {
   const port = Number(process.argv[2] ?? "3000");
   const roomCode = process.argv[3] ?? "demo87";
-  const urls = buildRoomUrls(roomIpv4Addresses(), port, roomCode);
+  const configuredHost = process.argv[4]?.trim();
+  const urls = buildRoomUrls(configuredHost ? [configuredHost] : roomIpv4Addresses(), port, roomCode);
   if (urls.length === 0) {
     console.error("No private room network was found. Connect the Mac and phones to the same Wi-Fi or hotspot, then retry.");
     process.exitCode = 1;
