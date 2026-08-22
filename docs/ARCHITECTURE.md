@@ -32,6 +32,7 @@ Development runs Vite on port 5173 and proxies API and Socket.IO traffic to Expr
 |---|---|---|---|
 | `ollama` | `gemma3:4b` | Primary on-device judging path on Apple Silicon | no key; trusted hotspot only |
 | `gemma-api` | `gemma-4-26b-a4b-it` | Public online-review path on Cloud Run | server-side `GEMINI_API_KEY` |
+| `openrouter` | `google/gemma-3-27b-it` | Hosted recovery path when the Gemini Developer API is unavailable | server-side `OPENROUTER_API_KEY` |
 | `mock` | deterministic fixture | Automated tests and UI development only | none |
 
 All providers implement the same typed interface and must return the same Zod schema. The model interprets the memory; it does not decide who is safe to contact. Matching remains explainable application logic, and low evidence returns no match.
@@ -42,7 +43,7 @@ The local Ollama path permits one in-flight extraction. A second submission rece
 
 | Mode | Model | Purpose | Secret/network |
 |---|---|---|---|
-| `gemini` | `gemini-3.6-flash` | Track 2 senior connection guide after a valid match | server-side `GEMINI_API_KEY` |
+| `gemini` | `gemini-3.6-flash` | Track 2 senior connection guide after a valid match | server-side `GEMINI_API_KEY`, or `OPENROUTER_API_KEY` when extraction uses OpenRouter |
 | `disabled` | none | Offline Gemma-only recovery | none |
 | `mock` | deterministic guide | Automated tests only | none |
 
@@ -53,7 +54,7 @@ The facilitator is separate from inference so both model roles remain visible. A
 - No authentication, contact exchange, database, object storage, analytics SDK or raw-input logging.
 - Local inference stays on the Mac, but phone-to-Mac traffic is plain HTTP; use a trusted private hotspot, never shared event Wi-Fi.
 - Memory and optional compressed image exist only for the request; room state stores only an approved capsule.
-- The Gemini key exists only in the server process or Secret Manager.
+- Model-provider keys exist only in the server process or Secret Manager.
 - Gemini receives no raw memory, images, contact data, capsule IDs, redaction details or unmatched submissions.
 - Logs contain request ID, method, path, status and duration—not the memory or model response.
 - Provider timeout or malformed output creates no room event and shares nothing.
@@ -64,7 +65,7 @@ The facilitator is separate from inference so both model roles remain visible. A
 - **Decision:** target Track 2 with local Gemma as the private extraction layer and Gemini 3.6 Flash as the senior facilitator; keep one public Cloud Run service in `asia-southeast1` for online review.
 - **Why:** participants install nothing, raw memories stay on the community Mac during judging, and Gemini still performs a visible, context-aware senior task.
 - **Trade-off:** the in-memory room cannot scale across replicas. This is deliberate for a live-room prototype; max instances stays one.
-- **Recovery:** use the explicitly labelled hosted Gemma + Gemini URL if local Ollama fails. The Gemma-only local mode is an offline partial recovery, not the complete Track 2 demo. Never simulate inference during judging.
+- **Recovery:** use the explicitly labelled OpenRouter-hosted Gemma + Gemini URL if the Gemini Developer API or local Ollama fails. The Gemma-only local mode is an offline partial recovery, not the complete Track 2 demo. Never simulate inference during judging.
 - **Excluded:** Redis, databases, queues, vector stores, multi-region hosting, self-hosted GPUs and native mobile packaging.
 
 Cloud deployment still requires the repository owner's explicit confirmation of the hackathon project and service before it is executed.

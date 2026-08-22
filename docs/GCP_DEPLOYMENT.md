@@ -49,6 +49,22 @@ gcloud secrets add-iam-policy-binding gemini-api-key \
 
 Do not grant project-wide owner/editor roles.
 
+### OpenRouter recovery secret
+
+When the Gemini Developer API is blocked, create a separate OpenRouter secret without printing or committing the key:
+
+```bash
+PROJECT_ID="$(gcloud config get-value project)"
+read -s "OPENROUTER_API_KEY_VALUE?OpenRouter API key: "
+printf '%s' "$OPENROUTER_API_KEY_VALUE" | gcloud secrets create openrouter-api-key --data-file=-
+unset OPENROUTER_API_KEY_VALUE
+gcloud secrets add-iam-policy-binding openrouter-api-key \
+  --member="serviceAccount:windows-87k-run@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role='roles/secretmanager.secretAccessor'
+```
+
+Use `gcloud secrets versions add openrouter-api-key --data-file=-` instead when the secret already exists.
+
 ## 3. Deploy one instance
 
 From the repository root:
@@ -70,6 +86,22 @@ gcloud run deploy windows-87k \
 
 One instance is intentional because rooms live in memory. Minimum one avoids a judging cold start; set it back to zero after the event to stop idle instance cost.
 
+For the OpenRouter recovery deployment, keep the same service and runtime limits but replace the model settings and secret binding:
+
+```bash
+gcloud run deploy windows-87k \
+  --source . \
+  --allow-unauthenticated \
+  --region asia-southeast1 \
+  --min-instances 1 \
+  --max-instances 1 \
+  --concurrency 40 \
+  --timeout 60 \
+  --service-account "windows-87k-run@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --set-env-vars INFERENCE_PROVIDER=openrouter,OPENROUTER_BASE_URL=https://openrouter.ai/api/v1,OPENROUTER_GEMMA_MODEL=google/gemma-3-27b-it,GEMINI_FACILITATOR=gemini,OPENROUTER_GEMINI_MODEL=google/gemini-3.6-flash,ROOM_TTL_MINUTES=120 \
+  --set-secrets OPENROUTER_API_KEY=openrouter-api-key:latest
+```
+
 ## 4. Verify before sharing
 
 ```bash
@@ -78,7 +110,7 @@ curl -fsS "$DEMO_URL/health"
 CLOUD_RUN_DEMO_URL="$DEMO_URL" ./scripts/verify-demo-machine.sh
 ```
 
-The health response must show `"status":"ok"`, `"provider":"gemma-api"`, `"facilitator":"gemini"` and `"geminiModel":"gemini-3.6-flash"`. Then open `/join/demo87` on a phone and `/wall/demo87` on the projector. Exercise the real extraction and Gemini guide once, then prove the no-match path creates no guide.
+The OpenRouter health response must show `"status":"ok"`, `"provider":"openrouter"`, `"facilitator":"gemini"`, `"gemmaModel":"google/gemma-3-27b-it"` and `"geminiModel":"google/gemini-3.6-flash"`. Then open `/join/demo87` on a phone and `/wall/demo87` on the projector. Exercise the real extraction and Gemini guide once, then prove the no-match path creates no guide.
 
 ## 5. After judging
 

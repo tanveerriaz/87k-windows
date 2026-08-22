@@ -90,7 +90,7 @@ The local prototype uses HTTP between each phone and the Mac, so it must not run
 
 To match the MacBook Air and `gemma3:4b` demo hardware, local inference deliberately handles one story at a time. Additional submissions receive a clear busy response and can retry after the current capsule is ready; there is no parallel model queue.
 
-The public Cloud Run demo uses hosted Gemma for extraction and Gemini 3.6 Flash for the same post-match guide. Every active model is labelled; neither silently falls back to simulated inference.
+The public Cloud Run recovery path uses OpenRouter-hosted Gemma 3 for extraction and Gemini 3.6 Flash for the same post-match guide. Every active model is labelled; neither silently falls back to simulated inference.
 
 ## Architecture
 
