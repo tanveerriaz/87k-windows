@@ -14,7 +14,7 @@ for argument in "$@"; do
   esac
 done
 
-RAILWAY_STATUS="NOT READY"
+CLOUD_RUN_STATUS="NOT READY"
 OLLAMA_STATUS="NOT READY"
 MOCK_STATUS="NOT READY"
 PROJECTOR_STATUS="NOT TESTED"
@@ -44,9 +44,9 @@ ollama_supported() {
   (( major > 0 || (major == 0 && minor >= 6) ))
 }
 
-if [[ -n "${RAILWAY_DEMO_URL:-}" ]] && command -v curl >/dev/null 2>&1; then
-  if curl -fsS --max-time 8 "${RAILWAY_DEMO_URL%/}/health" 2>/dev/null | grep -q '"status":"ok"'; then
-    RAILWAY_STATUS="READY"
+if [[ -n "${CLOUD_RUN_DEMO_URL:-}" ]] && command -v curl >/dev/null 2>&1; then
+  if curl -fsS --max-time 8 "${CLOUD_RUN_DEMO_URL%/}/health" 2>/dev/null | grep -q '"provider":"gemma-api"'; then
+    CLOUD_RUN_STATUS="READY"
   fi
 fi
 
@@ -88,7 +88,7 @@ if [[ "$PROJECTOR_TESTED" == "1" || "${PROJECTOR_TESTED_1280X720:-0}" == "1" ]];
   PROJECTOR_STATUS="READY"
 fi
 
-printf 'RAILWAY PRIMARY: %s\n' "$RAILWAY_STATUS"
+printf 'CLOUD RUN + GEMMA PRIMARY: %s\n' "$CLOUD_RUN_STATUS"
 printf 'OLLAMA OFFLINE: %s\n' "$OLLAMA_STATUS"
 printf 'MOCK EMERGENCY: %s\n' "$MOCK_STATUS"
 printf 'PROJECTOR 1280x720: %s\n' "$PROJECTOR_STATUS"

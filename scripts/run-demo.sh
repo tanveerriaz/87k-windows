@@ -5,8 +5,8 @@ set -euo pipefail
 MODE="${1:-}"
 MODEL="gemma3:4b"
 
-if [[ "$MODE" != "mock" && "$MODE" != "local" ]]; then
-  echo "Usage: ./scripts/run-demo.sh mock|local" >&2
+if [[ "$MODE" != "mock" && "$MODE" != "local" && "$MODE" != "gemma" ]]; then
+  echo "Usage: ./scripts/run-demo.sh mock|local|gemma" >&2
   exit 2
 fi
 
@@ -27,6 +27,13 @@ if [[ "$MODE" == "local" ]]; then
     || { echo "Ollama is not responding. Open the native Ollama app, then retry." >&2; exit 1; }
   echo "Starting 87K Windows in OLLAMA OFFLINE mode with $MODEL."
   exec env INFERENCE_PROVIDER=ollama OLLAMA_MODEL="$MODEL" npm run dev
+fi
+
+if [[ "$MODE" == "gemma" ]]; then
+  [[ -n "${GEMINI_API_KEY:-}" ]] \
+    || { echo "GEMINI_API_KEY is missing. Export it from a private shell or ignored .env; never commit it." >&2; exit 1; }
+  echo "Starting 87K Windows in HOSTED GEMMA mode. The key remains server-side."
+  exec env INFERENCE_PROVIDER=gemma-api npm run dev
 fi
 
 echo "Starting 87K Windows in MOCK EMERGENCY mode. No model or network is required."

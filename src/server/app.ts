@@ -13,6 +13,7 @@ import {
 import type { AppEnv } from "./env";
 import { MockProvider } from "./inference/mock-provider";
 import { OllamaProvider } from "./inference/ollama-provider";
+import { GemmaApiProvider } from "./inference/gemma-api-provider";
 import { ProviderOutputError, ProviderTimeoutError, type InferenceProvider } from "./inference/provider";
 import { StoryMatcher } from "./matching/matcher";
 
@@ -130,14 +131,13 @@ export function createApp(dependencies: AppDependencies): express.Express {
 }
 
 export function defaultDependencies(env: AppEnv): AppDependencies {
-  if (env.INFERENCE_PROVIDER === "gemma-api") {
-    throw new Error("Hosted Gemma integration is not enabled in this milestone.");
-  }
   return {
     env,
     provider:
       env.INFERENCE_PROVIDER === "ollama"
         ? new OllamaProvider(env.OLLAMA_BASE_URL, env.OLLAMA_MODEL)
+        : env.INFERENCE_PROVIDER === "gemma-api"
+          ? new GemmaApiProvider(env.GEMINI_API_KEY, env.GEMMA_MODEL)
         : new MockProvider(),
     matcher: new StoryMatcher(undefined, env.MATCH_THRESHOLD),
   };

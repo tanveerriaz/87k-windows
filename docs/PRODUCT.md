@@ -1,26 +1,45 @@
 # Product
 
-## Purpose
+## The problem
 
-87K Windows helps older Singapore residents form real human connections through memories, places, skills and interests. It does not imitate companionship.
+Loneliness is often framed as a lack of people. The harder problem is that a lifetime of useful stories, places and skills is invisible to the people nearby. Conventional chatbots answer the older person; 87K Windows uses AI to create a reason for two real people to meet.
 
-The demo begins with a clearly fictional memory about repairing radios in Queenstown in the 1970s. The system creates a redacted capsule, asks for approval, and searches twelve fictional prepared stories. A strong complementary connection illuminates two windows and produces a Kopi Card. Weak evidence produces `NO MATCH YET`.
+The title imagines roughly 87,000 windows across Singapore. Each lit window is not a metric. It is a small, consented piece of lived experience becoming visible.
 
-## Experience principles
+## The promise
 
-- Consent is a product step, not fine print.
-- Evidence is shown as a short path, never as hidden model reasoning.
-- The participant controls what enters matching.
-- Weak evidence is an honest outcome.
-- Phone text and controls are large, plain and high contrast.
-- The shared wall shows collective activity without exposing raw submissions.
+```text
+ASK             LISTEN            UNDERSTAND          LIGHT              CONNECT
+one gentle  →   voice or text  →  safe capsule    →   one window     →  one human
+prompt           on a phone       with evidence       on the wall       invitation
+```
 
-## Milestone 1 scope
+The demo begins with a clearly fictional memory about repairing radios in Queenstown in the 1970s. Gemma extracts a privacy-safe capsule for review. Approval lights a window and finds a fictional complementary story. A strong connection produces a Kopi Card; weak evidence produces `NO MATCH YET`.
 
-- Mobile Join Mode with prepared image, file fallback, safe capsule review and approval.
-- Projected Wall Mode with a canvas HDB façade, illuminated windows and evidence bridge.
-- Presenter Admin Mode with room QR, reset, deterministic injection and provider status.
-- Express API, Socket.IO rooms, Mock Mode inference and twelve synthetic stories.
-- Deterministic Queenstown/radio match and deliberate no-match fixture.
+## Why Gemma is essential
 
-Hosted Gemma, permanent data, authentication and deployment are deliberately deferred. Native Ollama with `gemma3:4b` is an optional presentation-machine fallback after the Mock path passes.
+Gemma handles the ambiguity that rules cannot: a short, conversational memory may contain place, era, a practical skill, something the person can offer and something they miss. It turns this into a strict, reviewable structure without inventing contact details or exposing hidden reasoning.
+
+The application then uses deterministic retrieval and scoring. This division is intentional:
+
+- Gemma understands human language.
+- The participant controls consent.
+- Transparent code controls matching and refusal.
+- The wall makes collective belonging visible.
+
+## Experience and safety principles
+
+- AI facilitates human connection; it never imitates friendship or dependency.
+- Consent is a full product step, not fine print.
+- Show short evidence and uncertainty, never chain-of-thought.
+- The participant may edit or stop before anything reaches the wall.
+- Weak evidence is an honest no-match, not a forced emotional result.
+- Phone controls are large, plain and high contrast.
+- The wall reveals a theme and connection, not raw private testimony.
+- Public code and the judged demo use fictional data only.
+
+## Scope
+
+The hackathon build includes mobile Join Mode, projected Wall Mode, presenter Admin Mode, hosted Gemma 4 via Gemini API, Cloud Run packaging, native Ollama fallback, deterministic Mock Mode, twelve fictional stories and a deliberate no-match fixture.
+
+It deliberately excludes native mobile installation, medical or welfare advice, authentication, permanent storage, contact exchange, social scoring and autonomous outreach. A production pilot would require community-partner moderation, retention controls, accessibility research and explicit safeguarding—not merely more model capability.

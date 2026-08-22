@@ -1,0 +1,29 @@
+{
+  "generated": [
+    {
+      "file": "assets/generated/hdb-facade.jpg",
+      "prompt": "assets/prompts/hdb-facade.md",
+      "model": "gemini-3.1-flash-image",
+      "mimeType": "image/jpeg",
+      "sha256": "5d490d4cf9db88fec15cdf02d4e8a0236651ef4aa959f24d25c6d4a057076df0",
+      "generatedAt": "2026-08-22T01:52:45.216Z"
+    },
+    {
+      "file": "assets/generated/memory-objects.jpg",
+      "prompt": "assets/prompts/memory-objects.md",
+      "model": "gemini-3.1-flash-image",
+      "mimeType": "image/jpeg",
+      "sha256": "416e6c355812a981ee8bc711e67644a52e72094c8775792247c1641f1c1fdf72",
+      "generatedAt": "2026-08-22T01:52:54.108Z"
+    },
+    {
+      "file": "assets/generated/submission-thumbnail.jpg",
+      "prompt": "assets/prompts/submission-thumbnail.md",
+      "model": "gemini-3.1-flash-image",
+      "mimeType": "image/jpeg",
+      "sha256": "9ad7b18ed60029c5a8d40849567a44879777fac8ac447a795ad2b1a8e4bf3db8",
+      "generatedAt": "2026-08-22T01:53:05.417Z"
+    }
+  ],
+  "policy": "Fictional, non-identifying build-time assets only. Review before moving an output into public/generated/."
+}

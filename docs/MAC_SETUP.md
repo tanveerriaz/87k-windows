@@ -1,24 +1,16 @@
 # Mac Mini to MacBook Air setup
 
-## Roles and source of truth
+GitHub is the bridge between the build Mac Mini and the presentation MacBook Air M4 with 16 GB memory. Clone cleanly on the Air; never copy `node_modules`, `.env`, Ollama model folders, logs or an old working directory between machines.
 
-The Mac Mini is the build machine: it is where changes are implemented, tested and audited for a public repository. GitHub is the only source-of-truth bridge between machines.
+## Day-of-event ladder
 
-The MacBook Air M4 with 16 GB memory is the presentation machine. It receives a fresh Git clone and installs the locked dependencies itself. Never copy `node_modules`, `.env`, Ollama model folders, generated logs or a working directory between Macs.
-
-The day-of-event mode ladder is:
-
-1. **Railway primary** — live phones, one shared Wall Mode and the hosted model after deployment is explicitly authorized.
-2. **Ollama offline** — native Ollama with `gemma3:4b` on the MacBook Air. No Docker layer is used, so Apple Silicon acceleration remains available.
-3. **Mock emergency** — deterministic prepared stories with no model, credential or network requirement.
-
-## Pinned runtime
-
-The project pins Node.js `22.23.2` in `package.json`, `.node-version`, `.nvmrc` and GitHub Actions. A newer Node version may be present on the build machine, but the clean-clone and presentation-machine verification must use the pinned Node 22 runtime.
+1. **Cloud Run + hosted Gemma** — phones scan a QR; nothing is installed on them.
+2. **Ollama offline** — the MacBook Air runs native `gemma3:4b` with Apple Silicon acceleration.
+3. **Mock emergency** — prepared deterministic story; no model, key or network.
 
 ## First setup on the MacBook Air
 
-Install Git/Xcode Command Line Tools, Node 22 and—only for Offline Mode—the native macOS Apple Silicon Ollama application yourself. The project scripts deliberately do not install or upgrade Homebrew or system software.
+Use the pinned Node 22 runtime. Install Git/Xcode Command Line Tools and Node yourself. Install native Ollama only if you want the offline fallback.
 
 ```bash
 mkdir -p ~/Projects
@@ -29,27 +21,36 @@ cd 87k-windows
 ./scripts/verify-demo-machine.sh
 ```
 
-Omit `--with-ollama` when preparing only Mock Mode. The flag checks Ollama 0.6 or newer and downloads `gemma3:4b` only when that exact model is missing. It never selects `gemma3:12b` or another model based on what happens to exist on the Mac Mini.
+Omit `--with-ollama` for Mock/Cloud-only preparation. The setup script runs `npm ci`; it does not install system software or create/overwrite environment files.
 
-The setup script runs `npm ci` from the committed lockfile. It does not create or overwrite `.env` or `.env.local`.
-
-## Run the safety nets
+## Run each safety net
 
 ```bash
 npm run demo:mock
 npm run demo:local
-npm run verify:machine
 ```
 
-`demo:local` requires the native Ollama service and `gemma3:4b`. It uses local text extraction; deterministic retrieval and the invitation fallback remain inside the application. `demo:mock` needs neither Ollama nor an internet connection.
+For a local hosted-Gemma check, keep the key out of shell history:
 
-To verify the projector after physically checking the 1280 × 720 output:
+```bash
+read -s "GEMINI_API_KEY?Gemini API key: "
+export GEMINI_API_KEY
+npm run demo:gemma
+unset GEMINI_API_KEY
+```
+
+Set `CLOUD_RUN_DEMO_URL` only in the current shell or an ignored environment file, then run `npm run verify:machine`; it checks that `/health` reports `gemma-api`.
+
+```bash
+export CLOUD_RUN_DEMO_URL='https://YOUR-SERVICE-URL'
+./scripts/verify-demo-machine.sh
+```
+
+After physically checking the real 1280 × 720 output:
 
 ```bash
 ./scripts/verify-demo-machine.sh --projector-tested
 ```
-
-For Railway, set `RAILWAY_DEMO_URL` only in the shell or an ignored local environment file. The verification script checks its `/health` route. It never writes the URL or a secret into the repository.
 
 ## Normal update workflow
 
@@ -62,18 +63,12 @@ npm ci
 
 Stop if local modifications appear. Review them rather than pulling over legitimate work.
 
-## Clean-clone portability check
-
-The release check uses a temporary local clone with Git object hard-linking disabled. Inside that clone, run `npm ci`, the four quality gates, machine verification and the two-browser test under Node 22. Do not copy an existing `node_modules`, environment file, model directory or log into the clone.
-
 ## Presentation checklist
 
-- Complete one phone-to-Wall flow on Railway.
+- Complete one phone-to-wall flow on Cloud Run.
 - Disconnect Wi-Fi and complete the prepared Ollama flow.
 - Stop Ollama and complete the Mock flow.
 - Test the real projector at 1280 × 720.
-- Keep the MacBook Air awake while plugged in.
+- Keep the Air awake and plugged in.
 - Bring the charger, display adapter and phone hotspot.
-- Keep a local 60-second backup recording.
-
-No Railway resource is created or changed by these instructions.
+- Keep a local 60-second backup recording and the public commit SHA.
