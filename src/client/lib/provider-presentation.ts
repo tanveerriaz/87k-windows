@@ -31,6 +31,14 @@ export function providerPresentation(provider?: Provider): ProviderPresentation 
       realGemma: true,
     };
   }
+  if (provider === "openrouter") {
+    return {
+      label: "Hosted Gemma 3 through OpenRouter",
+      heading: "Hosted Gemma is the privacy-layer recovery path.",
+      detail: "Real Gemma prepares the reviewable capsule through a server-side OpenRouter connection. The API key never reaches participant phones.",
+      realGemma: true,
+    };
+  }
   if (provider === "mock") {
     return {
       label: "Development test harness",

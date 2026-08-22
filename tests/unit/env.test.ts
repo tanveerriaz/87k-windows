@@ -21,4 +21,21 @@ describe("readEnv", () => {
       GEMINI_API_KEY: "test-key",
     })).toMatchObject({ INFERENCE_PROVIDER: "ollama", GEMINI_FACILITATOR: "gemini" });
   });
+
+  it("requires a server-side OpenRouter key and defaults both routed model slugs", () => {
+    expect(() => readEnv({ NODE_ENV: "test", INFERENCE_PROVIDER: "openrouter" })).toThrow(/OPENROUTER_API_KEY/);
+    expect(readEnv({
+      NODE_ENV: "test",
+      INFERENCE_PROVIDER: "openrouter",
+      GEMINI_FACILITATOR: "gemini",
+      OPENROUTER_API_KEY: "test-key",
+    })).toMatchObject({
+      INFERENCE_PROVIDER: "openrouter",
+      GEMINI_FACILITATOR: "gemini",
+      OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1",
+      OPENROUTER_GEMMA_MODEL: "google/gemma-3-27b-it",
+      OPENROUTER_GEMINI_MODEL: "google/gemini-3.6-flash",
+      GEMINI_API_KEY: "",
+    });
+  });
 });

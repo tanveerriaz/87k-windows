@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ProviderSchema = z.enum(["mock", "gemma-api", "ollama"]);
+export const ProviderSchema = z.enum(["mock", "gemma-api", "openrouter", "ollama"]);
 export const FacilitatorSchema = z.enum(["disabled", "gemini", "mock"]);
 
 export const SeniorBridgeSchema = z.object({

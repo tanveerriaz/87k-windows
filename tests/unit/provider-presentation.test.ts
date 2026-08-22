@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { facilitatorPresentation, providerPresentation } from "../../src/client/lib/provider-presentation";
+import { ProviderSchema } from "../../src/shared/schemas";
 
 describe("judging provider presentation", () => {
   it("identifies Ollama as the private room-local primary", () => {
@@ -14,6 +15,15 @@ describe("judging provider presentation", () => {
   it("identifies the hosted API as the remote fallback", () => {
     const presentation = providerPresentation("gemma-api");
     expect(presentation.heading).toContain("privacy-layer fallback");
+  });
+
+  it("identifies OpenRouter as a real hosted Gemma recovery path", () => {
+    const presentation = providerPresentation(ProviderSchema.parse("openrouter"));
+    expect(presentation.label).toContain("Gemma 3");
+    expect(presentation.label).toContain("OpenRouter");
+    expect(presentation.heading).toContain("privacy-layer");
+    expect(presentation.detail).toContain("server-side");
+    expect(presentation.realGemma).toBe(true);
   });
 
   it("keeps the deterministic provider out of the judging story", () => {
