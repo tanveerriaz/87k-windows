@@ -4,10 +4,11 @@ GitHub is the bridge between the build Mac Mini and the presentation MacBook Air
 
 ## Day-of-event ladder
 
-1. **Local Gemma + Ollama** — primary on-device judging path; phones join the Mac through a trusted private hotspot.
-2. **Cloud Run + hosted Gemma** — public online-review path and explicit recovery option.
+1. **Local Gemma + Gemini 3.6 Flash** — primary Track 2 judging path; Gemma protects raw memory on the Mac and server-side Gemini prepares the senior guide.
+2. **Cloud Run + hosted Gemma + Gemini** — public online-review path and explicit recovery option.
+3. **Local Gemma only** — offline partial recovery; it does not demonstrate the complete Track 2 Gemini feature.
 
-If neither real model is available, stop the live demo and use the prerecorded real-Gemma video. Do not present the deterministic test harness.
+If either judging model is unavailable, stop the live Track 2 demo and use the prerecorded real-model video. Do not present the deterministic test harness.
 
 ## First setup on the MacBook Air
 
@@ -24,13 +25,18 @@ cd 87k-windows
 
 Omit `--with-ollama` for Cloud-only preparation. The setup script runs `npm ci`; it does not install system software or create/overwrite environment files.
 
-## Run the real local judging path
+## Run the real Track 2 judging path
 
 ```bash
-npm run demo:local
+read -s "GEMINI_API_KEY?Gemini API key: "
+export GEMINI_API_KEY
+npm run demo:judge
+unset GEMINI_API_KEY
 ```
 
-The launcher builds the production app and serves it on port 3000. Use the Mac's hotspot IP in the Admin, Wall and Join URLs. The prototype uses local HTTP, so never connect participant phones through shared event Wi-Fi.
+The launcher verifies and warms local `gemma3:4b`, requires the Gemini key, builds the production app and serves it on port 3000. Use the Mac's hotspot IP in the Admin, Wall and Join URLs. The key remains in the server process. The prototype uses local HTTP, so never connect participant phones through shared event Wi-Fi.
+
+`npm run demo:local` starts the offline Gemma-only recovery path. It is useful if internet access fails, but it is not the complete Track 2 judging runtime.
 
 For a local hosted-Gemma check, keep the key out of shell history:
 
@@ -67,10 +73,12 @@ Stop if local modifications appear. Review them rather than pulling over legitim
 
 ## Presentation checklist
 
-- Complete one phone-to-wall flow through local Ollama.
-- Disconnect internet access and repeat the prepared Ollama flow over the trusted hotspot.
+- Complete one phone-to-wall flow through local Ollama and real Gemini 3.6 Flash.
+- Press `Read this aloud`, stop it, and confirm the visible text remains available.
+- Run the no-match fixture and confirm no Gemini guide appears.
+- Rehearse `demo:local` separately as the explicitly labelled offline partial recovery.
 - Confirm the hosted Cloud Run review URL separately.
-- Confirm the prerecorded real-Gemma video plays locally if both live model paths become unavailable.
+- Confirm the prerecorded real-model video plays locally if either judging model becomes unavailable.
 - Test the real projector at 1280 × 720.
 - Keep the Air awake and plugged in.
 - Bring the charger, display adapter and phone hotspot.

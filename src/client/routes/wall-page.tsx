@@ -3,7 +3,7 @@ import { HdbWallCanvas } from "../components/hdb-wall-canvas";
 import { StatusBadge } from "../components/status-badge";
 import { useRoomSocket } from "../lib/use-room-socket";
 
-const RESULT_STEPS = ["You shared", "Gemma noticed", "You approved", "A story matched"];
+const RESULT_STEPS = ["You shared", "Gemma protected", "You approved", "A story matched"];
 
 export function WallPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
@@ -11,6 +11,7 @@ export function WallPage() {
   const snapshot = room.snapshot;
   const sourceStory = snapshot?.windows.findLast((window) => window.participantId === snapshot.activeSourceId);
   const listenerStory = snapshot?.windows.findLast((window) => window.participantId === snapshot.activeCandidateId);
+  const resultSteps = snapshot?.guide ? [...RESULT_STEPS, "Gemini guides"] : RESULT_STEPS;
 
   return (
     <main className="wall-page">
@@ -21,7 +22,7 @@ export function WallPage() {
         </div>
         <div className="wall-room">
           <span>JOIN /join/{roomCode}</span>
-          <StatusBadge connected={room.connected} provider={snapshot?.provider} />
+          <StatusBadge connected={room.connected} provider={snapshot?.provider} facilitator={snapshot?.facilitator} />
         </div>
       </header>
       <section className="wall-stage" aria-live="polite">
@@ -36,7 +37,7 @@ export function WallPage() {
         {snapshot?.phase === "matching" && (
           <div className="wall-searching">
             <span className="mono-label">EVIDENCE SEARCH</span>
-            <p>The approved capsule is being compared for a shared human thread—not just matching words.</p>
+            <p>The approved capsule is being checked against visible evidence. If it holds, Gemini prepares a gentle way to begin.</p>
           </div>
         )}
         {snapshot?.phase === "matched" && snapshot.match && (
@@ -45,8 +46,8 @@ export function WallPage() {
               <p className="eyebrow">This is what connected you</p>
               <h1>A potential listener match was found.</h1>
               <p className="wall-result-summary">{snapshot.match.why}</p>
-              <div className="wall-journey" aria-label="How the connection was made">
-                {RESULT_STEPS.map((step, index) => (
+              <div className="wall-journey" aria-label="How the connection was made" style={{ gridTemplateColumns: `repeat(${resultSteps.length}, 1fr)` }}>
+                {resultSteps.map((step, index) => (
                   <span key={step}><small>0{index + 1}</small><strong>{step}</strong></span>
                 ))}
               </div>
@@ -69,7 +70,23 @@ export function WallPage() {
                 </article>
               </div>
             </div>
-            {snapshot.invite && (
+            {snapshot.guide ? (
+              <article className="wall-invite wall-guide">
+                <span className="mono-label">GEMINI · SENIOR CONNECTION GUIDE</span>
+                <h2>{snapshot.guide.introduction}</h2>
+                <ol>
+                  {snapshot.guide.questions.map((question) => <li key={question}>{question}</li>)}
+                </ol>
+                <p className="wall-consent">{snapshot.guide.consentReminder}</p>
+                <small>Gemini received only approved safe capsules. The people still choose whether to talk.</small>
+              </article>
+            ) : snapshot.guideError ? (
+              <article className="wall-invite wall-guide-error">
+                <span className="mono-label">GEMINI GUIDE UNAVAILABLE</span>
+                <h2>The evidence-backed match remains valid.</h2>
+                <p>{snapshot.guideError}</p>
+              </article>
+            ) : snapshot.invite && (
               <article className="wall-invite">
                 <span className="mono-label">YOUR RESULT</span>
                 <h2>Prepared fictional match</h2>
@@ -91,7 +108,7 @@ export function WallPage() {
       </section>
       <footer className="wall-footer">
         <span>{snapshot?.windows.length ?? 0} WINDOWS LIT</span>
-        <span>GEMMA MAKES MEMORY LEGIBLE. TRANSPARENT MATCHING DRAWS THE THREAD.</span>
+        <span>GEMMA PROTECTS THE MEMORY. GEMINI HELPS PEOPLE BEGIN.</span>
       </footer>
     </main>
   );

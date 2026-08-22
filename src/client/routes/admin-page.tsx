@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import { useParams } from "react-router-dom";
 import { StatusBadge } from "../components/status-badge";
-import { providerPresentation } from "../lib/provider-presentation";
+import { facilitatorPresentation, providerPresentation } from "../lib/provider-presentation";
 import { useRoomSocket } from "../lib/use-room-socket";
 
 export function AdminPage() {
@@ -11,6 +11,7 @@ export function AdminPage() {
   const joinUrl = useMemo(() => `${window.location.origin}/join/${roomCode}`, [roomCode]);
   const activeProvider = room.snapshot?.provider;
   const provider = providerPresentation(activeProvider);
+  const facilitator = facilitatorPresentation(room.snapshot?.facilitator);
   const [qrData, setQrData] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -31,7 +32,7 @@ export function AdminPage() {
           <span className="wordmark">87K WINDOWS</span>
           <span className="room-label">PRESENTER · {roomCode.toUpperCase()}</span>
         </div>
-        <StatusBadge connected={room.connected} provider={room.snapshot?.provider} />
+        <StatusBadge connected={room.connected} provider={room.snapshot?.provider} facilitator={room.snapshot?.facilitator} />
       </header>
       <section className="admin-shell">
         <div className="admin-intro">
@@ -61,13 +62,20 @@ export function AdminPage() {
           </article>
 
           <article className="admin-section provider-section">
-            <span className="mono-label">JUDGING INFERENCE</span>
-            <h2>{provider.heading}</h2>
+            <span className="mono-label">TRACK 2 · GEMINI FOR SENIORS</span>
+            <h2>{facilitator.heading}</h2>
+            <div className={`provider-lock ${facilitator.realGemini ? "is-live" : ""}`}>
+              <span className="status-dot is-online" aria-hidden="true" />
+              <div>
+                <strong>{facilitator.label}</strong>
+                <p>{facilitator.detail}</p>
+              </div>
+            </div>
             <div className={`provider-lock ${provider.realGemma ? "is-live" : ""}`}>
               <span className="status-dot is-online" aria-hidden="true" />
               <div>
                 <strong>{provider.label}</strong>
-                <p>{provider.detail}</p>
+                <p><b>{provider.heading}</b> {provider.detail}</p>
               </div>
             </div>
             {(room.message || room.snapshot?.lastError) && <div className="admin-message" role="status">{room.message ?? room.snapshot?.lastError}</div>}
@@ -80,6 +88,7 @@ export function AdminPage() {
               <div><dt>Phase</dt><dd>{room.snapshot?.phase ?? "Joining"}</dd></div>
               <div><dt>Windows lit</dt><dd>{room.snapshot?.windows.length ?? 0}</dd></div>
               <div><dt>Match</dt><dd>{room.snapshot?.match?.decision ?? "Not started"}</dd></div>
+              <div><dt>Gemini guide</dt><dd>{room.snapshot?.guide ? "Ready" : room.snapshot?.guideError ? "Unavailable" : "Not started"}</dd></div>
             </dl>
             <a className="text-link" href={`/wall/${roomCode}`} target="_blank" rel="noreferrer">Open Wall Mode ↗</a>
           </article>

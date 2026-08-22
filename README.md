@@ -4,13 +4,14 @@
 
 ### Lives witnessed. Human threads revealed.
 
-Gemma turns one consented memory into a safe, explainable invitation for another person to listen and learn.
+Gemini helps seniors begin a real conversation; local Gemma keeps the raw memory private.
 
 [**Open the live demo**](https://windows-87k-985493069617.asia-southeast1.run.app/join/demo87) · [Wall Mode](https://windows-87k-985493069617.asia-southeast1.run.app/wall/demo87) · [Architecture](docs/ARCHITECTURE.md) · [90-second demo](docs/DEMO_SCRIPT.md)
 
 [![Quality gates](https://github.com/tanveerriaz/87k-windows/actions/workflows/ci.yml/badge.svg)](https://github.com/tanveerriaz/87k-windows/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-073b39?logo=typescript&logoColor=white)
 ![Gemma](https://img.shields.io/badge/Gemma-real%20inference-b6402d)
+![Gemini](https://img.shields.io/badge/Gemini%203.6-senior%20facilitator-65bca7)
 ![Cloud Run](https://img.shields.io/badge/Cloud%20Run-Singapore-e3a43a?logo=googlecloud&logoColor=073b39)
 ![Data](https://img.shields.io/badge/demo%20data-fictional-65bca7)
 
@@ -26,15 +27,15 @@ Older people are not profiles to complete or companions to simulate. They are wi
 
 87K Windows asks one gentle question, lets the participant approve exactly what can be shared, and makes the resulting human bridge visible on a shared Singapore housing block.
 
-> Not an AI companion. An AI that makes a memory legible, finds the bridge, and gets out of the way.
+> Not an AI companion. Gemini creates a safe beginning, then gets out of the way so two people can talk.
 
 The story direction is informed by Singapore seniors who continue contributing through healthcare, football, modelling and education in CNA's [*Never Too Old*](https://www.youtube.com/watch?v=5eJ8cwojDJg). Every story shipped in this repository remains clearly fictional.
 
-## The four-beat experience
+## The Track 2 experience
 
-| 01 — You shared | 02 — Gemma noticed | 03 — You approved | 04 — A story matched |
-| --- | --- | --- | --- |
-| One short memory, spoken or typed | A safe capsule with evidence and uncertainty | Nothing enters matching without consent | A grounded invitation, or `NO MATCH YET` |
+| 01 — You shared | 02 — Gemma protected | 03 — You approved | 04 — Evidence matched | 05 — Gemini guides |
+| --- | --- | --- | --- | --- |
+| One short memory, spoken or typed | A local safe capsule with uncertainty | Nothing enters matching without consent | Transparent code returns a match or `NO MATCH YET` | Two gentle questions can be read aloud slowly |
 
 The prepared demo is intentionally simple:
 
@@ -56,9 +57,9 @@ The prepared demo is intentionally simple:
 <sub>Original synthetic visual direction generated with Gemini 3.1 Flash Image; implemented with accessible React, semantic HTML and Canvas.</sub>
 </details>
 
-## Where Gemma is used
+## Where Gemini and Gemma are used
 
-Gemma has one narrow, visible job: turn natural language into a reviewable story capsule.
+The models have different, visible jobs. Gemini is the senior-facing Track 2 intelligence. Gemma is the local privacy layer.
 
 ```text
 YOUR WORDS
@@ -70,20 +71,26 @@ server-side redaction → open Gemma on the local Mac → Zod validation
 place · era · skill · offer/want · safe summary · uncertainty
     │
     ▼
-your approval → transparent deterministic matcher → invitation or NO MATCH YET
+your approval → transparent matcher → MATCH or NO MATCH YET
+                                      │
+                        MATCH only     ▼
+approved safe capsules + visible evidence → Gemini 3.6 Flash
+                                      │
+                                      ▼
+two senior-friendly questions + pause/stop reminder + Read aloud
 ```
 
-Gemma does **not** choose a friend, invent a biography, analyse the optional photo, exchange contact details or imitate companionship. Matching is ordinary application logic with visible evidence and a hard threshold.
+Gemini never receives raw memory text, photos, contact details or unmatched submissions. It cannot choose a match or change its confidence. Gemma does **not** choose a friend, invent a biography, analyse the optional photo, exchange contact details or imitate companionship. Matching is ordinary application logic with visible evidence and a hard threshold.
 
 ## Why open Gemma matters
 
-The physical judging demo runs `gemma3:4b` locally through Ollama. Model inference stays on a community-operated Mac, the experience works without internet access, and one laptop can serve phones over a trusted private hotspot. Openness is therefore part of community control—not a model swap inside a generic cloud workflow.
+The physical judging demo runs `gemma3:4b` locally through Ollama for the privacy-sensitive first pass, while server-side `gemini-3.6-flash` produces the consent-first senior guide. One laptop serves zero-install phone clients over a trusted private hotspot; participants do not install Ollama or either model.
 
 The local prototype uses HTTP between each phone and the Mac, so it must not run on shared event Wi-Fi. `LOCAL GEMMA · ON-DEVICE` describes where inference runs; it is not a claim of encrypted transport.
 
 To match the MacBook Air and `gemma3:4b` demo hardware, local inference deliberately handles one story at a time. Additional submissions receive a clear busy response and can retry after the current capsule is ready; there is no parallel model queue.
 
-The public Cloud Run demo uses hosted Gemma through the Gemini API so remote reviewers can try the same typed provider contract. Both modes are labelled; neither silently falls back to simulated inference.
+The public Cloud Run demo uses hosted Gemma for extraction and Gemini 3.6 Flash for the same post-match guide. Every active model is labelled; neither silently falls back to simulated inference.
 
 ## Architecture
 
@@ -93,6 +100,7 @@ flowchart LR
     Server[Community Mac\nExpress · Socket.IO · Zod]
     Gemma[Open Gemma\nOllama · local inference]
     Match[MiniSearch +\ntransparent scorer]
+    Gemini[Gemini 3.6 Flash\nsenior connection guide]
     Wall[Projected HDB wall\nLight · Evidence · Invitation]
 
     Phone -->|short fictional memory| Server
@@ -100,6 +108,8 @@ flowchart LR
     Gemma -->|structured capsule| Server
     Server -->|approved capsule| Match
     Match -->|MATCH or NO MATCH| Server
+    Server -->|MATCH only · approved safe evidence| Gemini
+    Gemini -->|two questions + consent reminder| Server
     Server -->|live room events| Wall
 ```
 
@@ -116,12 +126,16 @@ npm ci
 npm test
 ```
 
-Start one real-model path:
+Start the Track 2 judging path:
 
 ```bash
-npm run demo:local  # primary live demo: native Ollama with gemma3:4b
-npm run demo:gemma  # online path: hosted Gemma; key stays server-side
+read -s "GEMINI_API_KEY?Gemini API key: "
+export GEMINI_API_KEY
+npm run demo:judge  # local Gemma + server-side Gemini 3.6 Flash
+unset GEMINI_API_KEY
 ```
+
+`npm run demo:local` is the offline Gemma-only recovery path. `npm run demo:gemma` is the hosted Gemma + Gemini online path.
 
 Open the three surfaces:
 
@@ -144,9 +158,12 @@ unset GEMINI_API_KEY
 
 | Mode | Model | Role |
 | --- | --- | --- |
-| Presentation Mac | `gemma3:4b` through native Ollama | Primary judging path: on-device and offline-capable |
-| Cloud Run | hosted Gemma 4 through the Gemini API | Public path for online reviewers |
-| Deterministic harness | synthetic fixture provider | Automated tests and UI development only |
+| Mode | Extraction | Senior facilitation | Role |
+| --- | --- | --- | --- |
+| `demo:judge` | local `gemma3:4b` | `gemini-3.6-flash` | Primary Track 2 judging path |
+| `demo:gemma` / Cloud Run | hosted Gemma 4 | `gemini-3.6-flash` | Public online-review path |
+| `demo:local` | local `gemma3:4b` | disabled | Offline recovery; not the complete Track 2 story |
+| Test harness | deterministic fixtures | deterministic guide | Automated checks only |
 
 If neither real model is available, the judged demo stops honestly. It never silently falls back to simulated inference.
 
@@ -156,6 +173,7 @@ If neither real model is available, the judged demo stops honestly. It never sil
 - Raw memory text and optional image previews are not persisted.
 - The optional photo stays in the browser and is never sent to Gemma.
 - Obvious contact details are removed before hosted inference.
+- Gemini receives only approved safe capsules after a valid match; no-match never calls it.
 - Model output is schema-constrained, validated and safely rejected when malformed.
 - Weak evidence returns `NO MATCH YET`; no invitation is invented.
 - No hidden chain-of-thought is shown—only evidence, uncertainty and missing information.

@@ -16,6 +16,7 @@
     "test:e2e": "playwright test",
     "assets:generate": "node scripts/generate-assets.mjs",
     "demo:gemma": "./scripts/run-demo.sh gemma",
+    "demo:judge": "./scripts/run-demo.sh judge",
     "demo:mock": "./scripts/run-demo.sh mock",
     "demo:local": "./scripts/run-demo.sh local",
     "verify:machine": "./scripts/verify-demo-machine.sh",

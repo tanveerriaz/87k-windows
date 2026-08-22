@@ -1,82 +1,76 @@
-# 87K Windows — 90-second demo script
+# 87K Windows — 90-second Track 2 demo
 
-Use one browser window for `/wall/<room>` and one phone-sized window for `/join/<room>`. Keep the provider label visible but unobtrusive. Use only the prepared fictional fixtures.
+Use one browser window for `/wall/<room>` and one phone for `/join/<room>`. Launch with `npm run demo:judge`; the status must show `LOCAL GEMMA + GEMINI`. Use only the prepared fictional fixtures.
 
-The organizer permits a maximum three-minute submission video. This 90-second version keeps the working core loop in the first minute.
+The organizer permits a maximum three-minute video. This version proves the complete senior-facing Gemini loop in 90 seconds.
 
-## 0:00–0:15 — Set the stakes
+## 0:00–0:12 — Set the stakes
 
-**Show:** The wall is dark.
-
-**Say:**
-
-> Every dark window stands for a life we have not asked about yet. 87K Windows gives an older person one gentle question, listens to the answer, and makes a respectful connection visible.
-
-> Older people are not profiles to complete. They are witnesses, makers and teachers. The question is whether someone is ready to listen and learn.
-
-## 0:15–0:30 — Ask and share
-
-**Show:** Join Mode with the large question and voice/type controls. Choose the prepared fictional radio memory if live voice is not available.
+**Show:** The dark wall.
 
 **Say:**
 
-> The participant does not fill out a profile or chat with a bot. They answer one question and review what can be shared. Today’s story is fictional: a Queenstown radio-repair memory.
+> Every dark window is a life we have not asked about. 87K Windows is not an AI companion. It helps an older person turn one memory into a safe beginning with another human being.
 
-Submit the memory and show the capsule review. Point out the observed evidence, safe summary, redactions and uncertainty. Approve it.
+## 0:12–0:30 — Voice-first, patient and consented
 
-## 0:30–0:48 — Gemma does the useful work
-
-**Show:** The first window lights and the capsule appears on the wall.
+**Show:** The large question and voice/type controls. Use the prepared fictional Queenstown radio memory. Show the editable text and review screen.
 
 **Say:**
 
-> Open Gemma runs here on the presentation Mac. Model inference stays on this device, connected through our private hotspot. It is not writing a personality or inventing a biography. It extracts only what the memory supports, keeps uncertainty visible, and gives the matcher evidence it can explain.
+> There is one question at a time. A participant can speak slowly, pause, type or edit. Local Gemma turns the raw memory into a small evidence capsule on this Mac. The participant—not the model—approves what may be shared.
 
-If asked about credentials, say:
+Point to the safe summary, offer, uncertainty and approval button. Do not show or use real personal data.
 
-> The Gemini API key is a server-side environment variable; it is never shipped to the browser or committed to this public repository.
+## 0:30–0:45 — Reliability before emotion
 
-## 0:48–1:05 — Reveal the connection
-
-**Show:** A second prepared fictional window lights and the bridge animates.
+**Show:** Approve. The first window lights, evidence appears and the grounded match is revealed.
 
 **Say:**
 
-> The matcher now finds a second fictional life with a grounded shared thread. The two windows glow together because the evidence connects them—not because the model guessed a person’s identity.
+> Transparent code decides whether the evidence holds. It can return `NO MATCH YET`; Gemini cannot force a connection or change the confidence. Here, Queenstown, the 1970s, radio repair and teach-to-learn form the visible bridge.
 
-> One person remembers how. Another wants to learn. That is the bridge.
+## 0:45–1:08 — Gemini for seniors
 
-Point briefly to the evidence path and suggested invitation. Make clear that the second story is a fictional fixture, not a person who has already accepted. In a real community room, both people would still choose whether to listen. If using the no-match fixture, show `NO MATCH YET` and say that the system refuses to force a weak connection.
-
-## 1:05–1:20 — Explain reliability and access
-
-**Show:** The provider status or admin provider panel.
+**Show:** The `GEMINI · SENIOR CONNECTION GUIDE` on the wall and phone. Press `Read this aloud`.
 
 **Say:**
 
-> Live judging uses open Gemma locally through Ollama, so the community controls where memories are interpreted and the demo can continue offline. Cloud Run uses hosted Gemma for online reviewers. Both paths are explicit real-model modes; neither falls back to simulation.
+> Now Gemini 3.6 Flash does the Track 2 work. It sees only the two approved safe capsules and this visible evidence—not the raw memory, photo or contact details. It creates two optional, plain-language questions and an explicit reminder that either person may pause or stop. The guide can be read aloud slowly, but it always stays visible.
 
-> The local demo handles one story at a time by design. That keeps the experience reliable on a MacBook Air instead of pretending this prototype is a scaled service.
+> Gemini creates the beginning. The people create the relationship.
 
-If the offline proof has been rehearsed, briefly disconnect internet and run the prepared extraction again. Do not improvise this step for the first time during judging.
+## 1:08–1:20 — Prove the refusal
 
-## 1:20–1:30 — Close
-
-**Show:** The completed wall with both windows glowing.
+**Show:** Briefly use the prepared no-match fixture, or cut to its recorded result.
 
 **Say:**
 
-> The phone is the doorway, Gemma is the careful listener, transparent matching draws the bridge, and the wall is the collective memory. Ask, listen, light a window, and discover which lives are connected.
+> With weak evidence, there is no invitation and Gemini is never called. Empathy without reliability is manipulation; this product refuses that.
+
+## 1:20–1:30 — Close on feasibility
+
+**Show:** Admin Mode’s Track 2 model panel, then the completed wall.
+
+**Say:**
+
+> Phones install nothing. Local Gemma protects the memory, server-side Gemini helps seniors begin, and one community Mac runs the room. AI steps back as soon as two humans can step forward.
+
+## If judges ask
+
+- **Why both?** Gemma is the private local interpreter; Gemini is the context-aware senior facilitator. Neither is decorative.
+- **Why not Gemini Live?** The hackathon slice prioritizes reliable editable input and a visible read-aloud guide. It never hides meaning in an ephemeral voice exchange.
+- **Who chooses the match?** Deterministic application logic with a visible threshold. Gemini only runs after `MATCH`.
+- **What reaches Gemini?** Two approved safe capsules, the evidence path and match explanation. No raw memory, image, contact data or unmatched submission.
+- **Where is the key?** A server-side environment variable only—never browser code or the public repository.
 
 ## Before recording
 
-- [ ] Use fictional fixtures only; remove real photos and recordings from the demo.
-- [ ] Confirm the displayed provider matches the actual server mode.
-- [ ] Confirm the status reads `LOCAL GEMMA · ON-DEVICE`, Ollama has `gemma3:4b` loaded, and phones use a trusted private hotspot—not shared event Wi-Fi.
-- [ ] Open Wall Mode before Join Mode so the first glow is visible.
-- [ ] Keep the prepared radio story and no-match fixture ready.
-- [ ] Test the positive match and `NO MATCH YET` paths once.
-- [ ] Record the core loop first; explain the separate Cloud Run online-review path afterward.
-- [ ] Keep the final video below the organizer's three-minute maximum.
-- [ ] Check that the public repository URL is included in the submission.
+- [ ] Run `npm run demo:judge`; confirm `LOCAL GEMMA + GEMINI` and real Gemini 3.6 Flash in Admin Mode.
+- [ ] Confirm Ollama has `gemma3:4b` loaded and the server has `GEMINI_API_KEY` without printing it.
+- [ ] Use a trusted private hotspot, never shared event Wi-Fi.
+- [ ] Test `Read this aloud`, Stop, large controls and 18 px mobile copy.
+- [ ] Test Queenstown/radio, wall reconnect and `NO MATCH YET`.
+- [ ] Use fictional fixtures only; remove real photos and recordings.
+- [ ] Keep the final video below three minutes and put the working core loop first.
 - [ ] Run lint, typecheck, tests, build and E2E before uploading.

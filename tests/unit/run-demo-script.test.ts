@@ -24,7 +24,7 @@ describe("local judging launcher", () => {
     await executable(fakeBin, "uname", '[[ "${1:-}" == "-s" ]] && echo Darwin || echo arm64');
     await executable(fakeBin, "ollama", '[[ "${1:-}" == "list" ]] && printf "NAME\\ngemma3:4b\\n" || true');
     await executable(fakeBin, "curl", `printf 'curl %s\\n' "$*" >> "${commandLog}"`);
-    await executable(fakeBin, "npm", `printf 'npm %s\\n' "$*" >> "${commandLog}"`);
+    await executable(fakeBin, "npm", `printf 'provider=%s facilitator=%s npm %s\\n' "\${INFERENCE_PROVIDER:-}" "\${GEMINI_FACILITATOR:-}" "$*" >> "${commandLog}"`);
 
     const result = spawnSync("bash", ["scripts/run-demo.sh", "local"], {
       cwd: process.cwd(),
@@ -46,5 +46,33 @@ describe("local judging launcher", () => {
     expect(log).toContain("npm run build");
     expect(log).toContain("npm start");
     expect(log).not.toContain("npm run dev");
+  });
+
+  it("starts the Track 2 judging runtime with local Gemma and real Gemini", async () => {
+    const fakeBin = await mkdtemp(join(tmpdir(), "87k-judge-bin-"));
+    temporaryDirectories.push(fakeBin);
+    const commandLog = join(fakeBin, "commands.log");
+    await executable(fakeBin, "uname", '[[ "${1:-}" == "-s" ]] && echo Darwin || echo arm64');
+    await executable(fakeBin, "ollama", '[[ "${1:-}" == "list" ]] && printf "NAME\\ngemma3:4b\\n" || true');
+    await executable(fakeBin, "curl", `printf 'curl %s\\n' "$*" >> "${commandLog}"`);
+    await executable(fakeBin, "npm", `printf 'provider=%s facilitator=%s npm %s\\n' "\${INFERENCE_PROVIDER:-}" "\${GEMINI_FACILITATOR:-}" "$*" >> "${commandLog}"`);
+
+    const result = spawnSync("bash", ["scripts/run-demo.sh", "judge"], {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${fakeBin}:${process.env.PATH ?? ""}`,
+        ROOM_HOST: "192.168.2.1",
+        DEMO_PORT: "3000",
+        GEMINI_API_KEY: "test-secret",
+      },
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("TRACK 2 JUDGING");
+    expect(result.stdout).toContain("LOCAL GEMMA + GEMINI 3.6 FLASH");
+    const log = await readFile(commandLog, "utf8");
+    expect(log).toContain("provider=ollama facilitator=gemini npm start");
   });
 });

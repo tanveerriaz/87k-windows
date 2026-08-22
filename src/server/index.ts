@@ -20,6 +20,7 @@ const rooms = new RoomStore(
   new StoryMatcher(undefined, env.MATCH_THRESHOLD),
   dependencies.provider,
   env.INFERENCE_PROVIDER,
+  dependencies.facilitator,
 );
 
 io.on("connection", (socket) => {
@@ -90,5 +91,5 @@ io.on("connection", (socket) => {
 });
 
 httpServer.listen(env.PORT, "0.0.0.0", () => {
-  console.info(`87K Windows server listening on http://0.0.0.0:${env.PORT} in ${env.INFERENCE_PROVIDER} mode`);
+  console.info(`87K Windows server listening on http://0.0.0.0:${env.PORT} with ${env.INFERENCE_PROVIDER} inference and ${env.GEMINI_FACILITATOR} facilitation`);
 });

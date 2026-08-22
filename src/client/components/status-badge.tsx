@@ -1,14 +1,23 @@
+import type { Facilitator, Provider } from "../../shared/schemas";
+
 type StatusBadgeProps = {
   connected: boolean;
-  provider?: string;
+  provider?: Provider;
+  facilitator?: Facilitator;
 };
 
-export function StatusBadge({ connected, provider }: StatusBadgeProps) {
-  const providerLabel = provider === "ollama"
-    ? "LOCAL GEMMA · ON-DEVICE"
+export function StatusBadge({ connected, provider, facilitator }: StatusBadgeProps) {
+  const providerLabel = provider === "ollama" && facilitator === "gemini"
+    ? "LOCAL GEMMA + GEMINI"
+    : provider === "gemma-api" && facilitator === "gemini"
+      ? "GEMMA + GEMINI · ONLINE"
+      : provider === "ollama"
+        ? "LOCAL GEMMA · ON-DEVICE"
     : provider === "gemma-api"
       ? "HOSTED GEMMA · ONLINE"
-      : provider === "mock"
+      : provider === "mock" && facilitator === "mock"
+        ? "TEST HARNESS · DUAL MODEL"
+        : provider === "mock"
         ? "TEST HARNESS"
         : "CONNECTING";
   return (

@@ -64,7 +64,7 @@ gcloud run deploy windows-87k \
   --concurrency 40 \
   --timeout 60 \
   --service-account "windows-87k-run@${PROJECT_ID}.iam.gserviceaccount.com" \
-  --set-env-vars INFERENCE_PROVIDER=gemma-api,GEMMA_MODEL=gemma-4-26b-a4b-it,ROOM_TTL_MINUTES=120 \
+  --set-env-vars INFERENCE_PROVIDER=gemma-api,GEMMA_MODEL=gemma-4-26b-a4b-it,GEMINI_FACILITATOR=gemini,GEMINI_MODEL=gemini-3.6-flash,ROOM_TTL_MINUTES=120 \
   --set-secrets GEMINI_API_KEY=gemini-api-key:latest
 ```
 
@@ -78,7 +78,7 @@ curl -fsS "$DEMO_URL/health"
 CLOUD_RUN_DEMO_URL="$DEMO_URL" ./scripts/verify-demo-machine.sh
 ```
 
-The health response must show `"status":"ok"` and `"provider":"gemma-api"`. Then open `/join/demo87` on a phone and `/wall/demo87` on the projector. Exercise the real extraction once and the no-match path once.
+The health response must show `"status":"ok"`, `"provider":"gemma-api"`, `"facilitator":"gemini"` and `"geminiModel":"gemini-3.6-flash"`. Then open `/join/demo87` on a phone and `/wall/demo87` on the projector. Exercise the real extraction and Gemini guide once, then prove the no-match path creates no guide.
 
 ## 5. After judging
 

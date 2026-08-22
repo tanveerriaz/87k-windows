@@ -8,7 +8,7 @@ import { compressImage } from "../lib/image";
 import { useRoomSocket } from "../lib/use-room-socket";
 
 const MEMORY_QUESTION = "What small thing made you happy when you were young?";
-const JOURNEY_STEPS = ["You shared", "Gemma noticed", "You approved", "A story matched"];
+const JOURNEY_STEPS = ["You shared", "Gemma protected", "You approved", "A story matched"];
 
 type Stage = "welcome" | "capture" | "processing" | "review" | "waiting" | "result";
 
@@ -24,11 +24,14 @@ export function JoinPage() {
   const [capsule, setCapsule] = useState<StoryCapsule | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const room = useRoomSocket(roomCode, "join");
   const preparedImageSelected = fixture === "radio" && photoData === null;
   const journeySteps = room.snapshot?.phase === "no-match"
     ? [...JOURNEY_STEPS.slice(0, 3), "Still listening"]
-    : JOURNEY_STEPS;
+    : room.snapshot?.guide
+      ? [...JOURNEY_STEPS, "Gemini guides"]
+      : JOURNEY_STEPS;
   const sourceStory = room.snapshot?.windows.findLast((window) => window.participantId === room.snapshot?.activeSourceId);
   const listenerStory = room.snapshot?.windows.findLast((window) => window.participantId === room.snapshot?.activeCandidateId);
 
@@ -47,6 +50,10 @@ export function JoinPage() {
       }
     }
   }, [participantId, room.snapshot?.activeSourceId, room.snapshot?.phase, stage]);
+
+  useEffect(() => () => {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  }, []);
 
   const chooseFixture = (next: "radio" | "no-match") => {
     setFixture(next);
@@ -125,10 +132,40 @@ export function JoinPage() {
   };
 
   const startAgain = () => {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    setIsSpeaking(false);
     room.reset();
     setCapsule(null);
     setStage("capture");
     chooseFixture("radio");
+  };
+
+  const speakGuide = () => {
+    const guide = room.snapshot?.guide;
+    if (!guide) return;
+    if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+      setError("Read aloud is not available in this browser. The full guide remains on screen.");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance([
+      guide.introduction,
+      ...guide.questions,
+      guide.consentReminder,
+    ].join(" "));
+    utterance.lang = "en-SG";
+    utterance.rate = 0.82;
+    utterance.pitch = 1;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    setError(null);
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopGuide = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
   };
 
   return (
@@ -138,11 +175,11 @@ export function JoinPage() {
           <span className="wordmark">87K WINDOWS</span>
           <span className="room-label">ROOM {roomCode.toUpperCase()}</span>
         </div>
-        <StatusBadge connected={room.connected} provider={room.snapshot?.provider} />
+        <StatusBadge connected={room.connected} provider={room.snapshot?.provider} facilitator={room.snapshot?.facilitator} />
       </header>
 
       <section className="join-shell" aria-live="polite">
-        <div className="step-rail" aria-label="Progress">
+        <div className={`step-rail ${journeySteps.length === 5 ? "has-guide" : ""}`} aria-label="Progress">
           {journeySteps.map((label, index) => {
             const activeIndex = stage === "welcome" || stage === "capture"
               ? 0
@@ -256,7 +293,7 @@ export function JoinPage() {
             <div className="window-beacon" aria-hidden="true" />
             <p className="eyebrow">Your window is lit</p>
             <h1>Your story is now visible as a warm light.</h1>
-            <p>Your approved capsule is being compared for a shared human thread, not just matching words.</p>
+            <p>Your approved capsule is being checked for a shared human thread. If the evidence holds, Gemini will prepare a gentle way to begin.</p>
           </div>
         )}
 
@@ -278,6 +315,24 @@ export function JoinPage() {
             <div className="evidence-path" aria-label="Evidence path">
               {room.snapshot.match.evidencePath.map((evidence) => <span key={evidence}>{evidence}</span>)}
             </div>
+            {room.snapshot.guide && (
+              <article className="senior-bridge">
+                <span className="mono-label">GEMINI · SENIOR CONNECTION GUIDE</span>
+                <h2>{room.snapshot.guide.introduction}</h2>
+                <p className="bridge-intro">Two optional questions, written for a slower conversation:</p>
+                <ol>
+                  {room.snapshot.guide.questions.map((question) => <li key={question}>{question}</li>)}
+                </ol>
+                <p className="consent-reminder">{room.snapshot.guide.consentReminder}</p>
+                <div className="read-aloud-actions">
+                  <button className="button button-primary" type="button" aria-pressed={isSpeaking} onClick={speakGuide}>Read this aloud</button>
+                  {isSpeaking && <button className="button button-secondary" type="button" onClick={stopGuide}>Stop reading</button>}
+                </div>
+                <small>Gemini received only the two approved safe capsules and the visible evidence above—not your raw words.</small>
+              </article>
+            )}
+            {room.snapshot.guideError && <div className="error-banner" role="status">{room.snapshot.guideError}</div>}
+            {error && <div className="error-banner" role="alert">{error}</div>}
             <article className="kopi-card">
               <span className="mono-label">SUGGESTED KOPI CARD · FICTIONAL DEMO</span>
               <h2>{room.snapshot.invite.invitation}</h2>

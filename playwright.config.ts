@@ -13,7 +13,7 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
   webServer: {
-    command: `CLIENT_PORT=${clientPort} SERVER_PORT=${serverPort} INFERENCE_PROVIDER=mock npm run dev`,
+    command: `CLIENT_PORT=${clientPort} SERVER_PORT=${serverPort} INFERENCE_PROVIDER=mock GEMINI_FACILITATOR=mock npm run dev`,
     url: `http://127.0.0.1:${clientPort}/health`,
     reuseExistingServer: false,
     timeout: 120_000,

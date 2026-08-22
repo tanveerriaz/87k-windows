@@ -11,9 +11,9 @@ export function LandingPage() {
       <section className="landing-hero">
         <p className="eyebrow">Ask before it is too late</p>
         <h1>Every life is a window.</h1>
-        <p className="landing-thesis">Gemma helps us ask, listen, and see which windows are connected.</p>
+        <p className="landing-thesis">Gemini helps seniors turn a shared memory into a human beginning.</p>
         <p className="landing-copy">
-          One humane question becomes one warm light. When two memories share a deeper human thread, the wall makes that connection visible.
+          Local Gemma keeps raw memories private. After the evidence holds, Gemini prepares two gentle questions that can be read aloud—so people, not AI, make the connection.
         </p>
         <div className="landing-actions">
           <Link className="button button-primary" to="/join/demo87">Start the demo</Link>
@@ -32,8 +32,8 @@ export function LandingPage() {
       </figure>
       <aside className="landing-proof" aria-label="How the demo works">
         <div><span>ASK</span><p>One small question, asked with patience.</p></div>
-        <div><span>LISTEN</span><p>Your words stay separate from Gemma’s reading.</p></div>
-        <div><span>CONNECT</span><p>Two lights glow only when the evidence holds.</p></div>
+        <div><span>PROTECT</span><p>Gemma makes a safe capsule on the room’s Mac.</p></div>
+        <div><span>BEGIN</span><p>Gemini offers a slow, consent-first way to start talking.</p></div>
       </aside>
     </main>
   );

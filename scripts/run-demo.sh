@@ -7,8 +7,8 @@ MODEL="gemma3:4b"
 DEMO_PORT="${DEMO_PORT:-3000}"
 ROOM_CODE="${ROOM_CODE:-demo87}"
 
-if [[ "$MODE" != "mock" && "$MODE" != "local" && "$MODE" != "gemma" ]]; then
-  echo "Usage: ./scripts/run-demo.sh mock|local|gemma" >&2
+if [[ "$MODE" != "mock" && "$MODE" != "local" && "$MODE" != "gemma" && "$MODE" != "judge" ]]; then
+  echo "Usage: ./scripts/run-demo.sh mock|local|gemma|judge" >&2
   exit 2
 fi
 
@@ -26,7 +26,7 @@ room_urls() {
 }
 
 start_real_room() {
-  local provider="$1" label="$2" urls
+  local provider="$1" label="$2" facilitator="${3:-disabled}" urls
   urls="$(room_urls)" || exit 1
   echo "$label"
   echo "Building the single-process room application..."
@@ -34,10 +34,14 @@ start_real_room() {
   echo "$urls"
   echo "Use a trusted private hotspot, never shared event Wi-Fi."
   echo "Open the ADMIN URL on the Mac, put WALL on the projector, and let participants scan the QR."
-  exec env NODE_ENV=production PORT="$DEMO_PORT" INFERENCE_PROVIDER="$provider" npm start
+  exec env NODE_ENV=production PORT="$DEMO_PORT" INFERENCE_PROVIDER="$provider" GEMINI_FACILITATOR="$facilitator" npm start
 }
 
-if [[ "$MODE" == "local" ]]; then
+if [[ "$MODE" == "local" || "$MODE" == "judge" ]]; then
+  if [[ "$MODE" == "judge" && -z "${GEMINI_API_KEY:-}" ]]; then
+    echo "GEMINI_API_KEY is missing. Track 2 judging requires server-side Gemini. Export it from a private shell or ignored .env; never commit it." >&2
+    exit 1
+  fi
   command -v ollama >/dev/null 2>&1 || { echo "Native Ollama is not installed. Use hosted Gemma or install Ollama for macOS yourself." >&2; exit 1; }
   ollama list 2>/dev/null | awk 'NR > 1 {print $1}' | grep -qx "$MODEL" \
     || { echo "$MODEL is missing. Run ./scripts/setup-macos.sh --with-ollama." >&2; exit 1; }
@@ -49,14 +53,17 @@ if [[ "$MODE" == "local" ]]; then
     --data "{\"model\":\"$MODEL\",\"prompt\":\"Reply READY\",\"stream\":false,\"keep_alive\":\"30m\",\"options\":{\"num_predict\":8}}" >/dev/null \
     || { echo "Local Gemma warm-up failed. Nothing has been shown to participants." >&2; exit 1; }
   export OLLAMA_MODEL="$MODEL"
+  if [[ "$MODE" == "judge" ]]; then
+    start_real_room ollama "TRACK 2 JUDGING · LOCAL GEMMA + GEMINI 3.6 FLASH. Gemma protects the memory; Gemini guides the human beginning." gemini
+  fi
   start_real_room ollama "Starting 87K Windows with LOCAL GEMMA PRIMARY on this Mac."
 fi
 
 if [[ "$MODE" == "gemma" ]]; then
   [[ -n "${GEMINI_API_KEY:-}" ]] \
     || { echo "GEMINI_API_KEY is missing. Export it from a private shell or ignored .env; never commit it." >&2; exit 1; }
-  start_real_room gemma-api "Starting 87K Windows with HOSTED GEMMA FALLBACK. The key remains server-side."
+  start_real_room gemma-api "Starting 87K Windows online with HOSTED GEMMA + GEMINI 3.6 FLASH. The key remains server-side." gemini
 fi
 
 echo "Starting the deterministic TEST HARNESS. Never use this mode during judging."
-exec env INFERENCE_PROVIDER=mock npm run dev
+exec env INFERENCE_PROVIDER=mock GEMINI_FACILITATOR=mock npm run dev

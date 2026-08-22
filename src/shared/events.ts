@@ -4,6 +4,7 @@ import type {
   MatchResult,
   Provider,
   RoomSnapshot,
+  SeniorBridge,
   StoryCapsule,
 } from "./schemas";
 
@@ -30,6 +31,7 @@ export interface ServerToClientEvents {
   "match:none": (result: MatchResult) => void;
   "bridge:animate": (result: MatchResult) => void;
   "invite:ready": (card: KopiCard) => void;
+  "guide:ready": (guide: SeniorBridge) => void;
   "demo:reset": (snapshot: RoomSnapshot) => void;
   "provider:changed": (payload: {
     provider: Provider;

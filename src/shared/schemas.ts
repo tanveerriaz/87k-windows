@@ -1,6 +1,16 @@
 import { z } from "zod";
 
 export const ProviderSchema = z.enum(["mock", "gemma-api", "ollama"]);
+export const FacilitatorSchema = z.enum(["disabled", "gemini", "mock"]);
+
+export const SeniorBridgeSchema = z.object({
+  introduction: z.string().trim().min(1).max(240),
+  questions: z.tuple([
+    z.string().trim().min(1).max(200),
+    z.string().trim().min(1).max(200),
+  ]),
+  consentReminder: z.string().trim().min(1).max(180),
+});
 
 export const StoryCapsuleSchema = z.object({
   id: z.string().min(1),
@@ -50,12 +60,15 @@ export const LitWindowSchema = z.object({
 export const RoomSnapshotSchema = z.object({
   roomCode: z.string(),
   provider: ProviderSchema,
+  facilitator: FacilitatorSchema,
   phase: z.enum(["idle", "reviewing", "matching", "matched", "no-match"]),
   windows: z.array(LitWindowSchema),
   activeSourceId: z.string().nullable(),
   activeCandidateId: z.string().nullable(),
   match: MatchResultSchema.nullable(),
   invite: KopiCardSchema.nullable(),
+  guide: SeniorBridgeSchema.nullable(),
+  guideError: z.string().nullable(),
   lastError: z.string().nullable(),
   updatedAt: z.string(),
 });
@@ -78,6 +91,8 @@ export const InviteRequestSchema = z.object({
 });
 
 export type Provider = z.infer<typeof ProviderSchema>;
+export type Facilitator = z.infer<typeof FacilitatorSchema>;
+export type SeniorBridge = z.infer<typeof SeniorBridgeSchema>;
 export type StoryCapsule = z.infer<typeof StoryCapsuleSchema>;
 export type MatchResult = z.infer<typeof MatchResultSchema>;
 export type KopiCard = z.infer<typeof KopiCardSchema>;

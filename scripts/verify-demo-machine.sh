@@ -16,6 +16,7 @@ done
 
 CLOUD_RUN_STATUS="NOT READY"
 OLLAMA_STATUS="NOT READY"
+GEMINI_STATUS="NOT CONFIGURED"
 MOCK_STATUS="NOT READY"
 PROJECTOR_STATUS="NOT TESTED"
 ROOM_NETWORK_STATUS="NOT READY"
@@ -46,9 +47,13 @@ ollama_supported() {
 }
 
 if [[ -n "${CLOUD_RUN_DEMO_URL:-}" ]] && command -v curl >/dev/null 2>&1; then
-  if curl -fsS --max-time 8 "${CLOUD_RUN_DEMO_URL%/}/health" 2>/dev/null | grep -q '"provider":"gemma-api"'; then
+  if curl -fsS --max-time 8 "${CLOUD_RUN_DEMO_URL%/}/health" 2>/dev/null | grep -q '"facilitator":"gemini"'; then
     CLOUD_RUN_STATUS="READY"
   fi
+fi
+
+if [[ -n "${GEMINI_API_KEY:-}" ]]; then
+  GEMINI_STATUS="CONFIGURED"
 fi
 
 if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "arm64" ]] && command -v ollama >/dev/null 2>&1; then
@@ -95,6 +100,7 @@ if [[ "$PROJECTOR_TESTED" == "1" || "${PROJECTOR_TESTED_1280X720:-0}" == "1" ]];
 fi
 
 printf 'LOCAL GEMMA PRIMARY: %s\n' "$OLLAMA_STATUS"
+printf 'GEMINI SENIOR BRIDGE: %s\n' "$GEMINI_STATUS"
 printf 'ROOM PHONE NETWORK: %s\n' "$ROOM_NETWORK_STATUS"
 printf 'HOSTED GEMMA FALLBACK: %s\n' "$CLOUD_RUN_STATUS"
 printf 'DETERMINISTIC TEST HARNESS: %s\n' "$MOCK_STATUS"

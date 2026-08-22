@@ -62,9 +62,10 @@ test("two tabs complete the match, reconnect and honest no-match flow", async ({
 
   await expect(wall.getByRole("heading", { name: "A potential listener match was found." })).toBeVisible({ timeout: 15_000 });
   await expect(wall.getByText("You shared", { exact: true })).toBeVisible();
-  await expect(wall.getByText("Gemma noticed", { exact: true })).toBeVisible();
+  await expect(wall.getByText("Gemma protected", { exact: true })).toBeVisible();
   await expect(wall.getByText("You approved", { exact: true })).toBeVisible();
   await expect(wall.getByText("A story matched", { exact: true })).toBeVisible();
+  await expect(wall.getByText("Gemini guides", { exact: true })).toBeVisible();
   await expect(wall.getByText("YOUR MEMORY", { exact: true })).toBeVisible();
   await expect(wall.getByText("A fictional memory of repairing radios in Queenstown in the 1970s, with an offer to share the skill.", { exact: true })).toBeVisible();
   await expect(wall.getByText("A fictional Queenstown hobbyist is restoring an old radio cabinet and wants to learn basic radio repair.", { exact: true })).toBeVisible();
@@ -72,6 +73,10 @@ test("two tabs complete the match, reconnect and honest no-match flow", async ({
   await expect(wall.getByText("Queenstown", { exact: true })).toBeVisible();
   await expect(wall.getByText("teach ↔ learn", { exact: true })).toBeVisible();
   await expect(join.getByRole("heading", { name: "A potential listener match was found." })).toBeVisible();
+  await expect(join.getByText("GEMINI · SENIOR CONNECTION GUIDE", { exact: true })).toBeVisible();
+  await expect(join.getByText("You both have a radio repair story to explore.", { exact: true })).toBeVisible();
+  await expect(join.getByRole("button", { name: "Read this aloud" })).toBeVisible();
+  await expect(wall.getByText("GEMINI · SENIOR CONNECTION GUIDE", { exact: true })).toBeVisible();
   await expect(join.getByText("This prepared story has not accepted.", { exact: false })).toBeVisible();
   await expect(wall.locator("canvas")).toHaveCount(1);
 
@@ -87,6 +92,7 @@ test("two tabs complete the match, reconnect and honest no-match flow", async ({
   await expect(join.getByText("We haven’t found the right listener yet.")).toBeVisible();
   await expect(join.getByText("Still listening", { exact: true })).toBeVisible();
   await expect(join.getByText("A story matched", { exact: true })).toHaveCount(0);
+  await expect(join.getByText("GEMINI · SENIOR CONNECTION GUIDE", { exact: true })).toHaveCount(0);
   await expect(wall.getByRole("heading", { name: "NO MATCH YET" })).toBeVisible();
   await expect(wall.getByText("We haven’t found the right listener yet.")).toBeVisible();
 
@@ -108,6 +114,7 @@ test("Admin Mode exposes safe controls and labels the development harness honest
   await page.getByRole("button", { name: "Run prepared story", exact: true }).click();
   await expect(page.getByText("MATCH", { exact: true })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("Development test harness", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Mock Gemini guide", { exact: true })).toBeVisible();
   await expect(page.getByText("never judging", { exact: false })).toBeVisible();
   await expect(page.getByRole("button", { name: "Mock" })).toHaveCount(0);
 });

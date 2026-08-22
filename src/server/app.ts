@@ -11,6 +11,9 @@ import {
   StoryCapsuleSchema,
 } from "../shared/schemas";
 import type { AppEnv } from "./env";
+import { GeminiFacilitator } from "./facilitation/gemini-facilitator";
+import { MockFacilitator } from "./facilitation/mock-facilitator";
+import { DisabledFacilitator, type ConnectionFacilitator } from "./facilitation/provider";
 import { MockProvider } from "./inference/mock-provider";
 import { OllamaProvider } from "./inference/ollama-provider";
 import { GemmaApiProvider } from "./inference/gemma-api-provider";
@@ -21,6 +24,10 @@ export type AppDependencies = {
   env: AppEnv;
   provider: InferenceProvider;
   matcher: StoryMatcher;
+};
+
+export type RuntimeDependencies = AppDependencies & {
+  facilitator: ConnectionFacilitator;
 };
 
 function errorPayload(error: unknown): { status: number; code: string; message: string } {
@@ -65,7 +72,15 @@ export function createApp(dependencies: AppDependencies): express.Express {
   });
 
   app.get("/health", (_request, response) => {
-    response.status(200).json({ status: "ok", provider: env.INFERENCE_PROVIDER, mode: env.NODE_ENV, uptimeSeconds: Math.round(process.uptime()) });
+    response.status(200).json({
+      status: "ok",
+      provider: env.INFERENCE_PROVIDER,
+      facilitator: env.GEMINI_FACILITATOR,
+      gemmaModel: env.INFERENCE_PROVIDER === "ollama" ? env.OLLAMA_MODEL : env.GEMMA_MODEL,
+      geminiModel: env.GEMINI_FACILITATOR === "gemini" ? env.GEMINI_MODEL : null,
+      mode: env.NODE_ENV,
+      uptimeSeconds: Math.round(process.uptime()),
+    });
   });
 
   app.post("/api/extract", inferenceLimiter, async (request, response) => {
@@ -122,7 +137,8 @@ export function createApp(dependencies: AppDependencies): express.Express {
       if (request.method !== "GET" || request.path.startsWith("/api/") || request.path === "/health") {
         return next();
       }
-      return response.sendFile(resolve(clientDirectory, "index.html"));
+      // The exact SPA entry is safe to serve even when a development worktree lives under a hidden directory.
+      return response.sendFile(resolve(clientDirectory, "index.html"), { dotfiles: "allow" });
     });
   }
 
@@ -133,7 +149,7 @@ export function createApp(dependencies: AppDependencies): express.Express {
   return app;
 }
 
-export function defaultDependencies(env: AppEnv): AppDependencies {
+export function defaultDependencies(env: AppEnv): RuntimeDependencies {
   return {
     env,
     provider:
@@ -142,6 +158,12 @@ export function defaultDependencies(env: AppEnv): AppDependencies {
         : env.INFERENCE_PROVIDER === "gemma-api"
           ? new GemmaApiProvider(env.GEMINI_API_KEY, env.GEMMA_MODEL)
         : new MockProvider(),
+    facilitator:
+      env.GEMINI_FACILITATOR === "gemini"
+        ? new GeminiFacilitator(env.GEMINI_API_KEY, env.GEMINI_MODEL)
+        : env.GEMINI_FACILITATOR === "mock"
+          ? new MockFacilitator()
+          : new DisabledFacilitator(),
     matcher: new StoryMatcher(undefined, env.MATCH_THRESHOLD),
   };
 }

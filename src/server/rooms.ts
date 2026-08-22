@@ -2,6 +2,11 @@ import type { Server } from "socket.io";
 import { PREPARED_RADIO_MEMORY } from "../shared/demo";
 import { RoomSnapshotSchema, type LitWindow, type Provider, type RoomSnapshot, type StoryCapsule } from "../shared/schemas";
 import type { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "../shared/events";
+import {
+  DisabledFacilitator,
+  FacilitationUnavailableError,
+  type ConnectionFacilitator,
+} from "./facilitation/provider";
 import type { InferenceProvider } from "./inference/provider";
 import type { StoryMatcher } from "./matching/matcher";
 
@@ -17,6 +22,7 @@ export class RoomStore {
     private readonly matcher: StoryMatcher,
     private readonly inferenceProvider: InferenceProvider,
     private readonly initialProvider: Provider = "mock",
+    private readonly facilitator: ConnectionFacilitator = new DisabledFacilitator(),
   ) {}
 
   get(roomCode: string): RoomSnapshot {
@@ -29,12 +35,15 @@ export class RoomStore {
     const room: RoomRecord = {
       roomCode,
       provider: this.initialProvider,
+      facilitator: this.facilitator.mode,
       phase: "idle",
       windows: [],
       activeSourceId: null,
       activeCandidateId: null,
       match: null,
       invite: null,
+      guide: null,
+      guideError: null,
       lastError: null,
       updatedAt: new Date().toISOString(),
       expiresAt: Date.now() + this.ttlMinutes * 60_000,
@@ -95,6 +104,8 @@ export class RoomStore {
     room.phase = "matching";
     room.match = null;
     room.invite = null;
+    room.guide = null;
+    room.guideError = null;
     room.lastError = null;
     room.updatedAt = new Date().toISOString();
 
@@ -118,11 +129,38 @@ export class RoomStore {
     }
 
     const candidate = result.candidateId ? this.matcher.getStory(result.candidateId) : undefined;
+    if (!candidate) {
+      room.phase = "no-match";
+      room.match = {
+        decision: "NO_MATCH",
+        candidateId: null,
+        confidence: 0,
+        evidencePath: [],
+        why: "The prepared story evidence was unavailable, so no connection was proposed.",
+        invitation: null,
+        scene: null,
+      };
+      io.to(roomCode).emit("match:none", room.match);
+      io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
+      return;
+    }
+
+    if (this.facilitator.mode !== "disabled") {
+      try {
+        room.guide = await this.facilitator.createGuide({ source: capsule, candidate, match: result });
+      } catch (error) {
+        room.guideError = error instanceof FacilitationUnavailableError
+          ? error.message
+          : "Gemini could not prepare the conversation guide. The evidence-backed match is still available.";
+      }
+      if (this.rooms.get(roomCode) !== room || room.activeSourceId !== participantId) return;
+    }
+
     const targetWindow: LitWindow = {
       participantId: result.candidateId ?? "prepared-story",
       windowId: result.scene?.toWindow ?? 64,
       colour: result.scene?.colour ?? "amber",
-      safeSummary: candidate?.safeSummary ?? "A prepared fictional story.",
+      safeSummary: candidate.safeSummary,
     };
     room.windows.push(targetWindow);
     room.activeCandidateId = targetWindow.participantId;
@@ -138,6 +176,7 @@ export class RoomStore {
     io.to(roomCode).emit("match:found", result);
     io.to(roomCode).emit("bridge:animate", result);
     io.to(roomCode).emit("invite:ready", room.invite);
+    if (room.guide) io.to(roomCode).emit("guide:ready", room.guide);
     io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
   }
 

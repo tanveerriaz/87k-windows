@@ -1,4 +1,7 @@
 import { createServer, type Server } from "node:http";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../../src/server/app";
 import { readEnv } from "../../src/server/env";
@@ -32,8 +35,40 @@ describe("Express API", () => {
     const response = await fetch(`${baseUrl}/health`);
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body).toMatchObject({ status: "ok", provider: "mock", mode: "test" });
+    expect(body).toMatchObject({
+      status: "ok",
+      provider: "mock",
+      facilitator: "disabled",
+      geminiModel: null,
+      mode: "test",
+    });
     expect(JSON.stringify(body)).not.toContain("GEMINI_API_KEY");
+  });
+
+  it("serves the SPA entry from a hidden worktree path", async () => {
+    const temporaryRoot = await mkdtemp(join(tmpdir(), "87k-hidden-static-"));
+    const hiddenRoot = join(temporaryRoot, ".worktree");
+    const clientDirectory = join(hiddenRoot, "dist", "client");
+    await mkdir(clientDirectory, { recursive: true });
+    await writeFile(join(clientDirectory, "index.html"), "<!doctype html><div id=\"root\"></div>");
+    const matcher = new StoryMatcher();
+    const cwd = vi.spyOn(process, "cwd").mockReturnValue(hiddenRoot);
+    const hiddenEnv = readEnv({ NODE_ENV: "test", PORT: "3000" });
+    const hiddenApp = createApp({ env: hiddenEnv, provider: new MockProvider(0), matcher });
+    cwd.mockRestore();
+    const hiddenServer = createServer(hiddenApp);
+
+    try {
+      await new Promise<void>((resolve) => hiddenServer.listen(0, "127.0.0.1", resolve));
+      const address = hiddenServer.address();
+      if (!address || typeof address === "string") throw new Error("Hidden-path server did not bind.");
+      const response = await fetch(`http://127.0.0.1:${address.port}/wall/demo87`);
+      expect(response.status).toBe(200);
+      await expect(response.text()).resolves.toContain("id=\"root\"");
+    } finally {
+      await new Promise<void>((resolve, reject) => hiddenServer.close((error) => (error ? reject(error) : resolve())));
+      await rm(temporaryRoot, { recursive: true, force: true });
+    }
   });
 
   it("extracts, validates and matches the prepared story", async () => {
