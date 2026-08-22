@@ -11,17 +11,17 @@ Build a visual-first, live-room hackathon prototype that uses Gemma to create ex
 - Keep one TypeScript repository and one deployable Node process.
 - Use React/Vite, Express, Socket.IO, Zod, MiniSearch and Vitest.
 - Keep shared schemas and Socket.IO event types in `src/shared/`.
-- Use one Railway replica later; do not add Redis or a database for the hackathon.
+- Use one Cloud Run instance for the hackathon; do not add Redis or a database.
 - Keep all Google and admin secrets server-side. Never use `VITE_` for secrets.
 - Use synthetic data only. Do not persist uploads or raw memory text.
 - Never display hidden chain-of-thought. Show evidence, confidence, uncertainty and missing information instead.
 - A weak connection must return `NO MATCH YET`.
-- Do not deploy or mutate Railway/cloud resources until the user explicitly authorizes deployment.
+- Do not deploy or mutate Google Cloud resources until the user explicitly authorizes the exact project and deployment.
 - The repository is public. Assume every tracked file, fixture, screenshot, diff and log is externally visible.
-- Never commit `.env`, secrets, Railway tokens, raw submissions, personal photographs, personal data or machine-specific absolute paths.
+- Never commit `.env`, secrets, Google credentials, raw submissions, personal photographs, personal data or machine-specific absolute paths.
 - Keep `.env.example` values empty and synthetic fixtures clearly labelled fictional.
 - Do not commit the private CLI handoff; maintain sanitized public product and architecture documentation.
-- Do not push, open a pull request or configure GitHub/Railway integration until the user explicitly authorizes publishing.
+- Do not push, open a pull request or configure GitHub/Cloud Run integration until the user explicitly authorizes publishing.
 - Do not add a licence without the user's choice.
 - Preserve unrelated user files and changes.
 

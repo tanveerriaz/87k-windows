@@ -58,7 +58,7 @@ export function AdminPage() {
 
           <article className="admin-section provider-section">
             <span className="mono-label">INFERENCE MODE</span>
-            <h2>Mock Mode is the Milestone 1 safety net.</h2>
+            <h2>One contract. Three honest modes.</h2>
             <div className="provider-options">
               {(["mock", "gemma-api", "ollama"] as Provider[]).map((provider) => (
                 <button
@@ -68,7 +68,7 @@ export function AdminPage() {
                   onClick={() => room.selectProvider(provider)}
                 >
                   <strong>{provider === "gemma-api" ? "Cloud" : provider === "ollama" ? "Local" : "Mock"}</strong>
-                  <span>{room.snapshot?.provider === provider ? "Active in this process" : provider === "gemma-api" ? "Hosted mode deferred" : "Restart in this mode"}</span>
+                  <span>{room.snapshot?.provider === provider ? "Active in this process" : "Restart the server in this mode"}</span>
                 </button>
               ))}
             </div>

@@ -8,6 +8,7 @@ import { useRoomSocket } from "../lib/use-room-socket";
 
 const RADIO_MEMORY = "I used to repair radios around Queenstown in the 1970s.";
 const NO_MATCH_MEMORY = "I catalogued polar clouds in Antarctica in the 2010s.";
+const MEMORY_QUESTION = "What small thing made you happy when you were young?";
 
 type Stage = "welcome" | "capture" | "processing" | "review" | "waiting" | "result";
 
@@ -22,6 +23,7 @@ export function JoinPage() {
   const [photoLabel, setPhotoLabel] = useState("Prepared fictional radio illustration");
   const [capsule, setCapsule] = useState<StoryCapsule | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
   const room = useRoomSocket(roomCode, "join");
 
   useEffect(() => {
@@ -56,13 +58,38 @@ export function JoinPage() {
     setError(null);
     room.submitted(participantId);
     try {
-      const result = await extractCapsule({ roomCode, memory, photoData, fixture });
+      const result = await extractCapsule({ roomCode, memory, photoData: null, fixture });
       setCapsule(result);
       setStage("review");
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Nothing was shared. Please try again.");
       setStage("capture");
     }
+  };
+
+  const captureVoice = () => {
+    type RecognitionResultEvent = Event & { results: { length: number; [index: number]: { [index: number]: { transcript: string } } } };
+    type Recognition = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; onresult: ((event: RecognitionResultEvent) => void) | null; onerror: (() => void) | null; onend: (() => void) | null };
+    type RecognitionConstructor = new () => Recognition;
+    const SpeechRecognition = (window as Window & { SpeechRecognition?: RecognitionConstructor; webkitSpeechRecognition?: RecognitionConstructor }).SpeechRecognition
+      ?? (window as Window & { webkitSpeechRecognition?: RecognitionConstructor }).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setError("Voice capture is not available in this browser. You can type your memory instead.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-SG";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from({ length: event.results.length }, (_, index) => event.results[index][0]?.transcript ?? "").join(" ").trim();
+      if (transcript) setMemory(transcript);
+    };
+    recognition.onerror = () => setError("We could not hear that clearly. You can try again or type your memory.");
+    recognition.onend = () => setIsListening(false);
+    setError(null);
+    setIsListening(true);
+    recognition.start();
   };
 
   const approve = async () => {
@@ -103,9 +130,10 @@ export function JoinPage() {
 
         {stage === "welcome" && (
           <div className="join-panel welcome-panel">
-            <p className="eyebrow">Your memory stays yours until you approve</p>
-            <h1>One short memory is enough.</h1>
-            <p>Use the prepared fictional story. You will see exactly what enters matching before anything lights up.</p>
+            <p className="eyebrow">Your words stay private until you choose to light a window</p>
+            <h1>There is one question worth asking.</h1>
+            <p>{MEMORY_QUESTION}</p>
+            <p className="welcome-support">You can speak, type, or bring an old photo. First, you will see what Gemma noticed—and what remains only your words.</p>
             <button className="button button-primary button-block" onClick={() => setStage("capture")}>Share a prepared memory</button>
             <p className="privacy-note">Synthetic demo only · No account · Nothing stored</p>
           </div>
@@ -113,8 +141,9 @@ export function JoinPage() {
 
         {stage === "capture" && (
           <div className="join-panel capture-panel">
-            <p className="eyebrow">Share</p>
-            <h1>Choose one picture and one sentence.</h1>
+            <p className="eyebrow">One gentle question</p>
+            <h1>{MEMORY_QUESTION}</h1>
+            <p className="capture-intro">There is no right answer. A small detail is enough.</p>
             <div className="photo-preview">
               {photoData ? <img src={photoData} alt="Chosen preview; it has not been shared" /> : fixture === "radio" ? <img src="/demo-radio.svg" alt="Prepared fictional illustration of a radio and repair tools" /> : <div className="text-fixture">NO PHOTO<br />TEXT FIXTURE</div>}
               <span>{photoLabel}</span>
@@ -128,15 +157,20 @@ export function JoinPage() {
               onChange={(event) => void handleFile(event.target.files?.[0])}
             />
             <div className="capture-actions">
-              <button className="button button-secondary" onClick={() => fileInputRef.current?.click()}>Take or choose photo</button>
+              <button className="button button-secondary" onClick={() => fileInputRef.current?.click()}>Add an old photo</button>
               <button className="text-button" onClick={() => chooseFixture("radio")}>Use prepared photo</button>
             </div>
-            <p className="field-help">If camera access is denied, choose a file or keep the prepared illustration.</p>
+            <p className="field-help">A photo is an optional memory cue. It stays in this browser and is never sent to Gemma. If camera access is denied, choose a file or keep the prepared illustration.</p>
             <label className="memory-field">
-              <span>Your memory</span>
-              <textarea value={memory} maxLength={600} rows={4} onChange={(event) => setMemory(event.target.value)} />
+              <span>Your words</span>
+              <textarea value={memory} maxLength={600} rows={4} placeholder="I remember…" onChange={(event) => setMemory(event.target.value)} />
               <small>{memory.length}/600</small>
             </label>
+            <button className="voice-button" type="button" onClick={captureVoice} aria-pressed={isListening}>
+              <span className="voice-ring" aria-hidden="true" />
+              <span>{isListening ? "Listening… pause when you need to" : "Speak your memory"}</span>
+              <small>Voice stays editable</small>
+            </button>
             <button className="fixture-link" onClick={() => chooseFixture("no-match")}>Use no-match fixture</button>
             {error && <div className="error-banner" role="alert">{error}</div>}
             <button className="button button-primary button-block" disabled={memory.trim().length < 8} onClick={() => void createCapsule()}>Create my safe capsule</button>
@@ -146,17 +180,24 @@ export function JoinPage() {
         {stage === "processing" && (
           <div className="join-panel processing-panel">
             <div className="processing-window" aria-hidden="true"><span /><span /><span /><span /></div>
-            <p className="eyebrow">Observe → protect → connect</p>
-            <h1>Preparing only what can be shared.</h1>
-            <p>Mock Mode follows the same checked data contract as the later model providers.</p>
+            <p className="eyebrow">Your words, then the meaning</p>
+            <h1>Separating what you said from what may connect.</h1>
+            <p>Gemma prepares a small, reviewable memory capsule. It does not fill in names, dates, or details you did not share.</p>
           </div>
         )}
 
         {stage === "review" && capsule && (
           <div className="join-panel review-panel">
-            <p className="eyebrow">Review the safe capsule</p>
+            <p className="eyebrow">You remain the author</p>
             <h1>You decide what enters matching.</h1>
-            <blockquote>{capsule.safeSummary}</blockquote>
+            <section className="words-card">
+              <span className="mono-label">YOUR WORDS</span>
+              <blockquote>“{memory}”</blockquote>
+            </section>
+            <section className="meaning-card">
+              <span className="mono-label">WHAT GEMMA NOTICED</span>
+              <p>{capsule.safeSummary}</p>
+            </section>
             <div className="capsule-evidence">
               {capsule.place && <span><small>PLACE</small>{capsule.place}</span>}
               {capsule.era && <span><small>ERA</small>{capsule.era}</span>}
@@ -165,7 +206,7 @@ export function JoinPage() {
             {capsule.redactions.length > 0 ? (
               <div className="redaction-note"><strong>Removed before sharing</strong><p>{capsule.redactions.join(", ")}</p></div>
             ) : (
-              <div className="redaction-note"><strong>No identifiers detected</strong><p>Only the safe summary and evidence above enter matching.</p></div>
+              <div className="redaction-note"><strong>No identifiers detected</strong><p>Only Gemma’s short interpretation and evidence above enter matching—not the full quote.</p></div>
             )}
             <details>
               <summary>What is uncertain?</summary>
@@ -181,8 +222,8 @@ export function JoinPage() {
           <div className="join-panel waiting-panel">
             <div className="window-beacon" aria-hidden="true" />
             <p className="eyebrow">Your window is lit</p>
-            <h1>Looking for evidence, not coincidences.</h1>
-            <p>The wall is comparing this capsule with twelve clearly fictional prepared stories.</p>
+            <h1>Your story is now visible as a warm light.</h1>
+            <p>Your approved capsule is being compared for a shared human thread, not just matching words.</p>
           </div>
         )}
 

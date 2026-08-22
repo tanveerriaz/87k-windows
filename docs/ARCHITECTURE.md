@@ -1,60 +1,62 @@
 # Architecture
 
-## Runtime
-
-87K Windows is one TypeScript repository and one deployable Node process:
+## One room, three surfaces
 
 ```text
-Phone or projector browser
-  ├── React and Vite interface
-  ├── typed Socket.IO room events
-  └── Express JSON endpoints
-          ├── Zod validation and in-memory rate limits
-          ├── Mock Mode capsule extraction
-          ├── MiniSearch top-three retrieval
-          └── ephemeral room Map with two-hour expiry
+┌──────────────────┐       HTTPS / Socket.IO       ┌────────────────────────────┐
+│ Participant phone│ ────────────────────────────▶ │ One Cloud Run Node process │
+│ ask, tell, review│                               │ Express + Socket.IO + Zod  │
+└──────────────────┘                               │                            │
+                                                   │  ┌──────────────────────┐  │
+┌──────────────────┐       live room events        │  │ hosted Gemma 4       │  │
+│ Projected wall   │ ◀──────────────────────────── │  │ safe capsule only    │  │
+│ light + connect  │                               │  └──────────────────────┘  │
+└──────────────────┘                               │            │               │
+                                                   │  MiniSearch + score        │
+┌──────────────────┐       reset / inject          │  ephemeral room Map        │
+│ Presenter admin  │ ◀───────────────────────────▶ │  two-hour expiry           │
+└──────────────────┘                               └────────────────────────────┘
 ```
 
-In development, Vite runs on port 5173 and proxies API and Socket.IO traffic to Express on port 3001. The production build defaults to port 3000 and is served by Express from the same origin.
+Development runs Vite on port 5173 and proxies API and Socket.IO traffic to Express on port 3001. Production is one container: Express serves `dist/client`, listens on Cloud Run's `PORT`, and owns the Socket.IO room state.
 
-## Room lifecycle
+## Core sequence
 
-1. Every client joins a room and receives its current snapshot.
-2. Join Mode submits input to `/api/extract`; raw text and image data are not added to room state.
-3. A Zod-validated safe capsule is returned for participant review.
-4. Approval sends only the capsule through Socket.IO.
-5. The room emits a lit window, starts matching, and broadcasts a match or no-match result.
-6. Refresh or reconnection rejoins the room and restores the snapshot.
-7. Inactive rooms expire after the configured time.
+1. Join Mode submits a short memory to `/api/extract`.
+2. The server removes obvious contact details before any hosted inference call.
+3. Gemma returns a schema-constrained capsule: summary, observations, era, place, skills, offer/want, redactions and uncertainty.
+4. Zod validates the response. Invalid output gets one repair attempt, then a safe failure.
+5. The participant reviews and explicitly approves the capsule.
+6. Only the approved capsule enters the ephemeral room and matching pipeline.
+7. MiniSearch retrieves up to three fictional candidates; a deterministic weighted scorer either returns a match or `NO MATCH`.
+8. Socket.IO lights the wall and sends the invitation back to the phone.
 
-## Matching
+## Inference modes
 
-MiniSearch first finds up to three prepared candidates. A deterministic scorer then applies:
+| Mode | Model | Purpose | Secret/network |
+|---|---|---|---|
+| `gemma-api` | `gemma-4-26b-a4b-it` | Judged primary path on Cloud Run | server-side `GEMINI_API_KEY` |
+| `ollama` | `gemma3:4b` | Native Apple Silicon fallback | no key; local network only |
+| `mock` | deterministic fixture | Emergency and reproducible tests | none |
 
-- 35% shared place;
-- 25% skill or interest relationship;
-- 20% shared era;
-- 20% complementary offer and want.
+All providers implement the same typed interface and must return the same Zod schema. The model interprets the memory; it does not decide who is safe to contact. Matching remains explainable application logic, and low evidence returns no match.
 
-A result below `MATCH_THRESHOLD` returns `NO_MATCH`. Mock Mode uses the same shared Zod schemas that future providers must satisfy.
+## Privacy and safety boundary
 
-## Privacy boundary
+- No authentication, contact exchange, database, object storage, analytics SDK or raw-input logging.
+- Memory and optional compressed image exist only for the request; room state stores only an approved capsule.
+- The Gemini key exists only in the server process or Secret Manager.
+- Logs contain request ID, method, path, status and duration—not the memory or model response.
+- Provider timeout or malformed output creates no room event and shares nothing.
+- Public fixtures and generated assets are synthetic and non-identifying.
 
-The browser may send a compressed image and one memory to Express, where they are processed in memory. Room state stores only redacted capsules, scene state and invitation text. Logs contain request identifiers and timing only. No database, file upload directory, Redis, authentication or browser-side secret is used.
+## Deployment decision record
 
-## Future providers
+- **Decision:** one public Cloud Run service in `asia-southeast1`, maximum one instance during the demo.
+- **Why:** phone and projector need one public origin, Socket.IO needs a shared room process, and the hackathon credit supports a short judging deployment.
+- **Trade-off:** the in-memory room cannot scale across replicas. This is deliberate for a live-room prototype; max instances stays one.
+- **Fallbacks:** native Ollama on the M4 MacBook Air, then deterministic Mock Mode.
+- **Recovery:** redeploy the last public Git commit or switch the presenter to a local URL; no durable user data needs migration.
+- **Excluded:** Redis, databases, queues, vector stores, multi-region hosting, self-hosted GPUs and native mobile packaging.
 
-`INFERENCE_PROVIDER` supports `mock` and the optional native `ollama` path using `gemma3:4b`. Hosted `gemma-api` integration remains deliberately disabled. Hosted credentials will remain server-side when that later milestone begins.
-
-## Machine and deployment decision
-
-- **Project type:** live, room-based AI hackathon prototype.
-- **Stage and audience:** local verified slice for judges; synthetic data only.
-- **Recommended architecture:** one Railway Node service later, native Ollama on the presentation Mac for offline use, and deterministic Mock Mode as the final safety net.
-- **Why this is the smallest suitable design:** a persistent Socket.IO room needs one process; no database, Redis, queue or second cloud service is needed.
-- **Build target:** Mac Mini, with GitHub as the only machine-to-machine source bridge.
-- **Presentation target:** MacBook Air M4 with 16 GB memory, Node 22 and fresh locked dependencies.
-- **Incremental prototype cost:** no new paid product is required for local and Mock modes; Railway uses existing account capacity only after deployment approval.
-- **Security and data controls:** safe synthetic fixtures, ephemeral room memory, server-only secrets, request limits and no raw-input logs.
-- **Deliberately excluded:** Docker for local inference, Mac Mini-only models, durable storage, public Mac hosting and multi-replica state.
-- **Deployment approval status:** NOT REQUESTED.
+Cloud deployment still requires the repository owner's explicit confirmation of the hackathon project and service before it is executed.

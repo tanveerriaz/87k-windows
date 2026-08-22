@@ -6,14 +6,14 @@ export function LandingPage() {
       <div className="landing-grid" aria-hidden="true" />
       <nav className="landing-nav">
         <span className="wordmark">87K WINDOWS</span>
-        <span className="mono-label">SYNTHETIC DEMO · MOCK MODE</span>
+        <span className="mono-label">A LIVING WALL OF MEMORIES</span>
       </nav>
       <section className="landing-hero">
-        <p className="eyebrow">One memory. One human connection.</p>
-        <h1>AI should not become her friend.</h1>
-        <p className="landing-thesis">It should help her find one.</p>
+        <p className="eyebrow">Ask before it is too late</p>
+        <h1>Every life is a window.</h1>
+        <p className="landing-thesis">Gemma helps us ask, listen, and see which windows are connected.</p>
         <p className="landing-copy">
-          Share a fictional memory, approve the safe version, and watch an explainable bridge appear across the community wall.
+          One humane question becomes one warm light. When two memories share a deeper human thread, the wall makes that connection visible.
         </p>
         <div className="landing-actions">
           <Link className="button button-primary" to="/join/demo87">Start the demo</Link>
@@ -21,9 +21,9 @@ export function LandingPage() {
         </div>
       </section>
       <aside className="landing-proof" aria-label="How the demo works">
-        <div><span>01</span><p>Share one synthetic memory.</p></div>
-        <div><span>02</span><p>Review the safe capsule.</p></div>
-        <div><span>03</span><p>See the evidence—or no match.</p></div>
+        <div><span>ASK</span><p>One small question, asked with patience.</p></div>
+        <div><span>LISTEN</span><p>Your words stay separate from Gemma’s reading.</p></div>
+        <div><span>CONNECT</span><p>Two lights glow only when the evidence holds.</p></div>
       </aside>
     </main>
   );

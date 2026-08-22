@@ -13,10 +13,10 @@ function pointForWindow(id: number, columns: number, rows: number, width: number
   const index = Math.abs(id) % (columns * rows);
   const column = index % columns;
   const row = Math.floor(index / columns);
-  const gutterX = width * 0.055;
-  const top = height * 0.12;
+  const gutterX = width * 0.105;
+  const top = height * 0.14;
   const fieldWidth = width - gutterX * 2;
-  const fieldHeight = height * 0.72;
+  const fieldHeight = height * 0.63;
   return {
     x: gutterX + ((column + 0.5) / columns) * fieldWidth,
     y: top + ((row + 0.5) / rows) * fieldHeight,
@@ -53,32 +53,43 @@ export function HdbWallCanvas({ snapshot }: { snapshot: RoomSnapshot | null }) {
       context.clearRect(0, 0, width, height);
 
       const sky = context.createLinearGradient(0, 0, 0, height);
-      sky.addColorStop(0, "#07111d");
-      sky.addColorStop(1, "#030609");
+      sky.addColorStop(0, "#111923");
+      sky.addColorStop(0.64, "#080c12");
+      sky.addColorStop(1, "#030405");
       context.fillStyle = sky;
       context.fillRect(0, 0, width, height);
 
-      const left = width * 0.045;
+      const left = width * 0.075;
       const top = height * 0.075;
-      const facadeWidth = width * 0.91;
-      const facadeHeight = height * 0.82;
-      context.fillStyle = "#0e151c";
+      const facadeWidth = width * 0.85;
+      const facadeHeight = height * 0.76;
+      context.fillStyle = "#111418";
       context.fillRect(left, top, facadeWidth, facadeHeight);
-      context.strokeStyle = "#283039";
+      context.fillStyle = "rgba(255,255,255,.025)";
+      for (let y = top + 18; y < top + facadeHeight; y += 44) context.fillRect(left, y, facadeWidth, 1);
+      context.strokeStyle = "#3b4043";
       context.lineWidth = 1;
       context.strokeRect(left, top, facadeWidth, facadeHeight);
 
-      const columns = width < 700 ? 44 : 72;
-      const rows = width < 700 ? 24 : 30;
-      const cellWidth = (width * 0.89) / columns;
-      const cellHeight = (height * 0.7) / rows;
-      context.fillStyle = "#17202a";
+      const columns = width < 700 ? 7 : 12;
+      const rows = width < 700 ? 8 : 9;
+      const fieldLeft = width * 0.105;
+      const fieldTop = height * 0.14;
+      const fieldWidth = width * 0.79;
+      const fieldHeight = height * 0.63;
+      const cellWidth = fieldWidth / columns;
+      const cellHeight = fieldHeight / rows;
 
       for (let row = 0; row < rows; row += 1) {
         for (let column = 0; column < columns; column += 1) {
-          const x = width * 0.055 + column * cellWidth + cellWidth * 0.25;
-          const y = height * 0.12 + row * cellHeight + cellHeight * 0.24;
-          context.fillRect(x, y, Math.max(2, cellWidth * 0.42), Math.max(2, cellHeight * 0.42));
+          const x = fieldLeft + column * cellWidth + cellWidth * 0.16;
+          const y = fieldTop + row * cellHeight + cellHeight * 0.17;
+          context.fillStyle = "#07090b";
+          context.fillRect(x - 2, y - 2, cellWidth * 0.68 + 4, cellHeight * 0.60 + 4);
+          context.fillStyle = "#15191d";
+          context.fillRect(x, y, cellWidth * 0.68, cellHeight * 0.60);
+          context.fillStyle = "rgba(255,255,255,.045)";
+          context.fillRect(x, y, cellWidth * 0.68, 1);
         }
       }
 
@@ -90,7 +101,7 @@ export function HdbWallCanvas({ snapshot }: { snapshot: RoomSnapshot | null }) {
         context.shadowColor = COLOURS[windowState.colour];
         context.shadowBlur = 20 * pulse;
         context.fillStyle = COLOURS[windowState.colour];
-        context.fillRect(point.x - cellWidth * 0.28, point.y - cellHeight * 0.28, cellWidth * 0.56, cellHeight * 0.56);
+        context.fillRect(point.x - cellWidth * 0.27, point.y - cellHeight * 0.24, cellWidth * 0.54, cellHeight * 0.48);
         context.restore();
       }
 
@@ -126,7 +137,7 @@ export function HdbWallCanvas({ snapshot }: { snapshot: RoomSnapshot | null }) {
 
       context.fillStyle = "rgba(244,244,240,.48)";
       context.font = "10px ui-monospace, monospace";
-      context.fillText(`${columns * rows} DRAWN WINDOWS · 87,200 STORIES IMPLIED`, left + 12, top + facadeHeight + 24);
+      context.fillText("EVERY DARK WINDOW HOLDS A LIFE WE HAVEN'T ASKED ABOUT YET.", left + 12, top + facadeHeight + 25);
 
       frame += 1;
       animationFrame = requestAnimationFrame(draw);
