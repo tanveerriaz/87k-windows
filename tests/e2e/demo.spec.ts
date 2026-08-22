@@ -19,6 +19,7 @@ test("two tabs complete the match, reconnect and honest no-match flow", async ({
   await expect(wall.getByText("Scan. Share. Watch the wall light up.")).toBeVisible();
   await join.getByRole("button", { name: "Share a prepared memory" }).click();
   await expect(join.getByText("Prepared demo image selected")).toBeVisible();
+  await expect(join.getByText("Your words", { exact: true })).toBeInViewport();
   await expect(join.getByText("If camera access is denied")).toBeVisible();
 
   await join.locator('input[type="file"]').setInputFiles({
@@ -33,12 +34,18 @@ test("two tabs complete the match, reconnect and honest no-match flow", async ({
   await join.getByRole("button", { name: "Create my safe capsule" }).click();
   await expect(join.getByRole("heading", { name: "You decide what enters matching." })).toBeVisible();
   await expect(join.getByText("OFFER", { exact: true })).toBeVisible();
-  await expect(join.getByText("teach basic radio repair", { exact: false })).toBeVisible();
+  await expect(join.locator(".capsule-evidence").getByText("teach basic radio repair", { exact: false })).toBeVisible();
   await join.getByRole("button", { name: "Approve and light my window" }).click();
 
   await expect(wall.getByRole("heading", { name: "A neighbour is ready to listen." })).toBeVisible({ timeout: 15_000 });
+  await expect(wall.getByText("You shared", { exact: true })).toBeVisible();
+  await expect(wall.getByText("Gemma noticed", { exact: true })).toBeVisible();
+  await expect(wall.getByText("You approved", { exact: true })).toBeVisible();
+  await expect(wall.getByText("A listener answered", { exact: true })).toBeVisible();
   await expect(wall.getByText("YOUR MEMORY", { exact: true })).toBeVisible();
   await expect(wall.getByText("THEIR INTEREST", { exact: true })).toBeVisible();
+  await expect(wall.getByText("Repairing radios in Queenstown, 1970s", { exact: true })).toBeVisible();
+  await expect(wall.getByText("Learning how old radios worked", { exact: true })).toBeVisible();
   await expect(wall.getByText("Queenstown", { exact: true })).toBeVisible();
   await expect(wall.getByText("teach ↔ learn", { exact: true })).toBeVisible();
   await expect(join.getByRole("heading", { name: "A neighbour is ready to listen." })).toBeVisible();
@@ -54,6 +61,8 @@ test("two tabs complete the match, reconnect and honest no-match flow", async ({
   await join.getByRole("button", { name: "Approve and light my window" }).click();
   await expect(join.getByRole("heading", { name: "NO MATCH YET" })).toBeVisible({ timeout: 15_000 });
   await expect(join.getByText("We haven’t found the right listener yet.")).toBeVisible();
+  await expect(join.getByText("Still listening", { exact: true })).toBeVisible();
+  await expect(join.getByText("A listener answered", { exact: true })).toHaveCount(0);
   await expect(wall.getByRole("heading", { name: "NO MATCH YET" })).toBeVisible();
   await expect(wall.getByText("We haven’t found the right listener yet.")).toBeVisible();
 

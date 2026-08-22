@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { buildMockCapsule } from "../../src/server/inference/mock-provider";
 import { StoryMatcher } from "../../src/server/matching/matcher";
+import { PREPARED_RADIO_MEMORY } from "../../src/shared/demo";
 
 describe("StoryMatcher", () => {
   const matcher = new StoryMatcher();
 
   it("connects the Queenstown radio teacher to the prepared learner", () => {
     const capsule = buildMockCapsule({
-      memory: "I used to repair radios around Queenstown in the 1970s.",
+      memory: PREPARED_RADIO_MEMORY,
       fixture: "radio",
     });
     const result = matcher.match(capsule);

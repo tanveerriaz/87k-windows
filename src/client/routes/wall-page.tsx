@@ -3,10 +3,19 @@ import { HdbWallCanvas } from "../components/hdb-wall-canvas";
 import { StatusBadge } from "../components/status-badge";
 import { useRoomSocket } from "../lib/use-room-socket";
 
+const RESULT_STEPS = ["You shared", "Gemma noticed", "You approved", "A listener answered"];
+
 export function WallPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
   const room = useRoomSocket(roomCode, "wall");
   const snapshot = room.snapshot;
+  const isRadioDemo = snapshot?.match?.evidencePath.includes("radio repair") ?? false;
+  const sourceStory = isRadioDemo
+    ? "Repairing radios in Queenstown, 1970s"
+    : snapshot?.windows[0]?.safeSummary;
+  const listenerStory = isRadioDemo
+    ? "Learning how old radios worked"
+    : snapshot?.windows[1]?.safeSummary;
 
   return (
     <main className="wall-page">
@@ -41,10 +50,15 @@ export function WallPage() {
               <p className="eyebrow">This is what connected you</p>
               <h1>A neighbour would like to hear your story.</h1>
               <p className="wall-result-summary">{snapshot.match.why}</p>
+              <div className="wall-journey" aria-label="How the connection was made">
+                {RESULT_STEPS.map((step, index) => (
+                  <span key={step}><small>0{index + 1}</small><strong>{step}</strong></span>
+                ))}
+              </div>
               <div className="wall-story-pair">
                 <article>
                   <span className="mono-label">YOUR MEMORY</span>
-                  <p>{snapshot.windows[0]?.safeSummary}</p>
+                  <p>{sourceStory}</p>
                 </article>
                 <div className="wall-evidence">
                   <span className="mono-label">EVIDENCE YOU BOTH SHARED</span>
@@ -56,7 +70,7 @@ export function WallPage() {
                 </div>
                 <article>
                   <span className="mono-label">THEIR INTEREST</span>
-                  <p>{snapshot.windows[1]?.safeSummary}</p>
+                  <p>{listenerStory}</p>
                 </article>
               </div>
             </div>

@@ -2,10 +2,11 @@ import { useEffect, useRef } from "react";
 import type { RoomSnapshot } from "../../shared/schemas";
 
 const COLOURS = {
-  amber: "#f1ae49",
-  mint: "#5ecfb0",
-  violet: "#9e84f5",
+  amber: "#e3a43a",
+  mint: "#65bca7",
+  violet: "#c65c43",
 };
+const THREAD_COLOUR = "#b6402d";
 
 type Point = { x: number; y: number };
 
@@ -52,23 +53,21 @@ export function HdbWallCanvas({ snapshot }: { snapshot: RoomSnapshot | null }) {
       const height = bounds.height;
       context.clearRect(0, 0, width, height);
 
-      const sky = context.createLinearGradient(0, 0, 0, height);
-      sky.addColorStop(0, "#111923");
-      sky.addColorStop(0.64, "#080c12");
-      sky.addColorStop(1, "#030405");
-      context.fillStyle = sky;
+      context.fillStyle = "#e9ddc7";
       context.fillRect(0, 0, width, height);
 
       const left = width * 0.075;
       const top = height * 0.075;
       const facadeWidth = width * 0.85;
       const facadeHeight = height * 0.76;
-      context.fillStyle = "#111418";
+      context.fillStyle = "#174d49";
       context.fillRect(left, top, facadeWidth, facadeHeight);
-      context.fillStyle = "rgba(255,255,255,.025)";
-      for (let y = top + 18; y < top + facadeHeight; y += 44) context.fillRect(left, y, facadeWidth, 1);
-      context.strokeStyle = "#3b4043";
-      context.lineWidth = 1;
+      context.fillStyle = "#a94430";
+      context.fillRect(left + facadeWidth * 0.91, top, facadeWidth * 0.09, facadeHeight);
+      context.fillStyle = "rgba(239,225,200,.2)";
+      for (let y = top + 18; y < top + facadeHeight; y += 44) context.fillRect(left, y, facadeWidth, 5);
+      context.strokeStyle = "#082f2e";
+      context.lineWidth = 2;
       context.strokeRect(left, top, facadeWidth, facadeHeight);
 
       const columns = width < 700 ? 7 : 12;
@@ -84,11 +83,11 @@ export function HdbWallCanvas({ snapshot }: { snapshot: RoomSnapshot | null }) {
         for (let column = 0; column < columns; column += 1) {
           const x = fieldLeft + column * cellWidth + cellWidth * 0.16;
           const y = fieldTop + row * cellHeight + cellHeight * 0.17;
-          context.fillStyle = "#07090b";
+          context.fillStyle = "#082f2e";
           context.fillRect(x - 2, y - 2, cellWidth * 0.68 + 4, cellHeight * 0.60 + 4);
-          context.fillStyle = "#15191d";
+          context.fillStyle = "#d7c7ac";
           context.fillRect(x, y, cellWidth * 0.68, cellHeight * 0.60);
-          context.fillStyle = "rgba(255,255,255,.045)";
+          context.fillStyle = "rgba(255,255,255,.28)";
           context.fillRect(x, y, cellWidth * 0.68, 1);
         }
       }
@@ -108,7 +107,7 @@ export function HdbWallCanvas({ snapshot }: { snapshot: RoomSnapshot | null }) {
       if (snapshot?.phase === "matching" && lit[0]) {
         const point = pointForWindow(lit[0].windowId, columns, rows, width, height);
         const radius = reducedMotion ? 28 : 18 + ((frame * 1.2) % 42);
-        context.strokeStyle = `rgba(241,174,73,${reducedMotion ? 0.55 : Math.max(0, 0.8 - radius / 65)})`;
+        context.strokeStyle = `rgba(182,64,45,${reducedMotion ? 0.55 : Math.max(0, 0.8 - radius / 65)})`;
         context.lineWidth = 2;
         context.beginPath();
         context.arc(point.x, point.y, radius, 0, Math.PI * 2);
@@ -123,8 +122,8 @@ export function HdbWallCanvas({ snapshot }: { snapshot: RoomSnapshot | null }) {
         const currentX = from.x + (to.x - from.x) * progress;
         const currentY = from.y + (to.y - from.y) * progress;
         context.save();
-        context.strokeStyle = COLOURS[snapshot.match.scene.colour];
-        context.shadowColor = COLOURS[snapshot.match.scene.colour];
+        context.strokeStyle = THREAD_COLOUR;
+        context.shadowColor = THREAD_COLOUR;
         context.shadowBlur = 14;
         context.lineWidth = 3;
         context.setLineDash([7, 8]);
@@ -135,8 +134,8 @@ export function HdbWallCanvas({ snapshot }: { snapshot: RoomSnapshot | null }) {
         context.restore();
       }
 
-      context.fillStyle = "rgba(244,244,240,.48)";
-      context.font = "10px ui-monospace, monospace";
+      context.fillStyle = "rgba(8,47,46,.72)";
+      context.font = "600 10px Arial, sans-serif";
       context.fillText("EVERY DARK WINDOW HOLDS A LIFE WE HAVEN'T ASKED ABOUT YET.", left + 12, top + facadeHeight + 25);
 
       frame += 1;

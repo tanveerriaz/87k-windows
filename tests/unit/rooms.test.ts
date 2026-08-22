@@ -3,12 +3,13 @@ import { buildMockCapsule } from "../../src/server/inference/mock-provider";
 import type { InferenceProvider } from "../../src/server/inference/provider";
 import { StoryMatcher } from "../../src/server/matching/matcher";
 import { RoomStore, type TypedServer } from "../../src/server/rooms";
+import { PREPARED_RADIO_MEMORY } from "../../src/shared/demo";
 
 describe("RoomStore prepared story", () => {
   it("uses the process inference provider instead of constructing a mock provider", async () => {
     vi.useFakeTimers();
     const capsule = buildMockCapsule({
-      memory: "I used to repair radios around Queenstown in the 1970s.",
+      memory: PREPARED_RADIO_MEMORY,
       fixture: "radio",
     });
     const provider: InferenceProvider = { extract: vi.fn().mockResolvedValue(capsule) };
@@ -22,7 +23,7 @@ describe("RoomStore prepared story", () => {
 
     expect(provider.extract).toHaveBeenCalledOnce();
     expect(provider.extract).toHaveBeenCalledWith({
-      memory: "I used to repair radios around Queenstown in the 1970s, and I would be happy to teach someone basic radio repair.",
+      memory: PREPARED_RADIO_MEMORY,
       fixture: "radio",
     });
     expect(rooms.get("real87")).toMatchObject({ provider: "gemma-api", phase: "matched" });

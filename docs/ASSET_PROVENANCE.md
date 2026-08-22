@@ -7,6 +7,7 @@ The prompts in `assets/prompts/` generate only fictional, non-identifying imager
 - a front-facing night-time Singapore housing façade texture;
 - a small atlas of symbolic memory objects;
 - a submission thumbnail showing two illuminated windows.
+- a Queenstown Story Block concept based on public-housing architectural motifs.
 
 No personal photograph, real resident, address, name, logo or private memory may be supplied. Generated outputs belong in `assets/generated/` and must be visually reviewed before they are moved into `public/generated/` for use by the app. Record the model, prompt file, UTC time and output hash in `assets/manifest.json`.
 

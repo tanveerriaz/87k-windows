@@ -128,7 +128,7 @@ export class StoryMatcher {
     const skill = capsule.skills[0] ?? capsule.interests[0] ?? "a shared interest";
     const hasComplement = best.evidencePath.includes("teach ↔ learn");
     const why = hasComplement
-      ? `Both fictional stories connect through ${capsule.place ?? "a place"} and ${skill}; one offers a skill the other wants to learn.`
+      ? `You both connect through ${capsule.place ?? "a place"} and ${skill}. One knows how; the other wants to learn.`
       : `Both fictional stories connect through ${capsule.place ?? "a place"}, ${capsule.era ?? "a shared era"} and ${skill}.`;
     return MatchResultSchema.parse({
       decision: "MATCH",

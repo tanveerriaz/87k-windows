@@ -23,6 +23,20 @@
       "mimeType": "image/jpeg",
       "sha256": "9ad7b18ed60029c5a8d40849567a44879777fac8ac447a795ad2b1a8e4bf3db8",
       "generatedAt": "2026-08-22T01:53:05.417Z"
+    },
+    {
+      "file": "assets/generated/queenstown-story-block.jpg",
+      "prompt": "assets/prompts/queenstown-story-block.md",
+      "model": "gemini-3.1-flash-image",
+      "mimeType": "image/jpeg",
+      "sha256": "9cc0e1e9ecbe66a8a46efa76a4f3aa8bd84b67792c383c91bb651d981527b085",
+      "generatedAt": "2026-08-22T02:57:44.260Z",
+      "references": [
+        "Selected synthetic UI concept generated during design exploration",
+        "NHB Roots: Former Forfar House",
+        "NHB Roots: 3-storey flats in Duchess Estate",
+        "NHB Roots: Princess House"
+      ]
     }
   ],
   "policy": "Fictional, non-identifying build-time assets only. Review before moving an output into public/generated/."

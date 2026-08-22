@@ -10,6 +10,8 @@ Use one browser window for `/wall/<room>` and one phone-sized window for `/join/
 
 > Every dark window stands for a life we have not asked about yet. 87K Windows gives an older person one gentle question, listens to the answer, and makes a respectful connection visible.
 
+> Older people are not profiles to complete. They are witnesses, makers and teachers. The question is whether someone is ready to listen and learn.
+
 ## 0:15–0:30 — Ask and share
 
 **Show:** Join Mode with the large question and voice/type controls. Choose the prepared fictional radio memory if live voice is not available.
@@ -39,6 +41,8 @@ If asked about credentials, say:
 **Say:**
 
 > The matcher now finds a second fictional life with a grounded shared thread. The two windows glow together because the evidence connects them—not because the model guessed a person’s identity.
+
+> One person remembers how. Another wants to learn. That is the bridge.
 
 Point briefly to the evidence path and invitation. If using the no-match fixture, show `NO MATCH YET` and say that the system refuses to force a weak connection.
 

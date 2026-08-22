@@ -4,6 +4,7 @@ import { createApp } from "../../src/server/app";
 import { readEnv } from "../../src/server/env";
 import { MockProvider } from "../../src/server/inference/mock-provider";
 import { StoryMatcher } from "../../src/server/matching/matcher";
+import { PREPARED_RADIO_MEMORY } from "../../src/shared/demo";
 
 describe("Express API", () => {
   let server: Server;
@@ -39,7 +40,7 @@ describe("Express API", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         roomCode: "demo87",
-        memory: "I used to repair radios around Queenstown in the 1970s.",
+        memory: PREPARED_RADIO_MEMORY,
         fixture: "radio",
       }),
     });

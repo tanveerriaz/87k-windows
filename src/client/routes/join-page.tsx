@@ -26,6 +26,9 @@ export function JoinPage() {
   const [isListening, setIsListening] = useState(false);
   const room = useRoomSocket(roomCode, "join");
   const preparedImageSelected = fixture === "radio" && photoData === null;
+  const journeySteps = room.snapshot?.phase === "no-match"
+    ? [...JOURNEY_STEPS.slice(0, 3), "Still listening"]
+    : JOURNEY_STEPS;
 
   useEffect(() => {
     if (stage === "waiting" && (room.snapshot?.phase === "matched" || room.snapshot?.phase === "no-match")) {
@@ -128,7 +131,7 @@ export function JoinPage() {
 
       <section className="join-shell" aria-live="polite">
         <div className="step-rail" aria-label="Progress">
-          {JOURNEY_STEPS.map((label, index) => {
+          {journeySteps.map((label, index) => {
             const activeIndex = stage === "welcome" || stage === "capture"
               ? 0
               : stage === "processing" || stage === "review"
