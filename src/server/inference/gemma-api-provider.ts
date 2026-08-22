@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { GoogleGenAI } from "@google/genai";
 import { StoryCapsuleSchema, type StoryCapsule } from "../../shared/schemas";
+import { keepExplicitConsent } from "./consent-evidence";
 import { redactMemory } from "./mock-provider";
 import { ProviderOutputError, ProviderTimeoutError, type ExtractInput, type InferenceProvider } from "./provider";
 
@@ -30,9 +31,6 @@ const CAPSULE_JSON_SCHEMA = {
     uncertain: { type: "array", items: { type: "string" } },
   },
 } as const;
-
-const EXPLICIT_OFFER = /\b(i can|i could|i would be happy to|i am happy to|i'm happy to|i am willing to|i'm willing to|i can teach|i can share|i can show|i can help)\b/i;
-const EXPLICIT_WANT = /\b(i want|i wish|i hope|i would like|i'm looking for|i am looking for|i miss|i want to learn)\b/i;
 
 export class GemmaApiProvider implements InferenceProvider {
   private readonly client: GemmaApiClient;
@@ -93,8 +91,11 @@ Memory: ${JSON.stringify(memory)}${repair}`;
       id: randomUUID(),
       containsPII: sourceRedaction.containsPII,
       redactions: sourceRedaction.redactions,
-      offers: EXPLICIT_OFFER.test(input.memory) ? (parsed as Record<string, unknown>).offers : [],
-      wants: EXPLICIT_WANT.test(input.memory) ? (parsed as Record<string, unknown>).wants : [],
+      ...keepExplicitConsent(
+        input.memory,
+        (parsed as Record<string, unknown>).offers,
+        (parsed as Record<string, unknown>).wants,
+      ),
     });
     const summaryRedaction = redactMemory(candidate.safeSummary);
     return StoryCapsuleSchema.parse({

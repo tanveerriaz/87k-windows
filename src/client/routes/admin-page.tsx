@@ -10,10 +10,12 @@ export function AdminPage() {
   const joinUrl = useMemo(() => `${window.location.origin}/join/${roomCode}`, [roomCode]);
   const activeProvider = room.snapshot?.provider;
   const isHostedGemma = activeProvider === "gemma-api";
+  const isLocalGemma = activeProvider === "ollama";
+  const isRealGemma = isHostedGemma || isLocalGemma;
   const activeProviderLabel = isHostedGemma
     ? "Hosted Gemma 4 via Gemini API"
     : activeProvider === "ollama"
-      ? "Local Gemma 3 through Ollama"
+      ? "Local gemma3:4b through Ollama"
       : activeProvider === "mock"
         ? "Development test harness"
         : "Connecting to inference";
@@ -60,7 +62,7 @@ export function AdminPage() {
             <span className="mono-label">DEMO CONTROLS</span>
             <h2>Real inference. Prepared words.</h2>
             <button className="button button-primary button-block" onClick={room.inject}>
-              {isHostedGemma ? "Run prepared story through Gemma" : "Run prepared story"}
+              {isRealGemma ? "Run prepared story through Gemma" : "Run prepared story"}
             </button>
             <button className="button button-danger button-block" onClick={room.reset}>Reset room</button>
             <p>The prepared story is fictional, but it goes through the active model. Reset removes the ephemeral room state.</p>
@@ -68,16 +70,16 @@ export function AdminPage() {
 
           <article className="admin-section provider-section">
             <span className="mono-label">JUDGING INFERENCE</span>
-            <h2>{isHostedGemma ? "Real Gemma is locked for judging." : activeProviderLabel}</h2>
-            <div className={`provider-lock ${isHostedGemma ? "is-live" : ""}`}>
+            <h2>{isLocalGemma ? "Open Gemma is running on-device." : isHostedGemma ? "Hosted Gemma is ready for online review." : activeProviderLabel}</h2>
+            <div className={`provider-lock ${isRealGemma ? "is-live" : ""}`}>
               <span className="status-dot is-online" aria-hidden="true" />
               <div>
                 <strong>{activeProviderLabel}</strong>
                 <p>
                   {isHostedGemma
-                    ? "No simulated fallback and no provider switch. If the hosted API fails, the room stops safely; relaunch local Ollama to continue with a real Gemma model."
+                    ? "Online review uses real hosted Gemma. It never falls back to simulated inference."
                     : activeProvider === "ollama"
-                      ? "Offline inference is active. This is a real Gemma model running on the presentation Mac."
+                      ? "Primary live judging mode: model inference stays on this Mac and serves one story at a time. Use a trusted private hotspot because phone traffic uses local HTTP."
                       : "Test harness active. This mode is for development and automated checks, never judging."}
                 </p>
               </div>

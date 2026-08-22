@@ -3,27 +3,19 @@
 ## One room, three surfaces
 
 ```text
-┌──────────────────┐       HTTPS / Socket.IO       ┌────────────────────────────┐
-│ Participant phone│ ────────────────────────────▶ │ One Cloud Run Node process │
-│ ask, tell, review│                               │ Express + Socket.IO + Zod  │
-└──────────────────┘                               │                            │
-                                                   │  ┌──────────────────────┐  │
-┌──────────────────┐       live room events        │  │ hosted Gemma 4       │  │
-│ Projected wall   │ ◀──────────────────────────── │  │ safe capsule only    │  │
-│ light + connect  │                               │  └──────────────────────┘  │
-└──────────────────┘                               │            │               │
-                                                   │  MiniSearch + score        │
-┌──────────────────┐       reset / inject          │  ephemeral room Map        │
-│ Presenter admin  │ ◀───────────────────────────▶ │  two-hour expiry           │
-└──────────────────┘                               └────────────────────────────┘
+Participant phone ── private hotspot ──▶ Presentation Mac
+Projected wall   ◀── room events ───  Express + Socket.IO + Zod
+Presenter admin  ─── controls ─────▶  Open Gemma via Ollama
+                                      MiniSearch + score
+                                      ephemeral room Map
 ```
 
-Development runs Vite on port 5173 and proxies API and Socket.IO traffic to Express on port 3001. Production is one container: Express serves `dist/client`, listens on Cloud Run's `PORT`, and owns the Socket.IO room state.
+Development runs Vite on port 5173 and proxies API and Socket.IO traffic to Express on port 3001. Judging uses the production build on the presentation Mac: Express serves `dist/client` on port 3000 and owns the Socket.IO room state. The same production process runs on Cloud Run for online review.
 
 ## Core sequence
 
 1. Join Mode submits a short memory to `/api/extract`.
-2. The server removes obvious contact details before any hosted inference call.
+2. The server removes obvious contact details before inference; in judging mode, the request stays on the local Mac.
 3. Gemma returns a schema-constrained capsule: summary, observations, era, place, skills, offer/want, redactions and uncertainty.
 4. Zod validates the response. Invalid output gets one repair attempt, then a safe failure.
 5. The participant reviews and explicitly approves the capsule.
@@ -35,15 +27,18 @@ Development runs Vite on port 5173 and proxies API and Socket.IO traffic to Expr
 
 | Mode | Model | Purpose | Secret/network |
 |---|---|---|---|
-| `gemma-api` | `gemma-4-26b-a4b-it` | Judged primary path on Cloud Run | server-side `GEMINI_API_KEY` |
-| `ollama` | `gemma3:4b` | Native Apple Silicon fallback | no key; local network only |
+| `ollama` | `gemma3:4b` | Primary on-device judging path on Apple Silicon | no key; trusted hotspot only |
+| `gemma-api` | `gemma-4-26b-a4b-it` | Public online-review path on Cloud Run | server-side `GEMINI_API_KEY` |
 | `mock` | deterministic fixture | Automated tests and UI development only | none |
 
 All providers implement the same typed interface and must return the same Zod schema. The model interprets the memory; it does not decide who is safe to contact. Matching remains explainable application logic, and low evidence returns no match.
 
+The local Ollama path permits one in-flight extraction. A second submission receives `409 LOCAL_GEMMA_BUSY` and may retry when the first capsule is ready. This is an explicit prototype limit for the presentation Mac, not a scaling claim.
+
 ## Privacy and safety boundary
 
 - No authentication, contact exchange, database, object storage, analytics SDK or raw-input logging.
+- Local inference stays on the Mac, but phone-to-Mac traffic is plain HTTP; use a trusted private hotspot, never shared event Wi-Fi.
 - Memory and optional compressed image exist only for the request; room state stores only an approved capsule.
 - The Gemini key exists only in the server process or Secret Manager.
 - Logs contain request ID, method, path, status and duration—not the memory or model response.
@@ -52,11 +47,10 @@ All providers implement the same typed interface and must return the same Zod sc
 
 ## Deployment decision record
 
-- **Decision:** one public Cloud Run service in `asia-southeast1`, maximum one instance during the demo.
-- **Why:** phone and projector need one public origin, Socket.IO needs a shared room process, and the hackathon credit supports a short judging deployment.
+- **Decision:** run open Gemma and the production app on one presentation Mac for judging; keep one public Cloud Run service in `asia-southeast1` for online review.
+- **Why:** local inference keeps memories under community control and works without internet; the hosted path remains easy for remote reviewers to access.
 - **Trade-off:** the in-memory room cannot scale across replicas. This is deliberate for a live-room prototype; max instances stays one.
-- **Fallback:** native Ollama on the M4 MacBook Air. If both real models fail, stop rather than simulate inference.
-- **Recovery:** redeploy the last public Git commit or switch the presenter to a local URL; no durable user data needs migration.
+- **Recovery:** use the explicitly labelled hosted Gemma URL if local Ollama fails. If neither real model works, stop rather than simulate inference.
 - **Excluded:** Redis, databases, queues, vector stores, multi-region hosting, self-hosted GPUs and native mobile packaging.
 
 Cloud deployment still requires the repository owner's explicit confirmation of the hackathon project and service before it is executed.

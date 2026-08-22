@@ -20,6 +20,8 @@ The demo begins with a clearly fictional memory about repairing radios in Queens
 
 Gemma handles the ambiguity that rules cannot: a short, conversational memory may contain place, era, a practical skill, something the person can offer and something they miss. It turns this into a strict, reviewable structure without inventing contact details or exposing hidden reasoning.
 
+Because Gemma is open, that interpretation can run on a community-centre Mac through Ollama. The primary live demo keeps model inference on-device and remains usable without internet access; hosted Gemma is the separate public-review path. Phones use a trusted private hotspot because the prototype's local HTTP transport is not encrypted.
+
 The application then uses deterministic retrieval and scoring. This division is intentional:
 
 - Gemma understands human language.
@@ -40,6 +42,6 @@ The application then uses deterministic retrieval and scoring. This division is 
 
 ## Scope
 
-The hackathon build includes mobile Join Mode, projected Wall Mode, presenter Admin Mode, hosted Gemma 4 via Gemini API, Cloud Run packaging, native Ollama fallback, twelve fictional stories and a deliberate no-match fixture. A deterministic provider exists only as an automated-test harness and is never used during judging.
+The hackathon build includes mobile Join Mode, projected Wall Mode, presenter Admin Mode, local `gemma3:4b` through Ollama, hosted Gemma 4 for online review, Cloud Run packaging, twelve fictional stories and a deliberate no-match fixture. A deterministic provider exists only as an automated-test harness and is never used during judging.
 
 It deliberately excludes native mobile installation, medical or welfare advice, authentication, permanent storage, contact exchange, social scoring and autonomous outreach. A production pilot would require community-partner moderation, retention controls, accessibility research and explicit safeguarding—not merely more model capability.

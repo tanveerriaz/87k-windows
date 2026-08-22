@@ -2,6 +2,8 @@
 
 Use one browser window for `/wall/<room>` and one phone-sized window for `/join/<room>`. Keep the provider label visible but unobtrusive. Use only the prepared fictional fixtures.
 
+The organizer permits a maximum three-minute submission video. This 90-second version keeps the working core loop in the first minute.
+
 ## 0:00–0:15 — Set the stakes
 
 **Show:** The wall is dark.
@@ -9,6 +11,8 @@ Use one browser window for `/wall/<room>` and one phone-sized window for `/join/
 **Say:**
 
 > Every dark window stands for a life we have not asked about yet. 87K Windows gives an older person one gentle question, listens to the answer, and makes a respectful connection visible.
+
+> Older people are not profiles to complete. They are witnesses, makers and teachers. The question is whether someone is ready to listen and learn.
 
 ## 0:15–0:30 — Ask and share
 
@@ -26,7 +30,7 @@ Submit the memory and show the capsule review. Point out the observed evidence, 
 
 **Say:**
 
-> Gemma runs on the server through the Gemini API. It is not writing a personality or inventing a biography. It extracts only what the memory supports, keeps uncertainty visible, and gives the matcher evidence it can explain.
+> Open Gemma runs here on the presentation Mac. Model inference stays on this device, connected through our private hotspot. It is not writing a personality or inventing a biography. It extracts only what the memory supports, keeps uncertainty visible, and gives the matcher evidence it can explain.
 
 If asked about credentials, say:
 
@@ -40,7 +44,9 @@ If asked about credentials, say:
 
 > The matcher now finds a second fictional life with a grounded shared thread. The two windows glow together because the evidence connects them—not because the model guessed a person’s identity.
 
-Point briefly to the evidence path and invitation. If using the no-match fixture, show `NO MATCH YET` and say that the system refuses to force a weak connection.
+> One person remembers how. Another wants to learn. That is the bridge.
+
+Point briefly to the evidence path and suggested invitation. Make clear that the second story is a fictional fixture, not a person who has already accepted. In a real community room, both people would still choose whether to listen. If using the no-match fixture, show `NO MATCH YET` and say that the system refuses to force a weak connection.
 
 ## 1:05–1:20 — Explain reliability and access
 
@@ -48,7 +54,11 @@ Point briefly to the evidence path and invitation. If using the no-match fixture
 
 **Say:**
 
-> The judging deployment runs on Google Cloud Run. If the hosted model is unavailable, the same server contract can use local Ollama Gemma on the Mac. Both paths are real Gemma inference. If neither works, we stop rather than simulate the AI.
+> Live judging uses open Gemma locally through Ollama, so the community controls where memories are interpreted and the demo can continue offline. Cloud Run uses hosted Gemma for online reviewers. Both paths are explicit real-model modes; neither falls back to simulation.
+
+> The local demo handles one story at a time by design. That keeps the experience reliable on a MacBook Air instead of pretending this prototype is a scaled service.
+
+If the offline proof has been rehearsed, briefly disconnect internet and run the prepared extraction again. Do not improvise this step for the first time during judging.
 
 ## 1:20–1:30 — Close
 
@@ -62,10 +72,11 @@ Point briefly to the evidence path and invitation. If using the no-match fixture
 
 - [ ] Use fictional fixtures only; remove real photos and recordings from the demo.
 - [ ] Confirm the displayed provider matches the actual server mode.
-- [ ] Confirm the hosted Gemma key is configured server-side and is not in frontend code.
+- [ ] Confirm the status reads `LOCAL GEMMA · ON-DEVICE`, Ollama has `gemma3:4b` loaded, and phones use a trusted private hotspot—not shared event Wi-Fi.
 - [ ] Open Wall Mode before Join Mode so the first glow is visible.
 - [ ] Keep the prepared radio story and no-match fixture ready.
 - [ ] Test the positive match and `NO MATCH YET` paths once.
-- [ ] Record the core loop first; explain Cloud Run and fallback modes afterward.
+- [ ] Record the core loop first; explain the separate Cloud Run online-review path afterward.
+- [ ] Keep the final video below the organizer's three-minute maximum.
 - [ ] Check that the public repository URL is included in the submission.
 - [ ] Run lint, typecheck, tests, build and E2E before uploading.

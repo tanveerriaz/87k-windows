@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { OllamaProvider } from "../../src/server/inference/ollama-provider";
+import { ProviderBusyError } from "../../src/server/inference/provider";
 
 const validLocalCapsule = JSON.stringify({
   observed: ["memory text about a radio"],
@@ -32,7 +33,21 @@ describe("OllamaProvider", () => {
     expect(capsule.place).toBe("Queenstown");
     expect(capsule.containsPII).toBe(true);
     expect(capsule.redactions).toContain("exact address");
+    expect(capsule.offers).toEqual([]);
+    expect(capsule.wants).toEqual([]);
     expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("keeps an offer only when the participant explicitly volunteers it", async () => {
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ response: validLocalCapsule }), { status: 200 }),
+    ) as typeof fetch;
+    const provider = new OllamaProvider("http://127.0.0.1:11434", "gemma3:4b", fetcher, 1000);
+    const capsule = await provider.extract({
+      memory: "I repaired radios in Queenstown, and I would be happy to teach basic radio repair.",
+    });
+    expect(capsule.offers).toEqual(["teach radio repair"]);
+    expect(capsule.wants).toEqual([]);
   });
 
   it("repairs invalid JSON once", async () => {
@@ -44,5 +59,20 @@ describe("OllamaProvider", () => {
     const capsule = await provider.extract({ memory: "A fictional Queenstown radio memory from the 1970s." });
     expect(capsule.skills).toContain("radio repair");
     expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects a second local inference while one story is running", async () => {
+    let releaseGeneration: () => void = () => undefined;
+    const fetcher = vi.fn(async () => {
+      await new Promise<void>((resolve) => { releaseGeneration = resolve; });
+      return new Response(JSON.stringify({ response: validLocalCapsule }), { status: 200 });
+    }) as typeof fetch;
+    const provider = new OllamaProvider("http://127.0.0.1:11434", "gemma3:4b", fetcher, 1000);
+
+    const first = provider.extract({ memory: "I would be happy to teach radio repair." });
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledOnce());
+    await expect(provider.extract({ memory: "I want to learn radio repair." })).rejects.toBeInstanceOf(ProviderBusyError);
+    releaseGeneration();
+    await expect(first).resolves.toMatchObject({ offers: ["teach radio repair"] });
   });
 });

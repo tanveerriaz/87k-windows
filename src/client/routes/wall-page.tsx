@@ -3,10 +3,14 @@ import { HdbWallCanvas } from "../components/hdb-wall-canvas";
 import { StatusBadge } from "../components/status-badge";
 import { useRoomSocket } from "../lib/use-room-socket";
 
+const RESULT_STEPS = ["You shared", "Gemma noticed", "You approved", "A story matched"];
+
 export function WallPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
   const room = useRoomSocket(roomCode, "wall");
   const snapshot = room.snapshot;
+  const sourceStory = snapshot?.windows.findLast((window) => window.participantId === snapshot.activeSourceId);
+  const listenerStory = snapshot?.windows.findLast((window) => window.participantId === snapshot.activeCandidateId);
 
   return (
     <main className="wall-page">
@@ -37,20 +41,41 @@ export function WallPage() {
         )}
         {snapshot?.phase === "matched" && snapshot.match && (
           <div className="wall-reveal">
-            <div className="wall-evidence">
-              <span className="mono-label">THE THREAD BETWEEN THESE TWO WINDOWS</span>
-              <div className="evidence-path">
-                {snapshot.match.evidencePath.map((item, index) => (
-                  <span key={item} style={{ animationDelay: `${index * 180}ms` }}>{item}</span>
+            <div className="wall-result-main">
+              <p className="eyebrow">This is what connected you</p>
+              <h1>A potential listener match was found.</h1>
+              <p className="wall-result-summary">{snapshot.match.why}</p>
+              <div className="wall-journey" aria-label="How the connection was made">
+                {RESULT_STEPS.map((step, index) => (
+                  <span key={step}><small>0{index + 1}</small><strong>{step}</strong></span>
                 ))}
               </div>
-              <p>{snapshot.match.why}</p>
+              <div className="wall-story-pair">
+                <article>
+                  <span className="mono-label">YOUR MEMORY</span>
+                  <p>{sourceStory?.safeSummary}</p>
+                </article>
+                <div className="wall-evidence">
+                  <span className="mono-label">EVIDENCE YOU BOTH SHARED</span>
+                  <div className="evidence-path">
+                    {snapshot.match.evidencePath.map((item, index) => (
+                      <span key={item} style={{ animationDelay: `${index * 180}ms` }}>{item}</span>
+                    ))}
+                  </div>
+                </div>
+                <article>
+                  <span className="mono-label">PREPARED FICTIONAL INTEREST</span>
+                  <p>{listenerStory?.safeSummary}</p>
+                </article>
+              </div>
             </div>
             {snapshot.invite && (
               <article className="wall-invite">
-                <span className="mono-label">KOPI CARD</span>
-                <h2>{snapshot.invite.invitation}</h2>
+                <span className="mono-label">YOUR RESULT</span>
+                <h2>Prepared fictional match</h2>
+                <p>{snapshot.invite.invitation}</p>
                 <p>{snapshot.invite.activity}</p>
+                <small>This prepared story has not accepted. In a real room, both people would still choose whether to listen. No contact details are exchanged.</small>
               </article>
             )}
           </div>
@@ -59,7 +84,8 @@ export function WallPage() {
           <div className="wall-no-match">
             <span className="mono-label">EVIDENCE CHECK COMPLETE</span>
             <h1>NO MATCH YET</h1>
-            <p>No bridge was drawn because the prepared stories did not contain enough evidence.</p>
+            <h2>We haven’t found the right listener yet.</h2>
+            <p>No invitation was created, and the approved story remains safe.</p>
           </div>
         )}
       </section>

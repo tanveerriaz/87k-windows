@@ -14,7 +14,7 @@ import type { AppEnv } from "./env";
 import { MockProvider } from "./inference/mock-provider";
 import { OllamaProvider } from "./inference/ollama-provider";
 import { GemmaApiProvider } from "./inference/gemma-api-provider";
-import { ProviderOutputError, ProviderTimeoutError, type InferenceProvider } from "./inference/provider";
+import { ProviderBusyError, ProviderOutputError, ProviderTimeoutError, type InferenceProvider } from "./inference/provider";
 import { StoryMatcher } from "./matching/matcher";
 
 export type AppDependencies = {
@@ -24,6 +24,9 @@ export type AppDependencies = {
 };
 
 function errorPayload(error: unknown): { status: number; code: string; message: string } {
+  if (error instanceof ProviderBusyError) {
+    return { status: 409, code: "LOCAL_GEMMA_BUSY", message: error.message };
+  }
   if (error instanceof ProviderOutputError) {
     return { status: 502, code: "INVALID_MODEL_OUTPUT", message: `${error.message} Nothing was shared. Please try again.` };
   }

@@ -1,4 +1,5 @@
 import type { Server } from "socket.io";
+import { PREPARED_RADIO_MEMORY } from "../shared/demo";
 import { RoomSnapshotSchema, type LitWindow, type Provider, type RoomSnapshot, type StoryCapsule } from "../shared/schemas";
 import type { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "../shared/events";
 import type { InferenceProvider } from "./inference/provider";
@@ -30,6 +31,8 @@ export class RoomStore {
       provider: this.initialProvider,
       phase: "idle",
       windows: [],
+      activeSourceId: null,
+      activeCandidateId: null,
       match: null,
       invite: null,
       lastError: null,
@@ -87,6 +90,8 @@ export class RoomStore {
       safeSummary: capsule.safeSummary,
     };
     room.windows = [...room.windows.filter((window) => window.participantId !== participantId), sourceWindow];
+    room.activeSourceId = participantId;
+    room.activeCandidateId = null;
     room.phase = "matching";
     room.match = null;
     room.invite = null;
@@ -100,6 +105,7 @@ export class RoomStore {
     io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
 
     await new Promise((resolve) => setTimeout(resolve, 700));
+    if (this.rooms.get(roomCode) !== room || room.activeSourceId !== participantId) return;
     const result = this.matcher.match(capsule);
     room.match = result;
     room.updatedAt = new Date().toISOString();
@@ -119,11 +125,12 @@ export class RoomStore {
       safeSummary: candidate?.safeSummary ?? "A prepared fictional story.",
     };
     room.windows.push(targetWindow);
+    room.activeCandidateId = targetWindow.participantId;
     room.phase = "matched";
     room.invite = {
-      title: "A small bridge, ready when you are",
+      title: "A potential listener match was found.",
       invitation: result.invitation ?? "Kopi and a shared story?",
-      activity: "Meet at the community table for 30 minutes. Bring the radio story; tools are optional.",
+      activity: "Suggested next step: meet at the community table for 30 minutes. Bring the radio story; tools are optional.",
       roomCode,
     };
 
@@ -136,7 +143,7 @@ export class RoomStore {
 
   async inject(io: TypedServer, roomCode: string): Promise<void> {
     const capsule = await this.inferenceProvider.extract({
-      memory: "I used to repair radios around Queenstown in the 1970s.",
+      memory: PREPARED_RADIO_MEMORY,
       fixture: "radio",
     });
     await this.approve(io, roomCode, "presenter-demo", capsule);

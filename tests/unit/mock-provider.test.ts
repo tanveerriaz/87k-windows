@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { buildMockCapsule, MockProvider, redactMemory } from "../../src/server/inference/mock-provider";
 import { ProviderOutputError, ProviderTimeoutError } from "../../src/server/inference/provider";
+import { PREPARED_RADIO_MEMORY } from "../../src/shared/demo";
 
 describe("MockProvider", () => {
   it("creates the deterministic Queenstown radio capsule", () => {
-    const capsule = buildMockCapsule({ memory: "I used to repair radios around Queenstown in the 1970s." });
+    const capsule = buildMockCapsule({ memory: PREPARED_RADIO_MEMORY });
     expect(capsule.place).toBe("Queenstown");
     expect(capsule.era).toBe("1970s");
     expect(capsule.skills).toContain("radio repair");

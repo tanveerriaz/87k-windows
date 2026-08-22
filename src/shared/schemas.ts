@@ -52,6 +52,8 @@ export const RoomSnapshotSchema = z.object({
   provider: ProviderSchema,
   phase: z.enum(["idle", "reviewing", "matching", "matched", "no-match"]),
   windows: z.array(LitWindowSchema),
+  activeSourceId: z.string().nullable(),
+  activeCandidateId: z.string().nullable(),
   match: MatchResultSchema.nullable(),
   invite: KopiCardSchema.nullable(),
   lastError: z.string().nullable(),
