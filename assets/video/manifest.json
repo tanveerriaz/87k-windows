@@ -1,0 +1,51 @@
+{
+  "policy": "Fictional, non-identifying video assets only. Generated footage supplies atmosphere; current product captures supply interface evidence.",
+  "productionOutputs": [
+    {
+      "file": "output/video/87k-windows-submission-final.mp4",
+      "durationSeconds": 110,
+      "dimensions": "1920x1080",
+      "frameRate": 24,
+      "videoCodec": "H.264",
+      "audioCodec": "AAC",
+      "sha256": "c1ba74fa463f40d316318881a664b477ba3e928c27b0c74303d093d9adfb6d7e",
+      "review": {
+        "status": "approved-for-submission",
+        "notes": "Frames reviewed at 0, 8, 20, 36, 49, 61, 73, 87, 99 and 107 seconds. The export contains only the photographic night design, current carbon-concrete-amber product captures, a two-light match with blue thread, one-light NO MATCH YET, and the final purpose card."
+      }
+    }
+  ],
+  "voiceover": {
+    "file": "assets/video/audio/voiceover-natural.mp3",
+    "provider": "fal.ai",
+    "model": "fal-ai/minimax/speech-02-hd",
+    "requestId": "01a02847-12b4-7e32-8b79-1cc8108837e1",
+    "voice": "Wise_Woman",
+    "durationSeconds": 100.519031,
+    "sha256": "d7c5cffeca402a00d20823922fa8c7c01e53e05fe52deefbc54af5b93d7f9da5"
+  },
+  "generatedFootage": [
+    {
+      "id": "discovery-objects",
+      "file": "assets/video/generated/seedance/01-discovery-objects.mp4",
+      "source": "assets/video/seedance-sources/01-discovery-objects.jpg",
+      "provider": "fal.ai",
+      "model": "Seedance",
+      "requestId": "01a0284a-2a24-7a62-8102-bf2a752db513",
+      "durationSeconds": 8,
+      "sha256": "1aebdff3fde3b841229919bbd62a0f0cdb2be710b35ba15444e6d66420070377",
+      "review": "approved"
+    },
+    {
+      "id": "dark-hdb",
+      "file": "assets/video/generated/seedance/02-dark-hdb.mp4",
+      "source": "assets/video/seedance-sources/02-dark-hdb.jpg",
+      "provider": "fal.ai",
+      "model": "Seedance",
+      "requestId": "01a0284a-2f40-7451-b5ab-5e741b8f5cd8",
+      "durationSeconds": 10,
+      "sha256": "ad52eb81d6cfe4bc964d31edf881e3de3b0a41fb770c6bca088552414394d9a8",
+      "review": "approved"
+    }
+  ]
+}

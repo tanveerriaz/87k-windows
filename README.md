@@ -6,7 +6,7 @@
 
 87K Windows helps older people turn joyful lived experience into a consented offer—something another person can hear, learn from or share—so memory becomes social connection.
 
-[**Open the Cloud Run app**](https://windows-87k-985493069617.asia-southeast1.run.app/) · [Join Mode](https://windows-87k-985493069617.asia-southeast1.run.app/join/demo87) · [Wall Mode](https://windows-87k-985493069617.asia-southeast1.run.app/wall/demo87) · [Architecture](docs/ARCHITECTURE.md) · [Demo story](docs/DEMO_SCRIPT.md)
+[**Open the Cloud Run app**](https://windows-87k-985493069617.asia-southeast1.run.app/) · [Submission video](output/video/87k-windows-submission-final.mp4) · [Join Mode](https://windows-87k-985493069617.asia-southeast1.run.app/join/demo87) · [Wall Mode](https://windows-87k-985493069617.asia-southeast1.run.app/wall/demo87) · [Architecture](docs/ARCHITECTURE.md) · [Demo story](docs/DEMO_SCRIPT.md)
 
 [![Quality gates](https://github.com/tanveerriaz/87k-windows/actions/workflows/ci.yml/badge.svg)](https://github.com/tanveerriaz/87k-windows/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-0b1118?logo=typescript&logoColor=white)
