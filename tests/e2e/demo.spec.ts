@@ -5,6 +5,29 @@ const syntheticPng = Buffer.from(
   "base64",
 );
 
+test("landing page leads with the 87K Windows artwork and a working demo action", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/");
+
+  await expect(page.getByAltText("Two illuminated windows connected across a Singapore housing block at night")).toBeVisible();
+  await expect(page.getByText("Two windows. One human thread.")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileCaptionSizes = await page.locator(".landing-visual figcaption").evaluate((caption) => ({
+    caption: Number.parseFloat(getComputedStyle(caption).fontSize),
+    disclosure: Number.parseFloat(getComputedStyle(caption.querySelector("span")!).fontSize),
+    proof: Number.parseFloat(getComputedStyle(document.querySelector(".landing-proof p")!).fontSize),
+  }));
+  expect(mobileCaptionSizes.caption).toBeGreaterThanOrEqual(18);
+  expect(mobileCaptionSizes.disclosure).toBeGreaterThanOrEqual(18);
+  expect(mobileCaptionSizes.proof).toBeGreaterThanOrEqual(18);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await page.getByRole("link", { name: "Start the demo" }).click();
+  await expect(page).toHaveURL(/\/join\/demo87$/);
+});
+
 test("two tabs complete the match, reconnect and honest no-match flow", async ({ browser }) => {
   const roomCode = `e2e-${Date.now()}`;
   const phoneContext = await browser.newContext({ viewport: { width: 390, height: 844 } });

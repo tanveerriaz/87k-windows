@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
+import windowsArtwork from "../../../assets/generated/submission-thumbnail.jpg";
 
 export function LandingPage() {
   return (
     <main className="landing-page">
-      <div className="landing-grid" aria-hidden="true" />
       <nav className="landing-nav">
         <span className="wordmark">87K WINDOWS</span>
         <span className="mono-label">A LIVING WALL OF MEMORIES</span>
@@ -20,6 +20,16 @@ export function LandingPage() {
           <Link className="text-link" to="/wall/demo87">Open Wall Mode</Link>
         </div>
       </section>
+      <figure className="landing-visual">
+        <img
+          src={windowsArtwork}
+          alt="Two illuminated windows connected across a Singapore housing block at night"
+        />
+        <figcaption>
+          <strong>Two windows. One human thread.</strong>
+          <span>Fictional generated artwork</span>
+        </figcaption>
+      </figure>
       <aside className="landing-proof" aria-label="How the demo works">
         <div><span>ASK</span><p>One small question, asked with patience.</p></div>
         <div><span>LISTEN</span><p>Your words stay separate from Gemma’s reading.</p></div>

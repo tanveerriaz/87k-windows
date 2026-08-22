@@ -285,43 +285,7 @@ p {
   position: relative;
   min-height: 100svh;
   overflow: hidden;
-  background:
-    linear-gradient(90deg, transparent 0 69%, rgba(91, 118, 255, .09) 69% 69.08%, transparent 69.08%),
-    var(--carbon);
-}
-
-.landing-grid {
-  position: absolute;
-  inset: 0 0 0 69%;
-  opacity: .7;
-  background-color: #0d1217;
-  background-image:
-    linear-gradient(#222831 1px, transparent 1px),
-    linear-gradient(90deg, #222831 1px, transparent 1px);
-  background-size: 28px 26px;
-  mask-image: linear-gradient(to bottom, transparent 7%, #000 24%, #000 82%, transparent);
-}
-
-.landing-grid::before,
-.landing-grid::after {
-  content: "";
-  position: absolute;
-  width: 13px;
-  height: 11px;
-  background: var(--amber);
-  box-shadow: 0 0 18px rgba(241, 174, 73, .7);
-}
-
-.landing-grid::before {
-  top: 35%;
-  left: 27%;
-}
-
-.landing-grid::after {
-  top: 58%;
-  left: 62%;
-  background: var(--mint);
-  box-shadow: 0 0 18px rgba(94, 207, 176, .7);
+  background: var(--carbon);
 }
 
 .landing-nav {
@@ -345,19 +309,19 @@ p {
   flex-direction: column;
   justify-content: center;
   margin-inline: auto;
-  padding: 70px 36% 96px 0;
+  padding: 42px 43% 42px 0;
 }
 
 .landing-hero h1 {
   max-width: 850px;
   margin-bottom: 12px;
-  font-size: clamp(56px, 7.4vw, 112px);
+  font-size: clamp(56px, 6.5vw, 94px);
 }
 
 .landing-thesis {
-  margin-bottom: 34px;
+  margin-bottom: 24px;
   color: var(--amber);
-  font-size: clamp(30px, 4vw, 58px);
+  font-size: clamp(28px, 3.3vw, 46px);
   font-weight: 300;
   letter-spacing: -.04em;
   line-height: 1;
@@ -365,7 +329,7 @@ p {
 
 .landing-copy {
   max-width: 610px;
-  margin-bottom: 32px;
+  margin-bottom: 26px;
   color: var(--silver);
   font-size: clamp(18px, 1.6vw, 22px);
 }
@@ -374,6 +338,44 @@ p {
   display: flex;
   align-items: center;
   gap: 26px;
+}
+
+.landing-visual {
+  position: absolute;
+  top: 112px;
+  right: max(24px, calc((100vw - 1280px) / 2));
+  z-index: 2;
+  width: min(37vw, 500px);
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #394048;
+  background: #0d1217;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .42);
+}
+
+.landing-visual img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.landing-visual figcaption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 2px 1px;
+  color: var(--white);
+  font-size: 14px;
+}
+
+.landing-visual figcaption span {
+  color: var(--smoke);
+  font: 500 9px/1.4 var(--mono);
+  letter-spacing: .05em;
+  text-align: right;
+  text-transform: uppercase;
 }
 
 .landing-proof {
@@ -1400,20 +1402,26 @@ p {
     overflow: auto;
   }
 
-  .landing-grid {
-    inset: 55% 0 0 0;
-  }
-
   .landing-hero {
     min-height: auto;
-    padding: 86px 0 260px;
+    padding: 86px 0 40px;
+  }
+
+  .landing-visual {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: calc(100% - 48px);
+    margin: 0 auto 32px;
   }
 
   .landing-proof {
-    right: 24px;
-    bottom: 28px;
-    left: 24px;
-    width: auto;
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: calc(100% - 48px);
+    margin: 0 auto 40px;
   }
 
   .admin-intro {
@@ -1458,7 +1466,9 @@ p {
   }
 
   .landing-nav,
-  .landing-hero {
+  .landing-hero,
+  .landing-visual,
+  .landing-proof {
     width: calc(100% - 32px);
   }
 
@@ -1468,6 +1478,22 @@ p {
 
   .landing-hero {
     padding-top: 58px;
+  }
+
+  .landing-visual figcaption {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 18px;
+  }
+
+  .landing-visual figcaption span {
+    font-size: 18px;
+    text-align: left;
+  }
+
+  .landing-proof p {
+    font-size: 18px;
   }
 
   .landing-hero h1 {

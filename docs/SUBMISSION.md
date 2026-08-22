@@ -1,5 +1,14 @@
 # 87K Windows — Hackathon Submission
 
+## Organizer requirements
+
+The [official participant guide](https://65labs-gemini-hack.notion.site/) sets a **3:30 PM SGT sharp** submission deadline. The team target remains 3:00 PM so there is a safety margin.
+
+- Public GitHub repository
+- Demo video no longer than 3 minutes
+- Project name and one-line description
+- No more than two selected tracks
+
 ## Tracks
 
 87K Windows is entered in:
@@ -9,7 +18,7 @@
 
 ## One-line description
 
-87K Windows is a voice-first living memory wall where Gemma turns a fictional memory into a consented story capsule and gives a transparent matcher evidence for a meaningful connection between two lives.
+87K Windows is a visual-first living memory wall where Gemma turns a fictional memory into a consented story capsule and gives a transparent matcher evidence for a meaningful connection between two lives.
 
 ## The core loop
 
@@ -44,6 +53,23 @@ Both paths use a real Gemma model and display the active provider. There is no a
 ## Why it fits the Elderly Hack
 
 The interaction is designed for an older participant: one question at a time, large controls, a calm review step, and no requirement to understand AI terminology. Voice dictation and typed input lead to the same editable review step, so speaking is optional. The wall turns a private recollection into a respectful invitation to connect.
+
+The experience maps directly to the track's published judging weights:
+
+| Criterion | Weight | Evidence in the demo |
+| --- | ---: | --- |
+| Empathy and usability | 40% | One gentle question, large controls, prepared and upload paths, one clear next action |
+| Contextual safety and reliability | 30% | Consent gate, visible uncertainty, explicit provider, honest `NO MATCH YET`, no silent fallback |
+| Real-world impact and feasibility | 30% | One community Mac, one participant at a time, trusted hotspot, offline-capable local inference |
+
+## What judges can verify quickly
+
+1. Start with the prepared fictional radio memory.
+2. See `gemma3:4b` extract a capsule locally and keep uncertainty visible.
+3. Approve the capsule before matching begins.
+4. Read the exact Queenstown, 1970s, radio-repair and teach-to-learn evidence.
+5. Run the negative fixture and see the product refuse a weak connection.
+6. If rehearsed and stable, disconnect internet and repeat local extraction to prove that openness changes deployability.
 
 ## Privacy and safety
 

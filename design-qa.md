@@ -1,5 +1,58 @@
 # Design QA
 
+## Selected HDB artwork landing pass
+
+### Comparison target
+
+- Source visual truth: `assets/generated/submission-thumbnail.jpg`
+- Source pixels: 1376 x 768, landscape
+- Rendered implementation: `docs/images/landing-selected-artwork.jpg`
+- Implementation pixels and CSS viewport: 1280 x 720 at device scale 1 after capture normalization
+- State: landing page, default state, selected artwork loaded
+- Density normalization: the in-app browser reported a 1280 x 720 CSS viewport at device pixel ratio 2 but returned a half-scale page inside a 1280 x 720 raster. The visible 640 x 360 page region was cropped and resampled to 1280 x 720. DOM measurements independently confirmed 1280 x 720 with no horizontal or vertical overflow.
+
+### Full-view comparison
+
+The selected image remains undistorted at 16:9 and retains the two warm windows, thin blue connection and dark Singapore housing façade. The landing page uses the artwork as the dominant visual counterweight to the product statement rather than turning it into decorative wallpaper. The heritage-teal surface, warm amber thesis and brick-red action inherit the image's restrained night palette.
+
+The source and rendered implementation were opened together in one combined comparison during QA. The source establishes the metaphor; the implementation adds only the product promise, one action and the three-step explanation needed to understand the demo.
+
+### Focused region comparison
+
+- Artwork: full subject, glowing windows and connection line remain visible without cropping or stretching.
+- Message and action: the two-line promise is the strongest type after the title, while `Start the demo` remains the sole primary action.
+- Responsive state: at 390 x 844 the statement, 53 px primary action and top of the artwork are visible in sequence with no horizontal overflow.
+
+### Required fidelity surfaces
+
+- Fonts and typography: Georgia provides the humane editorial voice; Arial keeps the explanation and controls plain. Hierarchy and wrapping are intentional at desktop and phone sizes.
+- Spacing and layout rhythm: the 1280 x 720 landing view has no scrollbars; the image, proof rail and hero occupy distinct regions. Mobile stacks the same regions without clipping.
+- Colors and visual tokens: heritage teal, amber, cream and brick red echo the selected night artwork without adding a new token family.
+- Image quality and asset fidelity: the original generated JPEG is used directly, at its natural aspect ratio, with a short fictional-artwork label. No placeholder, CSS drawing or duplicate asset was introduced.
+- Copy and content: the page explains the human outcome before infrastructure, names Gemma once, and offers one clear next action.
+
+### Comparison history
+
+#### Pass 1 — blocked
+
+- P2: the first desktop capture extended 52 px beyond the 720 px viewport, weakening the single-screen opening.
+- Fix: tightened the hero type scale, margins and vertical padding without shrinking the primary message or action.
+
+#### Pass 2 — passed
+
+- The revised 1280 x 720 DOM measures exactly 1280 x 720 with no overflow.
+- The artwork is loaded, the primary action navigates to Join Mode, and the phone layout keeps a 53 px target with no horizontal overflow.
+- Browser console errors: none.
+
+#### Pass 3 — passed
+
+- Raised both lines of the mobile artwork caption and the three proof sentences to 18 px after independent review flagged them as too small.
+- Rechecked at 390 x 844: all mobile body copy computes to at least 18 px, the primary action is 53 px tall and horizontal overflow remains absent.
+
+### Result
+
+No actionable P0, P1 or P2 findings remain for the selected-artwork landing pass.
+
 ## Comparison target
 
 - Source visual truth: `assets/generated/queenstown-story-block.jpg`

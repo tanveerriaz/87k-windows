@@ -4,7 +4,7 @@
 
 **Goal:** Make the judged real-Gemma journey visually memorable, immediately understandable, and honest while keeping the repository small.
 
-**Architecture:** Keep the existing Join, Wall, Admin, Express, Socket.IO and Canvas structure. Centralise only the prepared demo copy that must stay identical on client and server; express every other improvement in the existing route files and stylesheet. The generated Queenstown concept remains a build-time visual reference and README hero, never a rasterised application screen.
+**Architecture:** Keep the existing Join, Wall, Admin, Express, Socket.IO and Canvas structure. Centralise only the prepared demo copy that must stay identical on client and server; express every other improvement in the existing route files and stylesheet. The selected HDB-window artwork is the landing and README brand image, the Queenstown concept remains a build-time visual reference, and the real result capture remains the proof of the working flow.
 
 **Tech Stack:** React 19, TypeScript, Express, Socket.IO, Canvas, Vitest, Playwright
 

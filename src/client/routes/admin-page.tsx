@@ -15,7 +15,7 @@ export function AdminPage() {
   const activeProviderLabel = isHostedGemma
     ? "Hosted Gemma 4 via Gemini API"
     : activeProvider === "ollama"
-      ? "Local Gemma 3 through Ollama"
+      ? "Local gemma3:4b through Ollama"
       : activeProvider === "mock"
         ? "Development test harness"
         : "Connecting to inference";

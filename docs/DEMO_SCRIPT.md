@@ -2,6 +2,8 @@
 
 Use one browser window for `/wall/<room>` and one phone-sized window for `/join/<room>`. Keep the provider label visible but unobtrusive. Use only the prepared fictional fixtures.
 
+The organizer permits a maximum three-minute submission video. This 90-second version keeps the working core loop in the first minute.
+
 ## 0:00–0:15 — Set the stakes
 
 **Show:** The wall is dark.
@@ -56,6 +58,8 @@ Point briefly to the evidence path and suggested invitation. Make clear that the
 
 > The local demo handles one story at a time by design. That keeps the experience reliable on a MacBook Air instead of pretending this prototype is a scaled service.
 
+If the offline proof has been rehearsed, briefly disconnect internet and run the prepared extraction again. Do not improvise this step for the first time during judging.
+
 ## 1:20–1:30 — Close
 
 **Show:** The completed wall with both windows glowing.
@@ -73,5 +77,6 @@ Point briefly to the evidence path and suggested invitation. Make clear that the
 - [ ] Keep the prepared radio story and no-match fixture ready.
 - [ ] Test the positive match and `NO MATCH YET` paths once.
 - [ ] Record the core loop first; explain the separate Cloud Run online-review path afterward.
+- [ ] Keep the final video below the organizer's three-minute maximum.
 - [ ] Check that the public repository URL is included in the submission.
 - [ ] Run lint, typecheck, tests, build and E2E before uploading.

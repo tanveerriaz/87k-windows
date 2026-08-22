@@ -16,9 +16,9 @@ Gemma turns one consented memory into a safe, explainable invitation for another
 
 </div>
 
-![Real hosted Gemma result at 1280 by 720: two fictional Queenstown radio memories connected by visible evidence](docs/images/real-gemma-wall-result.jpg)
+![Two illuminated windows connected across a Singapore housing block at night](assets/generated/submission-thumbnail.jpg)
 
-<p align="center"><sub>Real hosted Gemma result captured from the local real-model flow. Synthetic stories only.</sub></p>
+<p align="center"><sub>The core metaphor: two lives become visible when a grounded human thread connects them. Fictional generated artwork.</sub></p>
 
 ## Why this exists
 
@@ -42,6 +42,10 @@ The prepared demo is intentionally simple:
 - **Their interest:** learning how old radios worked.
 - **Evidence:** `Queenstown` · `1970s` · `radio repair` · `teach ↔ learn`.
 - **Human outcome:** **A potential listener match was found.** The shipped listener is a clearly labelled fictional fixture, not a simulated acceptance from a real person.
+
+![Real Gemma result at 1280 by 720: two fictional Queenstown radio memories connected by visible evidence](docs/images/real-gemma-wall-result.jpg)
+
+<p align="center"><sub>Proof, not a mockup: the real-model flow produced this evidence-backed result. Synthetic stories only.</sub></p>
 
 <details>
 <summary><strong>See the Queenstown visual direction</strong></summary>
