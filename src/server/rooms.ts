@@ -1,4 +1,5 @@
 import type { Server } from "socket.io";
+import { PREPARED_RADIO_MEMORY } from "../shared/demo";
 import { RoomSnapshotSchema, type LitWindow, type Provider, type RoomSnapshot, type StoryCapsule } from "../shared/schemas";
 import type { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "../shared/events";
 import type { InferenceProvider } from "./inference/provider";
@@ -136,7 +137,7 @@ export class RoomStore {
 
   async inject(io: TypedServer, roomCode: string): Promise<void> {
     const capsule = await this.inferenceProvider.extract({
-      memory: "I used to repair radios around Queenstown in the 1970s.",
+      memory: PREPARED_RADIO_MEMORY,
       fixture: "radio",
     });
     await this.approve(io, roomCode, "presenter-demo", capsule);

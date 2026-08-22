@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { PREPARED_NO_MATCH_MEMORY, PREPARED_RADIO_MEMORY } from "../../shared/demo";
 import type { StoryCapsule } from "../../shared/schemas";
 import { StatusBadge } from "../components/status-badge";
 import { extractCapsule } from "../lib/api";
 import { compressImage } from "../lib/image";
 import { useRoomSocket } from "../lib/use-room-socket";
 
-const RADIO_MEMORY = "I used to repair radios around Queenstown in the 1970s.";
-const NO_MATCH_MEMORY = "I catalogued polar clouds in Antarctica in the 2010s.";
 const MEMORY_QUESTION = "What small thing made you happy when you were young?";
 
 type Stage = "welcome" | "capture" | "processing" | "review" | "waiting" | "result";
@@ -17,7 +16,7 @@ export function JoinPage() {
   const participantId = useMemo(() => crypto.randomUUID(), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<Stage>("welcome");
-  const [memory, setMemory] = useState(RADIO_MEMORY);
+  const [memory, setMemory] = useState(PREPARED_RADIO_MEMORY);
   const [fixture, setFixture] = useState<"radio" | "no-match">("radio");
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [photoLabel, setPhotoLabel] = useState("Prepared fictional radio illustration");
@@ -34,7 +33,7 @@ export function JoinPage() {
 
   const chooseFixture = (next: "radio" | "no-match") => {
     setFixture(next);
-    setMemory(next === "radio" ? RADIO_MEMORY : NO_MATCH_MEMORY);
+    setMemory(next === "radio" ? PREPARED_RADIO_MEMORY : PREPARED_NO_MATCH_MEMORY);
     setPhotoData(null);
     setPhotoLabel(next === "radio" ? "Prepared fictional radio illustration" : "Text-only no-match fixture");
     setCapsule(null);
