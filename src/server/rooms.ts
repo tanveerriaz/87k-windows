@@ -14,6 +14,13 @@ export type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, Int
 
 type RoomRecord = RoomSnapshot & { expiresAt: number };
 
+function providerName(provider: Provider): string {
+  if (provider === "ollama") return "Local";
+  if (provider === "gemma-api") return "Cloud";
+  if (provider === "openrouter") return "OpenRouter";
+  return "Mock";
+}
+
 export class RoomStore {
   private readonly rooms = new Map<string, RoomRecord>();
 
@@ -80,8 +87,8 @@ export class RoomStore {
     const room = this.mutable(roomCode);
     const available = requested === this.initialProvider;
     room.provider = this.initialProvider;
-    const activeName = this.initialProvider === "ollama" ? "Local" : this.initialProvider === "gemma-api" ? "Cloud" : "Mock";
-    room.lastError = available ? null : `${requested === "ollama" ? "Local" : requested === "gemma-api" ? "Cloud" : "Mock"} Mode is not active in this process. ${activeName} Mode is still active.`;
+    const activeName = providerName(this.initialProvider);
+    room.lastError = available ? null : `${providerName(requested)} Mode is not active in this process. ${activeName} Mode is still active.`;
     room.updatedAt = new Date().toISOString();
     return {
       snapshot: RoomSnapshotSchema.parse(room),

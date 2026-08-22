@@ -45,6 +45,38 @@ describe("Express API", () => {
     expect(JSON.stringify(body)).not.toContain("GEMINI_API_KEY");
   });
 
+  it("reports the routed Gemma and Gemini models without the OpenRouter secret", async () => {
+    const routedEnv = readEnv({
+      NODE_ENV: "test",
+      PORT: "3000",
+      INFERENCE_PROVIDER: "openrouter",
+      GEMINI_FACILITATOR: "gemini",
+      OPENROUTER_API_KEY: "test-openrouter-key",
+    });
+    const routedServer = createServer(createApp({
+      env: routedEnv,
+      provider: new MockProvider(0),
+      matcher: new StoryMatcher(),
+    }));
+    try {
+      await new Promise<void>((resolve) => routedServer.listen(0, "127.0.0.1", resolve));
+      const address = routedServer.address();
+      if (!address || typeof address === "string") throw new Error("Routed test server did not bind.");
+      const response = await fetch(`http://127.0.0.1:${address.port}/health`);
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body).toMatchObject({
+        provider: "openrouter",
+        facilitator: "gemini",
+        gemmaModel: "google/gemma-3-27b-it",
+        geminiModel: "google/gemini-3.6-flash",
+      });
+      expect(JSON.stringify(body)).not.toContain("test-openrouter-key");
+    } finally {
+      await new Promise<void>((resolve, reject) => routedServer.close((error) => (error ? reject(error) : resolve())));
+    }
+  });
+
   it("serves the SPA entry from a hidden worktree path", async () => {
     const temporaryRoot = await mkdtemp(join(tmpdir(), "87k-hidden-static-"));
     const hiddenRoot = join(temporaryRoot, ".worktree");

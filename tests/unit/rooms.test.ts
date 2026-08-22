@@ -7,6 +7,17 @@ import { PREPARED_RADIO_MEMORY } from "../../src/shared/demo";
 import type { ConnectionFacilitator } from "../../src/server/facilitation/provider";
 
 describe("RoomStore prepared story", () => {
+  it("reports OpenRouter as the active cloud mode", () => {
+    const provider: InferenceProvider = { extract: vi.fn() };
+    const rooms = new RoomStore(120, new StoryMatcher(), provider, "openrouter");
+
+    expect(rooms.providerRequest("router87", "openrouter")).toMatchObject({
+      available: true,
+      message: "OpenRouter Mode is active.",
+      snapshot: { provider: "openrouter", lastError: null },
+    });
+  });
+
   it("asks the facilitator only after a grounded match", async () => {
     vi.useFakeTimers();
     const emit = vi.fn();

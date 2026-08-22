@@ -19,6 +19,7 @@ import { OllamaProvider } from "./inference/ollama-provider";
 import { GemmaApiProvider } from "./inference/gemma-api-provider";
 import { ProviderBusyError, ProviderOutputError, ProviderTimeoutError, type InferenceProvider } from "./inference/provider";
 import { StoryMatcher } from "./matching/matcher";
+import { OpenRouterGenAiClient } from "./openrouter-client";
 
 export type AppDependencies = {
   env: AppEnv;
@@ -76,8 +77,16 @@ export function createApp(dependencies: AppDependencies): express.Express {
       status: "ok",
       provider: env.INFERENCE_PROVIDER,
       facilitator: env.GEMINI_FACILITATOR,
-      gemmaModel: env.INFERENCE_PROVIDER === "ollama" ? env.OLLAMA_MODEL : env.GEMMA_MODEL,
-      geminiModel: env.GEMINI_FACILITATOR === "gemini" ? env.GEMINI_MODEL : null,
+      gemmaModel: env.INFERENCE_PROVIDER === "ollama"
+        ? env.OLLAMA_MODEL
+        : env.INFERENCE_PROVIDER === "openrouter"
+          ? env.OPENROUTER_GEMMA_MODEL
+          : env.GEMMA_MODEL,
+      geminiModel: env.GEMINI_FACILITATOR === "gemini"
+        ? env.INFERENCE_PROVIDER === "openrouter"
+          ? env.OPENROUTER_GEMINI_MODEL
+          : env.GEMINI_MODEL
+        : null,
       mode: env.NODE_ENV,
       uptimeSeconds: Math.round(process.uptime()),
     });
@@ -150,6 +159,9 @@ export function createApp(dependencies: AppDependencies): express.Express {
 }
 
 export function defaultDependencies(env: AppEnv): RuntimeDependencies {
+  const openRouterClient = env.INFERENCE_PROVIDER === "openrouter"
+    ? new OpenRouterGenAiClient(env.OPENROUTER_BASE_URL, env.OPENROUTER_API_KEY)
+    : undefined;
   return {
     env,
     provider:
@@ -157,10 +169,14 @@ export function defaultDependencies(env: AppEnv): RuntimeDependencies {
         ? new OllamaProvider(env.OLLAMA_BASE_URL, env.OLLAMA_MODEL)
         : env.INFERENCE_PROVIDER === "gemma-api"
           ? new GemmaApiProvider(env.GEMINI_API_KEY, env.GEMMA_MODEL)
+        : env.INFERENCE_PROVIDER === "openrouter" && openRouterClient
+          ? new GemmaApiProvider(env.OPENROUTER_API_KEY, env.OPENROUTER_GEMMA_MODEL, openRouterClient)
         : new MockProvider(),
     facilitator:
       env.GEMINI_FACILITATOR === "gemini"
-        ? new GeminiFacilitator(env.GEMINI_API_KEY, env.GEMINI_MODEL)
+        ? env.INFERENCE_PROVIDER === "openrouter" && openRouterClient
+          ? new GeminiFacilitator(env.OPENROUTER_API_KEY, env.OPENROUTER_GEMINI_MODEL, openRouterClient)
+          : new GeminiFacilitator(env.GEMINI_API_KEY, env.GEMINI_MODEL)
         : env.GEMINI_FACILITATOR === "mock"
           ? new MockFacilitator()
           : new DisabledFacilitator(),
