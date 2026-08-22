@@ -2,58 +2,13 @@ import { useEffect, useRef } from "react";
 import facadeArtwork from "../../../assets/generated/photographic-hdb-wall.png";
 import type { RoomSnapshot } from "../../shared/schemas";
 import { deriveWallVisualState } from "../lib/wall-visual-state";
-
-type WindowRect = { x: number; y: number; width: number; height: number };
-type ImagePlacement = { x: number; y: number; width: number; height: number };
+import { coverPlacement, placedWindow, windowRect, type ImagePlacement, type WindowRect } from "../lib/wall-window-layout";
 
 const WINDOW_COLOURS = {
-  amber: { core: "#ffd79a", edge: "#e8912f", glow: "rgba(255, 168, 67, .72)" },
-  mint: { core: "#d4f4dc", edge: "#75b99d", glow: "rgba(117, 185, 157, .62)" },
-  violet: { core: "#f0c3b5", edge: "#be7765", glow: "rgba(190, 119, 101, .62)" },
+  amber: { core: "#ffd79a", edge: "#e8912f" },
+  mint: { core: "#d4f4dc", edge: "#75b99d" },
+  violet: { core: "#f0c3b5", edge: "#be7765" },
 };
-
-// Coordinates are normalized to the reviewed generated façade, not the viewport.
-const HERO_WINDOWS = new Map<number, WindowRect>([
-  [27, { x: 0.356, y: 0.386, width: 0.047, height: 0.056 }],
-  [64, { x: 0.648, y: 0.386, width: 0.047, height: 0.056 }],
-]);
-
-function fallbackWindow(id: number): WindowRect {
-  const columns = 14;
-  const rows = 7;
-  const index = Math.abs(id) % (columns * rows);
-  return {
-    x: 0.075 + (index % columns) * 0.061,
-    y: 0.115 + Math.floor(index / columns) * 0.095,
-    width: 0.042,
-    height: 0.052,
-  };
-}
-
-function windowRect(id: number): WindowRect {
-  return HERO_WINDOWS.get(id) ?? fallbackWindow(id);
-}
-
-function coverPlacement(image: HTMLImageElement, width: number, height: number): ImagePlacement {
-  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-  const imageWidth = image.naturalWidth * scale;
-  const imageHeight = image.naturalHeight * scale;
-  return {
-    x: (width - imageWidth) / 2,
-    y: (height - imageHeight) / 2,
-    width: imageWidth,
-    height: imageHeight,
-  };
-}
-
-function placedWindow(rect: WindowRect, placement: ImagePlacement): WindowRect {
-  return {
-    x: placement.x + rect.x * placement.width,
-    y: placement.y + rect.y * placement.height,
-    width: rect.width * placement.width,
-    height: rect.height * placement.height,
-  };
-}
 
 function easeOutCubic(value: number): number {
   return 1 - Math.pow(1 - Math.min(1, Math.max(0, value)), 3);
@@ -78,18 +33,26 @@ function drawWindowLight(
   if (reveal <= 0) return;
   const revealWidth = rect.width * reveal;
   const revealX = rect.x + (rect.width - revealWidth) / 2;
+  const centerX = rect.x + rect.width / 2;
+  const centerY = rect.y + rect.height / 2;
 
   context.save();
+  context.beginPath();
+  context.rect(rect.x, rect.y, rect.width, rect.height);
+  context.clip();
   context.globalCompositeOperation = "screen";
-  context.shadowColor = palette.glow;
-  context.shadowBlur = Math.max(22, rect.width * 0.72) * pulse;
   const light = context.createLinearGradient(rect.x, rect.y, rect.x, rect.y + rect.height);
   light.addColorStop(0, palette.core);
   light.addColorStop(0.56, palette.edge);
   light.addColorStop(1, "#7a3d16");
   context.fillStyle = light;
   context.fillRect(revealX, rect.y, revealWidth, rect.height);
-  context.shadowBlur = 0;
+
+  const inner = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, rect.width * 0.72);
+  inner.addColorStop(0, `rgba(255, 220, 160, ${0.28 * reveal * pulse})`);
+  inner.addColorStop(1, "rgba(255, 169, 76, 0)");
+  context.fillStyle = inner;
+  context.fillRect(rect.x, rect.y, rect.width, rect.height);
 
   context.globalAlpha = 0.34;
   context.fillStyle = "#fff5dc";
@@ -97,22 +60,6 @@ function drawWindowLight(
   context.globalAlpha = 0.42;
   context.fillStyle = "#331b0f";
   context.fillRect(rect.x + rect.width * 0.49, rect.y, Math.max(1, rect.width * 0.025), rect.height);
-  context.restore();
-
-  context.save();
-  context.globalCompositeOperation = "screen";
-  const bloom = context.createRadialGradient(
-    rect.x + rect.width / 2,
-    rect.y + rect.height / 2,
-    0,
-    rect.x + rect.width / 2,
-    rect.y + rect.height / 2,
-    rect.width * 1.8,
-  );
-  bloom.addColorStop(0, `rgba(255, 169, 76, ${0.22 * reveal * pulse})`);
-  bloom.addColorStop(1, "rgba(255, 169, 76, 0)");
-  context.fillStyle = bloom;
-  context.fillRect(rect.x - rect.width * 1.6, rect.y - rect.height, rect.width * 4.2, rect.height * 3);
   context.restore();
 }
 

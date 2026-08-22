@@ -32,6 +32,37 @@ const CAPSULE_JSON_SCHEMA = {
   },
 } as const;
 
+const JSON_FENCE = /^```(?:json)?\s*|\s*```$/gi;
+
+function decodeCapsuleJson(output: string): Record<string, unknown> {
+  const stripped = output.replace(JSON_FENCE, "").trim();
+  const parsed = parseJsonObject(stripped);
+  if (parsed) return parsed;
+  const start = stripped.indexOf("{");
+  const end = stripped.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    const nested = parseJsonObject(stripped.slice(start, end + 1));
+    if (nested) return nested;
+  }
+  throw new Error("invalid capsule json");
+}
+
+function parseJsonObject(text: string): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function nullableText(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 export class GemmaApiProvider implements InferenceProvider {
   private readonly client: GemmaApiClient;
 
@@ -84,18 +115,16 @@ Memory: ${JSON.stringify(memory)}${repair}`;
   }
 
   private parse(output: string, input: ExtractInput): StoryCapsule {
-    const parsed: unknown = JSON.parse(output.trim());
+    const parsed = decodeCapsuleJson(output);
     const sourceRedaction = redactMemory(input.memory);
     const candidate = StoryCapsuleSchema.parse({
-      ...(parsed as Record<string, unknown>),
+      ...parsed,
       id: randomUUID(),
+      place: parsed.place == null ? null : nullableText(parsed.place),
+      era: parsed.era == null ? null : nullableText(parsed.era),
       containsPII: sourceRedaction.containsPII,
       redactions: sourceRedaction.redactions,
-      ...keepExplicitConsent(
-        input.memory,
-        (parsed as Record<string, unknown>).offers,
-        (parsed as Record<string, unknown>).wants,
-      ),
+      ...keepExplicitConsent(input.memory, parsed.offers, parsed.wants),
     });
     const summaryRedaction = redactMemory(candidate.safeSummary);
     return StoryCapsuleSchema.parse({

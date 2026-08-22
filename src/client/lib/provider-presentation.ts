@@ -79,3 +79,13 @@ export function facilitatorPresentation(facilitator?: Facilitator): FacilitatorP
     realGemini: false,
   };
 }
+
+export function publicStatusLabel(provider?: Provider, facilitator?: Facilitator): string {
+  if (provider === "ollama" && facilitator === "gemini") return "LOCAL GEMMA + GEMINI";
+  if ((provider === "openrouter" || provider === "gemma-api") && facilitator === "gemini") return "GEMMA + GEMINI · ONLINE";
+  if (provider === "ollama") return "LOCAL GEMMA · ON-DEVICE";
+  if (provider === "gemma-api" || provider === "openrouter") return "HOSTED GEMMA · ONLINE";
+  if (provider === "mock" && facilitator === "mock") return "TEST HARNESS · DUAL MODEL";
+  if (provider === "mock") return "TEST HARNESS";
+  return "CONNECTING";
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { facilitatorPresentation, providerPresentation } from "../../src/client/lib/provider-presentation";
+import { facilitatorPresentation, providerPresentation, publicStatusLabel } from "../../src/client/lib/provider-presentation";
 import { ProviderSchema } from "../../src/shared/schemas";
 
 describe("judging provider presentation", () => {
@@ -39,5 +39,17 @@ describe("judging provider presentation", () => {
     expect(presentation.detail).toContain("read-aloud questions");
     expect(presentation.detail).toContain("never receives the raw memory");
     expect(presentation.realGemini).toBe(true);
+  });
+});
+
+describe("public status labels", () => {
+  it("names Gemma and Gemini on the public chip without the OpenRouter vendor", () => {
+    expect(publicStatusLabel("openrouter", "gemini")).toBe("GEMMA + GEMINI · ONLINE");
+    expect(publicStatusLabel("gemma-api", "gemini")).toBe("GEMMA + GEMINI · ONLINE");
+    expect(publicStatusLabel("openrouter", "gemini")).not.toMatch(/openrouter/i);
+  });
+
+  it("keeps the local judging path distinct", () => {
+    expect(publicStatusLabel("ollama", "gemini")).toBe("LOCAL GEMMA + GEMINI");
   });
 });
