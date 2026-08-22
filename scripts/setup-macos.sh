@@ -62,7 +62,7 @@ echo "npm: $(npm --version)"
 if [[ -e .env || -e .env.local ]]; then
   echo "Environment file detected and preserved unchanged."
 else
-  echo "No environment file created; Mock and Local modes use safe defaults."
+  echo "No environment file created; Local mode uses safe defaults and tests need no key."
 fi
 
 echo "Installing the exact locked dependencies with npm ci..."

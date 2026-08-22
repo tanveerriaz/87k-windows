@@ -40,6 +40,6 @@ The application then uses deterministic retrieval and scoring. This division is 
 
 ## Scope
 
-The hackathon build includes mobile Join Mode, projected Wall Mode, presenter Admin Mode, hosted Gemma 4 via Gemini API, Cloud Run packaging, native Ollama fallback, deterministic Mock Mode, twelve fictional stories and a deliberate no-match fixture.
+The hackathon build includes mobile Join Mode, projected Wall Mode, presenter Admin Mode, hosted Gemma 4 via Gemini API, Cloud Run packaging, native Ollama fallback, twelve fictional stories and a deliberate no-match fixture. A deterministic provider exists only as an automated-test harness and is never used during judging.
 
 It deliberately excludes native mobile installation, medical or welfare advice, authentication, permanent storage, contact exchange, social scoring and autonomous outreach. A production pilot would require community-partner moderation, retention controls, accessibility research and explicit safeguarding—not merely more model capability.

@@ -20,7 +20,7 @@ NODE_MAJOR="${NODE_MAJOR%%.*}"
 [[ -d node_modules ]] || { echo "Dependencies are missing. Run ./scripts/setup-macos.sh first." >&2; exit 1; }
 
 if [[ "$MODE" == "local" ]]; then
-  command -v ollama >/dev/null 2>&1 || { echo "Native Ollama is not installed. Use Mock Mode or install Ollama for macOS yourself." >&2; exit 1; }
+  command -v ollama >/dev/null 2>&1 || { echo "Native Ollama is not installed. Use hosted Gemma or install Ollama for macOS yourself." >&2; exit 1; }
   ollama list 2>/dev/null | awk 'NR > 1 {print $1}' | grep -qx "$MODEL" \
     || { echo "$MODEL is missing. Run ./scripts/setup-macos.sh --with-ollama." >&2; exit 1; }
   curl -fsS --max-time 4 "${OLLAMA_BASE_URL:-http://127.0.0.1:11434}/api/tags" >/dev/null \
@@ -36,5 +36,5 @@ if [[ "$MODE" == "gemma" ]]; then
   exec env INFERENCE_PROVIDER=gemma-api npm run dev
 fi
 
-echo "Starting 87K Windows in MOCK EMERGENCY mode. No model or network is required."
+echo "Starting the deterministic TEST HARNESS. Never use this mode during judging."
 exec env INFERENCE_PROVIDER=mock npm run dev

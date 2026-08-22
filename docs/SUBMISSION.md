@@ -37,7 +37,7 @@ Gemma's role is deliberately narrow and visible:
 - provide the evidence that the matcher can use to find a connection;
 - return a safe failure when the model times out or produces invalid output.
 
-The same interface supports a local Ollama Gemma fallback on the presentation Mac and a deterministic Mock emergency mode. This keeps the experience demonstrable without hiding which provider is active.
+The same interface supports a local Ollama Gemma fallback on the presentation Mac. Both judging paths use a real Gemma model and display the active provider. If neither is available, the live demo stops rather than simulating inference.
 
 ## Why it fits the Elderly Hack
 
@@ -59,7 +59,8 @@ The interaction is designed for an older participant: one question at a time, la
 | --- | --- | --- |
 | Cloud / hosted Gemma | Primary judging path on Google Cloud Run using the Gemini API | Server-side `GEMINI_API_KEY` |
 | Local Gemma | Offline/private presentation fallback through Ollama | Local Ollama with the configured Gemma model |
-| Mock | Deterministic emergency path for a reliable demo | None |
+
+The deterministic provider is restricted to automated tests and UI development. It is not part of the hackathon presentation.
 
 Cloud Run is the public application host. The application listens on the platform-provided `PORT`, keeps room state ephemeral, and exposes `/health`. No database, vector store, queue, or persistent audio store is needed for the hackathon slice.
 

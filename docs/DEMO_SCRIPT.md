@@ -48,7 +48,7 @@ Point briefly to the evidence path and invitation. If using the no-match fixture
 
 **Say:**
 
-> The judging deployment runs on Google Cloud Run. If the hosted model is unavailable, the same server contract can use local Ollama Gemma on the Mac. Mock Mode is a deterministic emergency path, and the label always tells us which one is active.
+> The judging deployment runs on Google Cloud Run. If the hosted model is unavailable, the same server contract can use local Ollama Gemma on the Mac. Both paths are real Gemma inference. If neither works, we stop rather than simulate the AI.
 
 ## 1:20–1:30 — Close
 

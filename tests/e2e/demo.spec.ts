@@ -44,14 +44,15 @@ test("two tabs complete the match, reconnect and honest no-match flow", async ({
   await projectorContext.close();
 });
 
-test("Admin Mode exposes safe controls and can inject the guaranteed story", async ({ page }) => {
+test("Admin Mode exposes safe controls and labels the development harness honestly", async ({ page }) => {
   const roomCode = `admin-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(`/admin/${roomCode}`);
   await expect(page.getByRole("heading", { name: "Keep the room moving." })).toBeVisible();
   await expect(page.getByAltText(new RegExp(`QR code for .*${roomCode}`))).toBeVisible();
-  await page.getByRole("button", { name: "Inject guaranteed radio memory" }).click();
+  await page.getByRole("button", { name: "Run prepared story", exact: true }).click();
   await expect(page.getByText("MATCH", { exact: true })).toBeVisible({ timeout: 15_000 });
-  await page.getByRole("button", { name: "Cloud" }).click();
-  await expect(page.getByText("Cloud Mode is not active in this process. Mock Mode is still active.")).toBeVisible();
+  await expect(page.getByText("Development test harness", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("never judging", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Mock" })).toHaveCount(0);
 });

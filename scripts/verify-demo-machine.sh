@@ -90,11 +90,11 @@ fi
 
 printf 'CLOUD RUN + GEMMA PRIMARY: %s\n' "$CLOUD_RUN_STATUS"
 printf 'OLLAMA OFFLINE: %s\n' "$OLLAMA_STATUS"
-printf 'MOCK EMERGENCY: %s\n' "$MOCK_STATUS"
+printf 'DETERMINISTIC TEST HARNESS: %s\n' "$MOCK_STATUS"
 printf 'PROJECTOR 1280x720: %s\n' "$PROJECTOR_STATUS"
 
 if [[ "$MOCK_STATUS" != "READY" ]]; then
-  echo "Mock verification details:" >&2
+  echo "Test harness verification details:" >&2
   tail -n 24 "$VERIFY_LOG" >&2
   exit 1
 fi

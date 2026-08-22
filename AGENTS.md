@@ -7,7 +7,7 @@ Build a visual-first, live-room hackathon prototype that uses Gemma to create ex
 ## Working agreements
 
 - Read the sanitized project documentation and inspect the visual references before changing product behavior.
-- Lead with a runnable vertical slice. Preserve Mock Mode so the demo never depends on an external service.
+- Lead with a runnable vertical slice. Keep the deterministic provider for tests only; never present it during judging.
 - Keep one TypeScript repository and one deployable Node process.
 - Use React/Vite, Express, Socket.IO, Zod, MiniSearch and Vitest.
 - Keep shared schemas and Socket.IO event types in `src/shared/`.
