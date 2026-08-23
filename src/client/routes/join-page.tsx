@@ -144,7 +144,7 @@ export function JoinPage() {
     setError(null);
     if (!isRetry) room.submitted(participantId);
     try {
-      const result = await extractCapsule({ roomCode, memory, photoData: null, fixture });
+      const result = await extractCapsule({ roomCode, memory, fixture });
       setCapsule(result.capsule);
       setCapsuleId(result.capsuleId);
       setStage("review");
@@ -208,7 +208,7 @@ export function JoinPage() {
     setError(null);
     room.submitted(participantId);
     try {
-      const listenerCapsule = await extractCapsule({ roomCode, memory: listenerMemory, photoData: null });
+      const listenerCapsule = await extractCapsule({ roomCode, memory: listenerMemory });
       await room.approve(participantId, listenerCapsule.capsuleId);
       setCapsule(listenerCapsule.capsule);
       setCapsuleId(listenerCapsule.capsuleId);

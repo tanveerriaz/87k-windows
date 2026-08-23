@@ -87,7 +87,6 @@ export const RoomSnapshotSchema = z.object({
 export const ExtractRequestSchema = z.object({
   roomCode: z.string().trim().min(3).max(24).regex(/^[a-zA-Z0-9-]+$/),
   memory: z.string().trim().min(8).max(600),
-  photoData: z.string().max(7_000_000).nullable().optional(),
   fixture: z.enum(["radio", "no-match"]).optional(),
 });
 

@@ -139,6 +139,26 @@ describe("Express API", () => {
     expect(matched.match).toMatchObject({ decision: "MATCH", candidateId: "story-07" });
   });
 
+  it("rejects a JSON body over the 64kb limit before it reaches inference", async () => {
+    const response = await fetch(`${baseUrl}/api/extract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomCode: "demo87", memory: "x".repeat(70_000) }),
+    });
+    expect(response.status).toBe(413);
+  });
+
+  it("ignores a photoData field on /api/extract instead of processing it", async () => {
+    const response = await fetch(`${baseUrl}/api/extract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomCode: "demo87", memory: PREPARED_RADIO_MEMORY, photoData: "data:image/png;base64,AAAA" }),
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.capsule).toBeDefined();
+  });
+
   it("turns invalid provider output and timeout into recoverable responses", async () => {
     for (const [memory, status, code] of [
       ["INVALID_PROVIDER_JSON fixture", 502, "INVALID_MODEL_OUTPUT"],

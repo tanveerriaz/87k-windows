@@ -61,7 +61,20 @@ export function createApp(dependencies: AppDependencies): express.Express {
   // exactly one hop lets Express recover the visitor address without trusting
   // arbitrary client-supplied forwarding chains.
   app.set("trust proxy", 1);
-  app.use(express.json({ limit: Math.ceil(env.MAX_UPLOAD_BYTES * 1.45) }));
+
+  const inferenceLimiter = rateLimit({
+    windowMs: 60_000,
+    limit: 30,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    keyGenerator: (request) => ipKeyGenerator(request.ip ?? request.socket.remoteAddress ?? "unknown"),
+    message: { code: "RATE_LIMITED", message: "Too many demo requests. Wait a moment and try again." },
+  });
+
+  // A demo request is a short memory (max 600 chars) plus a small envelope;
+  // 64kb comfortably covers it with no photo payload to size for.
+  const jsonBody = express.json({ limit: "64kb" });
+
   app.use((request: Request, response: Response, next: NextFunction) => {
     const requestId = randomUUID();
     const startedAt = performance.now();
@@ -71,15 +84,6 @@ export function createApp(dependencies: AppDependencies): express.Express {
       console.info(JSON.stringify({ requestId, method: request.method, path: request.path, status: response.statusCode, durationMs }));
     });
     next();
-  });
-
-  const inferenceLimiter = rateLimit({
-    windowMs: 60_000,
-    limit: 30,
-    standardHeaders: "draft-8",
-    legacyHeaders: false,
-    keyGenerator: (request) => ipKeyGenerator(request.ip ?? request.socket.remoteAddress ?? "unknown"),
-    message: { code: "RATE_LIMITED", message: "Too many demo requests. Wait a moment and try again." },
   });
 
   app.get("/health", (_request, response) => {
@@ -107,15 +111,9 @@ export function createApp(dependencies: AppDependencies): express.Express {
     });
   });
 
-  app.post("/api/extract", inferenceLimiter, async (request, response) => {
+  app.post("/api/extract", inferenceLimiter, jsonBody, async (request, response) => {
     try {
       const input = ExtractRequestSchema.parse(request.body);
-      if (input.photoData) {
-        const approximateBytes = Math.floor((input.photoData.length * 3) / 4);
-        if (approximateBytes > env.MAX_UPLOAD_BYTES) {
-          return response.status(413).json({ code: "IMAGE_TOO_LARGE", message: "Choose an image smaller than 5 MB." });
-        }
-      }
       const capsule = StoryCapsuleSchema.parse(await provider.extract({ memory: input.memory, fixture: input.fixture }));
       const capsuleId = rooms.registerCapsule(capsule);
       return response.json({ capsule, capsuleId, provider: env.INFERENCE_PROVIDER });
@@ -125,7 +123,7 @@ export function createApp(dependencies: AppDependencies): express.Express {
     }
   });
 
-  app.post("/api/match", inferenceLimiter, (request, response) => {
+  app.post("/api/match", inferenceLimiter, jsonBody, (request, response) => {
     try {
       const { capsule } = MatchRequestSchema.parse(request.body);
       return response.json({ match: matcher.match(capsule) });
@@ -135,7 +133,7 @@ export function createApp(dependencies: AppDependencies): express.Express {
     }
   });
 
-  app.post("/api/invite", inferenceLimiter, (request, response) => {
+  app.post("/api/invite", inferenceLimiter, jsonBody, (request, response) => {
     try {
       const { roomCode, match } = InviteRequestSchema.parse(request.body);
       if (match.decision === "NO_MATCH") {

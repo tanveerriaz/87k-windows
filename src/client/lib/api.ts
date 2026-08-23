@@ -3,7 +3,6 @@ import { StoryCapsuleSchema, type StoryCapsule } from "../../shared/schemas";
 type ExtractInput = {
   roomCode: string;
   memory: string;
-  photoData?: string | null;
   fixture?: "radio" | "no-match";
 };
 
