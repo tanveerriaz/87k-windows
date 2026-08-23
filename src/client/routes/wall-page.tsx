@@ -74,7 +74,7 @@ export function WallPage() {
                   </div>
                 </div>
                 <article>
-                  <span className="mono-label">PREPARED FICTIONAL INTEREST</span>
+                  <span className="mono-label">{snapshot.connectionConsent ? "LISTENER’S APPROVED REASON" : "PREPARED FICTIONAL INTEREST"}</span>
                   <p>{listenerStory?.safeSummary}</p>
                 </article>
               </div>

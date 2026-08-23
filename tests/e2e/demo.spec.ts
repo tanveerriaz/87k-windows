@@ -78,6 +78,8 @@ test("storyteller, listener and wall reach mutual yes only after two independent
   await expect(wall.locator("canvas")).toHaveAttribute("data-wall-state", "matched");
   await expect(wall.locator("canvas")).toHaveAttribute("data-has-thread", "true");
   await expect(wall.getByText("2 WINDOWS LIT", { exact: true })).toBeVisible();
+  await expect(wall.getByText("LISTENER’S APPROVED REASON")).toBeVisible();
+  await expect(wall.getByText("PREPARED FICTIONAL INTEREST")).toHaveCount(0);
 
   const guide = wall.locator(".wall-guide");
   const clipped = await guide.evaluate((el) => el.scrollHeight > el.clientHeight + 1);
