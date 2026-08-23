@@ -16,7 +16,9 @@ Populate offers or wants only when the person explicitly volunteers an offer or 
 Put missing or ambiguous facts in uncertain; use null for an unstated place or era.`;
 
 const DIALECT_NOTE: Record<CapsuleDialect, string> = {
-  ollama: "The input has already had obvious identifiers replaced with [redacted]. Keep those identifiers out of the summary.",
+  ollama: `The input has already had obvious identifiers replaced with [redacted]. Keep those identifiers out of the summary.
+Return one JSON object with exactly these keys:
+observed (string array), place (string or null), era (string or null), skills (string array), interests (string array), offers (string array), wants (string array), safeSummary (one short string), containsPII (boolean), redactions (string array), uncertain (string array).`,
   hosted: "Return only the requested JSON. Do not include reasoning, hidden analysis, markdown, or extra keys.",
 };
 
