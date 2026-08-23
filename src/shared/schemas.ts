@@ -101,6 +101,38 @@ export const InviteRequestSchema = z.object({
   match: MatchResultSchema,
 });
 
+export const RoomCodeSchema = z.string().trim().min(3).max(24).regex(/^[a-zA-Z0-9-]+$/);
+
+export const RoomJoinPayloadSchema = z.object({
+  roomCode: RoomCodeSchema,
+  role: z.enum(["join", "wall", "admin"]),
+  adminSecret: z.string().max(128).optional(), // consumed in Task 6
+});
+
+export const StorySubmittedPayloadSchema = z.object({
+  roomCode: RoomCodeSchema,
+  participantId: z.string().min(1).max(64),
+});
+
+export const CapsuleApprovedPayloadSchema = z.object({
+  roomCode: RoomCodeSchema,
+  participantId: z.string().min(1).max(64),
+  capsule: StoryCapsuleSchema, // replaced by capsuleId in Task 7
+});
+
+export const ConsentDecidedPayloadSchema = z.object({
+  roomCode: RoomCodeSchema,
+  participantId: z.string().min(1).max(64),
+  decision: z.enum(["yes", "no"]),
+});
+
+export const RoomOnlyPayloadSchema = z.object({ roomCode: RoomCodeSchema });
+
+export const ProviderChangedPayloadSchema = z.object({
+  roomCode: RoomCodeSchema,
+  provider: ProviderSchema,
+});
+
 export type Provider = z.infer<typeof ProviderSchema>;
 export type Facilitator = z.infer<typeof FacilitatorSchema>;
 export type SeniorBridge = z.infer<typeof SeniorBridgeSchema>;

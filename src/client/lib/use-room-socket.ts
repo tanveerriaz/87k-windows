@@ -16,7 +16,10 @@ export function useRoomSocket(roomCode: string, role: ClientRole) {
     const joinRoom = () => {
       setConnected(true);
       setMessage(null);
-      socket.emit("room:join", { roomCode, role }, (current) => setSnapshot(current));
+      socket.emit("room:join", { roomCode, role }, (result) => {
+        if (result.ok) setSnapshot(result.snapshot);
+        else setMessage(result.message);
+      });
     };
     const onDisconnect = () => setConnected(false);
     const onSnapshot = (current: RoomSnapshot) => setSnapshot(current);

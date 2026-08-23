@@ -14,12 +14,15 @@ export type ClientRole = "join" | "wall" | "admin";
 export type RoomJoinPayload = {
   roomCode: string;
   role: ClientRole;
+  adminSecret?: string;
 };
 
 export type EventAck = {
   ok: boolean;
   message?: string;
 };
+
+export type RoomJoinAck = { ok: true; snapshot: RoomSnapshot } | { ok: false; message: string };
 
 export interface ServerToClientEvents {
   "room:snapshot": (snapshot: RoomSnapshot) => void;
@@ -46,7 +49,7 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-  "room:join": (payload: RoomJoinPayload, ack: (snapshot: RoomSnapshot) => void) => void;
+  "room:join": (payload: RoomJoinPayload, ack: (result: RoomJoinAck) => void) => void;
   "story:submitted": (payload: { roomCode: string; participantId: string }, ack?: (result: EventAck) => void) => void;
   "capsule:approved": (
     payload: { roomCode: string; participantId: string; capsule: StoryCapsule },
