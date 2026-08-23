@@ -17,10 +17,8 @@ export function LandingPage() {
             src="/landing-story.mp4"
             poster="/landing-story-poster.jpg"
             controls
-            muted
-            autoPlay
             playsInline
-            preload="metadata"
+            preload="none"
             aria-label="The story of 87K Windows: why the product is named for the roughly 87,000 seniors living alone in Singapore, told through a storyteller and a listener in the same block"
           />
         </figure>

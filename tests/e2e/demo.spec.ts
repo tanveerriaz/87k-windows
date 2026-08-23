@@ -16,7 +16,10 @@ async function submitStory(page: Page, role: "share" | "listen" = "share") {
 test("landing page presents the two human roles at mobile size", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(page.getByAltText("Two empty chairs facing a small lamp in a quiet community room")).toBeVisible();
+  const heroFilm = page.locator(".two-chairs-visual video");
+  await expect(heroFilm).toBeVisible();
+  await expect(heroFilm).toHaveAttribute("preload", "none");
+  await expect(heroFilm).toHaveAttribute("poster", /landing-story-poster/);
   await expect(page.getByRole("heading", { name: "What story should not disappear?" })).toBeVisible();
   await expect(page.getByRole("link", { name: "I have a story" })).toHaveAttribute("href", "/join/demo87?role=share");
   await expect(page.getByRole("link", { name: "I would like to listen" })).toHaveAttribute("href", "/join/demo87?role=listen");
@@ -116,6 +119,7 @@ test("storyteller no-match remains honest", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "NO MATCH YET" })).toBeVisible();
   await expect(listener.getByRole("heading", { name: "No connection was opened." })).toBeVisible();
   await expect(listener.getByRole("button", { name: "Create my safe capsule" })).toHaveCount(0);
+  await expect(listener.getByText("What small thing made you happy when you were young?")).toHaveCount(0);
   await expect(page.getByText("You both said yes.")).toHaveCount(0);
   await storytellerContext.close();
   await listenerContext.close();
