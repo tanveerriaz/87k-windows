@@ -947,6 +947,27 @@ p {
   font-weight: 700;
 }
 
+.guide-english-fallback {
+  margin: 18px 0;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(101, 188, 167, .5);
+}
+
+.guide-english-fallback h3 {
+  margin: 10px 0;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.guide-english-fallback ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 24px;
+  color: var(--white);
+  font-size: 17px;
+}
+
 .read-aloud-actions {
   display: flex;
   gap: 10px;

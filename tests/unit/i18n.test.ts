@@ -156,6 +156,7 @@ const ENGLISH_KEYS: Record<UiStringKey, true> = {
   yourMemoryLabel: true,
   listenerApprovedReasonLabel: true,
   guideLabel: true,
+  englishFallbackLabel: true,
   twoQuestionsIntro: true,
   readAloudButton: true,
   guideDisclaimer: true,

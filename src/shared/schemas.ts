@@ -5,12 +5,28 @@ export const FacilitatorSchema = z.enum(["disabled", "gemini", "mock"]);
 export const LanguageSchema = z.enum(["en", "zh", "ms", "ta"]);
 
 export const SeniorBridgeSchema = z.object({
+  // The storyteller's language — the language introduction/questions/
+  // consentReminder are actually written in. Lets the client pick the
+  // right read-aloud voice and decide when to show englishFallback.
+  language: LanguageSchema.default("en"),
   introduction: z.string().trim().min(1).max(240),
   questions: z.tuple([
     z.string().trim().min(1).max(200),
     z.string().trim().min(1).max(200),
   ]),
   consentReminder: z.string().trim().min(1).max(180),
+  // Requested only when the listener's language differs from the
+  // storyteller's, so a viewer whose language differs from the guide's can
+  // still read it. Absent (not just empty) otherwise — no wasted output.
+  englishFallback: z
+    .object({
+      introduction: z.string().trim().min(1).max(240),
+      questions: z.tuple([
+        z.string().trim().min(1).max(200),
+        z.string().trim().min(1).max(200),
+      ]),
+    })
+    .optional(),
 });
 
 export const StoryCapsuleSchema = z.object({

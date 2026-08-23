@@ -170,6 +170,7 @@ describe("RoomStore mutual consent", () => {
     let guideResolved: () => void = () => {};
     const guideDone = new Promise<void>((resolve) => { guideResolved = resolve; });
     const fixtureGuide = {
+      language: "en" as const,
       introduction: "You both have a radio story to explore.",
       questions: ["Would you like to share first?", "Would you like to listen next?"] as [string, string],
       consentReminder: "Either person may pause or stop.",

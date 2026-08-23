@@ -116,6 +116,18 @@ export function JoinPage() {
       : null;
   const ttsVoice = useMemo(() => pickVoice(availableVoices, SPEECH_LOCALE[lang]), [availableVoices, lang]);
   const canReadAloudNow = ttsVoice !== null;
+  const guide = room.snapshot?.guide ?? null;
+  // The guide is written in the storyteller's language; show the English
+  // fallback (when the facilitator provided one) only to a viewer whose own
+  // selected language differs from it — the storyteller sees their own
+  // language guide with no fallback needed.
+  const showGuideEnglishFallback = Boolean(guide && guide.language !== lang && guide.englishFallback);
+  const guideReadingLang: Lang | null = guide ? (showGuideEnglishFallback ? "en" : guide.language) : null;
+  const guideVoice = useMemo(
+    () => (guideReadingLang ? pickVoice(availableVoices, SPEECH_LOCALE[guideReadingLang]) : null),
+    [availableVoices, guideReadingLang],
+  );
+  const canReadGuideAloud = guideVoice !== null;
 
   useEffect(() => {
     document.documentElement.lang = SPEECH_LOCALE[lang];
@@ -334,15 +346,17 @@ export function JoinPage() {
   };
 
   const speakGuide = () => {
-    const guide = room.snapshot?.guide;
-    if (!guide) return;
+    if (!guide || !guideReadingLang) return;
     if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
       setError(t(lang, "errorReadAloudUnavailableGuide"));
       return;
     }
+    const spokenText = showGuideEnglishFallback && guide.englishFallback
+      ? [guide.englishFallback.introduction, ...guide.englishFallback.questions].join(" ")
+      : [guide.introduction, ...guide.questions, guide.consentReminder].join(" ");
     setError(null);
     setIsSpeaking(true);
-    speakText([guide.introduction, ...guide.questions, guide.consentReminder].join(" "), SPEECH_LOCALE[lang], ttsVoice, () => setIsSpeaking(false));
+    speakText(spokenText, SPEECH_LOCALE[guideReadingLang], guideVoice, () => setIsSpeaking(false));
   };
 
   const readReviewAloud = () => {
@@ -625,16 +639,25 @@ export function JoinPage() {
             <div className="evidence-path" aria-label={t(lang, "evidencePathAriaLabel")}>
               {room.snapshot.match.evidencePath.map((evidence) => <span key={evidence}>{evidence}</span>)}
             </div>
-            {room.snapshot.guide ? (
+            {guide ? (
               <article className="senior-bridge">
                 <span className="mono-label">{t(lang, "guideLabel")}</span>
-                <h2>{room.snapshot.guide.introduction}</h2>
+                <h2>{guide.introduction}</h2>
                 <p className="bridge-intro">{t(lang, "twoQuestionsIntro")}</p>
                 <ol>
-                  {room.snapshot.guide.questions.map((question) => <li key={question}>{question}</li>)}
+                  {guide.questions.map((question) => <li key={question}>{question}</li>)}
                 </ol>
-                <p className="consent-reminder">{room.snapshot.guide.consentReminder}</p>
-                {canReadAloudNow && (
+                <p className="consent-reminder">{guide.consentReminder}</p>
+                {showGuideEnglishFallback && guide.englishFallback && (
+                  <div className="guide-english-fallback">
+                    <span className="mono-label">{t(lang, "englishFallbackLabel")}</span>
+                    <h3>{guide.englishFallback.introduction}</h3>
+                    <ol>
+                      {guide.englishFallback.questions.map((question) => <li key={question}>{question}</li>)}
+                    </ol>
+                  </div>
+                )}
+                {canReadGuideAloud && (
                   <div className="read-aloud-actions">
                     <button className="button button-primary" type="button" aria-pressed={isSpeaking} onClick={speakGuide}>{t(lang, "readAloudButton")}</button>
                     {isSpeaking && <button className="button button-secondary" type="button" onClick={stopSpeaking}>{t(lang, "stopReadingButton")}</button>}
