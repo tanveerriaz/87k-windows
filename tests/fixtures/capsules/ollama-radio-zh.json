@@ -1,8 +1,9 @@
 {
-  "id": "122c905a-29c3-4d1b-8631-90d039030b68",
+  "id": "68e61c88-19eb-4deb-a575-b9415140cc9d",
   "language": "zh",
   "observed": [
-    "A memory of repairing radios"
+    "repairing radios",
+    "basic radio repair"
   ],
   "place": "Queenstown",
   "era": "1970s",
@@ -11,10 +12,10 @@
   ],
   "interests": [],
   "offers": [
-    "I am willing to teach basic radio repair"
+    "teaching basic radio repair"
   ],
   "wants": [],
-  "safeSummary": "A memory of repairing radios in Queenstown during the 1970s.",
+  "safeSummary": "A memory of ... repairing radios near Queenstown in the 1970s.",
   "containsPII": false,
   "redactions": [],
   "uncertain": []
