@@ -7,7 +7,7 @@ import { SiteWordmark } from "../components/site-wordmark";
 import { StatusBadge } from "../components/status-badge";
 import { ApiError, extractCapsule } from "../lib/api";
 import { compressImage } from "../lib/image";
-import { isLang, LANG_LABELS, t, type Lang, type UiStringKey } from "../lib/i18n";
+import { isLang, LANG_LABELS, SPEECH_LOCALE, t, type Lang, type UiStringKey } from "../lib/i18n";
 import { resolveJoinDisplacement, type JoinStage } from "../lib/join-stage";
 import { useRoomSocket } from "../lib/use-room-socket";
 
@@ -111,6 +111,13 @@ export function JoinPage() {
     : consent?.candidateParticipantId === participantId
       ? consent.candidateDecision
       : null;
+
+  useEffect(() => {
+    document.documentElement.lang = SPEECH_LOCALE[lang];
+    return () => {
+      document.documentElement.lang = SPEECH_LOCALE.en;
+    };
+  }, [lang]);
 
   useEffect(() => {
     if (lastRoleEntryRef.current === listenerEntry) return;
@@ -350,12 +357,12 @@ export function JoinPage() {
 
       {(room.message || room.connectionError) && (
         <div className="error-banner" role="alert">
-          <span>{room.message ?? room.connectionError}</span>
+          <span>{room.message ?? (room.connectionErrorKey ? t(lang, room.connectionErrorKey) : room.connectionError)}</span>
           {room.message && <button type="button" className="text-button" onClick={() => room.setMessage(null)}>{t(lang, "dismissButton")}</button>}
         </div>
       )}
 
-      <section className="join-shell" aria-live="polite">
+      <section className="join-shell" data-lang={lang} aria-live="polite">
         <div className={`step-rail ${journeyStepKeys.length === 5 ? "has-guide" : ""}`} aria-label={t(lang, "progressAriaLabel")}>
           {journeyStepKeys.map((stepKey, index) => {
             const activeIndex = stage === "welcome" || stage === "capture"
@@ -495,7 +502,7 @@ export function JoinPage() {
             <div className="capture-actions">
               <button className="button button-secondary" onClick={() => fileInputRef.current?.click()}>{t(lang, "addPhotoButton")}</button>
               {preparedImageSelected ? (
-                <span className="prepared-image-status" role="status">{t(lang, "preparedImageStatus")}</span>
+                <span className="prepared-image-status" role="status"><span className="prepared-image-badge">{t(lang, "selectedBadgeLabel")}</span>{t(lang, "preparedImageStatus")}</span>
               ) : (
                 <button className="text-button" onClick={restorePreparedImage}>{t(lang, "restorePreparedImageButton")}</button>
               )}

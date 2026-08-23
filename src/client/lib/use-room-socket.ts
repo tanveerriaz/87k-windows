@@ -10,6 +10,7 @@ const ACK_TIMEOUT_MS = 8_000;
 const ACK_TIMEOUT_MESSAGE = "The room did not respond. Check the connection and try again.";
 const APPROVAL_FAILED_MESSAGE = "The safe capsule could not be approved.";
 const CHOICE_NOT_RECORDED_MESSAGE = "Your choice could not be recorded.";
+const CONNECT_FAILED_MESSAGE = "Could not connect to the room.";
 
 /**
  * Attaches a UiStringKey to a client-authored friendly Error so join-page.tsx
@@ -25,6 +26,8 @@ export function useRoomSocket(roomCode: string, role: ClientRole, adminSecret?: 
   const [connected, setConnected] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  /** Set only when connectionError is the client-authored CONNECT_FAILED_MESSAGE fallback (not the socket's own technical error text), so join-page.tsx can translate it while wall/admin keep rendering connectionError as-is. */
+  const [connectionErrorKey, setConnectionErrorKey] = useState<UiStringKey | null>(null);
 
   const socket = useMemo<RoomSocket>(() => io({ autoConnect: false, transports: ["websocket", "polling"] }), []);
 
@@ -32,6 +35,7 @@ export function useRoomSocket(roomCode: string, role: ClientRole, adminSecret?: 
     const joinRoom = () => {
       setConnected(true);
       setConnectionError(null);
+      setConnectionErrorKey(null);
       setMessage(null);
       socket.emit("room:join", { roomCode, role, adminSecret }, (result) => {
         if (result.ok) setSnapshot(result.snapshot);
@@ -39,7 +43,15 @@ export function useRoomSocket(roomCode: string, role: ClientRole, adminSecret?: 
       });
     };
     const onDisconnect = () => setConnected(false);
-    const onConnectError = (error: Error) => setConnectionError(error.message || "Could not connect to the room.");
+    const onConnectError = (error: Error) => {
+      if (error.message) {
+        setConnectionError(error.message);
+        setConnectionErrorKey(null);
+      } else {
+        setConnectionError(CONNECT_FAILED_MESSAGE);
+        setConnectionErrorKey("errorConnectionFailed");
+      }
+    };
     const onSnapshot = (current: RoomSnapshot) => setSnapshot(current);
     const onError = (payload: { message: string }) => setMessage(payload.message);
     const onProvider = (payload: { message: string }) => setMessage(payload.message);
@@ -102,5 +114,5 @@ export function useRoomSocket(roomCode: string, role: ClientRole, adminSecret?: 
     [roomCode, socket],
   );
 
-  return { snapshot, connected, connectionError, message, setMessage, submitted, approve, decide, reset, inject };
+  return { snapshot, connected, connectionError, connectionErrorKey, message, setMessage, submitted, approve, decide, reset, inject };
 }
