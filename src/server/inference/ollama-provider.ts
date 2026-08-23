@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { StoryCapsuleSchema, type StoryCapsule } from "../../shared/schemas";
+import { redactMemory, unionRedactionVerdicts } from "../privacy/redact";
 import { buildCapsulePrompt } from "./capsule-prompt";
 import { keepExplicitConsent } from "./consent-evidence";
-import { redactMemory } from "./mock-provider";
 import { ProviderBusyError, ProviderOutputError, ProviderTimeoutError, type ExtractInput, type InferenceProvider } from "./provider";
 
 type FetchLike = typeof fetch;
@@ -50,18 +50,15 @@ export class OllamaProvider implements InferenceProvider {
   }
 
   private parse(output: string, input: ExtractInput): StoryCapsule {
-    const parsed: unknown = JSON.parse(output.replace(JSON_FENCE, "").trim());
+    const parsed = JSON.parse(output.replace(JSON_FENCE, "").trim()) as Record<string, unknown>;
     const sourceRedaction = redactMemory(input.memory);
+    const merged = unionRedactionVerdicts(sourceRedaction, parsed.containsPII, parsed.redactions);
     const candidate = StoryCapsuleSchema.parse({
-      ...(parsed as Record<string, unknown>),
+      ...parsed,
       id: randomUUID(),
-      containsPII: sourceRedaction.containsPII,
-      redactions: sourceRedaction.redactions,
-      ...keepExplicitConsent(
-        input.memory,
-        (parsed as Record<string, unknown>).offers,
-        (parsed as Record<string, unknown>).wants,
-      ),
+      containsPII: merged.containsPII,
+      redactions: merged.redactions,
+      ...keepExplicitConsent(input.memory, parsed.offers, parsed.wants),
     });
     const summaryRedaction = redactMemory(candidate.safeSummary);
     return StoryCapsuleSchema.parse({

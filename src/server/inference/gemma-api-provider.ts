@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { GoogleGenAI } from "@google/genai";
 import { StoryCapsuleSchema, type StoryCapsule } from "../../shared/schemas";
+import { redactMemory, unionRedactionVerdicts } from "../privacy/redact";
 import { buildCapsulePrompt } from "./capsule-prompt";
 import { keepExplicitConsent } from "./consent-evidence";
-import { redactMemory } from "./mock-provider";
 import { ProviderOutputError, ProviderTimeoutError, type ExtractInput, type InferenceProvider } from "./provider";
 
 type GenerateRequest = Parameters<GoogleGenAI["models"]["generateContent"]>[0];
@@ -104,13 +104,14 @@ export class GemmaApiProvider implements InferenceProvider {
   private parse(output: string, input: ExtractInput): StoryCapsule {
     const parsed = decodeCapsuleJson(output);
     const sourceRedaction = redactMemory(input.memory);
+    const merged = unionRedactionVerdicts(sourceRedaction, parsed.containsPII, parsed.redactions);
     const candidate = StoryCapsuleSchema.parse({
       ...parsed,
       id: randomUUID(),
       place: parsed.place == null ? null : nullableText(parsed.place),
       era: parsed.era == null ? null : nullableText(parsed.era),
-      containsPII: sourceRedaction.containsPII,
-      redactions: sourceRedaction.redactions,
+      containsPII: merged.containsPII,
+      redactions: merged.redactions,
       ...keepExplicitConsent(input.memory, parsed.offers, parsed.wants),
     });
     const summaryRedaction = redactMemory(candidate.safeSummary);

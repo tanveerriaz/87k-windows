@@ -1,39 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { StoryCapsuleSchema, type StoryCapsule } from "../../shared/schemas";
+import { redactMemory } from "../privacy/redact";
 import {
   ProviderOutputError,
   ProviderTimeoutError,
   type ExtractInput,
   type InferenceProvider,
 } from "./provider";
-
-const PHONE_PATTERN = /(?:\+?65[\s-]?)?[689]\d{3}[\s-]?\d{4}/g;
-const ADDRESS_PATTERN = /\b(?:blk|block)\s+\d+[a-z]?(?:\s*,?\s*#\d{1,2}-\d{1,4})?/gi;
-const NAME_PATTERN = /\bmy name is\s+[a-z]+(?:\s+[a-z]+)?/gi;
-
-export function redactMemory(memory: string): {
-  safeText: string;
-  containsPII: boolean;
-  redactions: string[];
-} {
-  const redactions: string[] = [];
-  let safeText = memory;
-
-  const replace = (pattern: RegExp, label: string) => {
-    if (pattern.test(safeText)) {
-      redactions.push(label);
-      pattern.lastIndex = 0;
-      safeText = safeText.replace(pattern, "[redacted]");
-    }
-    pattern.lastIndex = 0;
-  };
-
-  replace(PHONE_PATTERN, "phone number");
-  replace(ADDRESS_PATTERN, "exact address");
-  replace(NAME_PATTERN, "name");
-
-  return { safeText, containsPII: redactions.length > 0, redactions };
-}
 
 function sentenceCase(text: string): string {
   const trimmed = text.trim().replace(/\s+/g, " ");
