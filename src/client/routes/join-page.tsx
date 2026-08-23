@@ -472,7 +472,7 @@ export function JoinPage() {
             <div className="evidence-path" aria-label="Evidence path">
               {room.snapshot.match.evidencePath.map((evidence) => <span key={evidence}>{evidence}</span>)}
             </div>
-            {room.snapshot.guide && (
+            {room.snapshot.guide ? (
               <article className="senior-bridge">
                 <span className="mono-label">GEMINI · SENIOR CONNECTION GUIDE</span>
                 <h2>{room.snapshot.guide.introduction}</h2>
@@ -487,8 +487,11 @@ export function JoinPage() {
                 </div>
                 <small>Gemini received only the two approved safe capsules and the visible evidence above—not your raw words.</small>
               </article>
-            )}
-            {room.snapshot.guideError && <div className="error-banner" role="status">{room.snapshot.guideError}</div>}
+            ) : room.snapshot.guideError ? (
+              <div className="error-banner" role="status">{room.snapshot.guideError}</div>
+            ) : room.snapshot.facilitator !== "disabled" ? (
+              <p className="guide-pending" role="status">Gemini is preparing the first questions…</p>
+            ) : null}
             {error && <div className="error-banner" role="alert">{error}</div>}
             <article className="kopi-card">
               <span className="mono-label">SUGGESTED KOPI CARD · FICTIONAL DEMO</span>

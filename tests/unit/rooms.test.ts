@@ -12,6 +12,10 @@ function testIo() {
   return { emit, io: { to: vi.fn(() => ({ emit })) } as unknown as TypedServer };
 }
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function approveCapsule(rooms: RoomStore, io: TypedServer, roomCode: string, participantId: string, capsule: StoryCapsule) {
   return rooms.approve(io, roomCode, participantId, rooms.registerCapsule(capsule));
 }
@@ -157,5 +161,35 @@ describe("RoomStore mutual consent", () => {
     expect(rooms.get("demo87").windows).toHaveLength(1);
     await rooms.approve(io, "demo87", "p2", "forged-id");
     expect(rooms.get("demo87").windows).toHaveLength(1);
+  });
+
+  it("emits consent:requested before the guide resolves", async () => {
+    const order: string[] = [];
+    const { io } = testIo();
+    io.to = (() => ({ emit: (event: string) => order.push(event) })) as unknown as TypedServer["to"];
+    let guideResolved: () => void = () => {};
+    const guideDone = new Promise<void>((resolve) => { guideResolved = resolve; });
+    const fixtureGuide = {
+      introduction: "You both have a radio story to explore.",
+      questions: ["Would you like to share first?", "Would you like to listen next?"] as [string, string],
+      consentReminder: "Either person may pause or stop.",
+    };
+    const facilitator: ConnectionFacilitator = {
+      mode: "gemini",
+      createGuide: vi.fn(async () => {
+        order.push("guide-start");
+        await delay(50);
+        order.push("guide-end");
+        guideResolved();
+        return fixtureGuide;
+      }),
+    };
+    const rooms = new RoomStore(120, new StoryMatcher(), { extract: vi.fn() }, "ollama", facilitator);
+    const { source, candidate } = radioCapsules();
+    await approveCapsule(rooms, io, "order87", "person-a", source);
+    const secondCapsuleId = rooms.registerCapsule(candidate);
+    await rooms.approve(io, "order87", "person-b", secondCapsuleId);
+    await guideDone;
+    expect(order.indexOf("consent:requested")).toBeLessThan(order.indexOf("guide-end"));
   });
 });

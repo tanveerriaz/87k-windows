@@ -177,16 +177,6 @@ export class RoomStore {
       return;
     }
 
-    if (this.facilitator.mode !== "disabled") {
-      try {
-        room.guide = await this.facilitator.createGuide({ source: sourceCapsule, candidate: capsule, match: result });
-      } catch (error) {
-        room.guideError = error instanceof FacilitationUnavailableError
-          ? error.message
-          : "Gemini could not prepare the conversation guide. The evidence-backed match is still available.";
-      }
-      if (this.rooms.get(roomCode) !== room) return;
-    }
     room.activeSourceId = sourceParticipantId;
     room.activeCandidateId = participantId;
     room.connectionConsent = {
@@ -200,6 +190,24 @@ export class RoomStore {
     io.to(roomCode).emit("match:found", result);
     io.to(roomCode).emit("consent:requested", { sourceParticipantId, candidateParticipantId: participantId, match: result });
     io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
+
+    if (this.facilitator.mode !== "disabled") {
+      void this.facilitator.createGuide({ source: sourceCapsule, candidate: capsule, match: result })
+        .then((guide) => {
+          if (this.rooms.get(roomCode) !== room) return;
+          room.guide = guide;
+          room.updatedAt = new Date().toISOString();
+          io.to(roomCode).emit("guide:ready", guide);
+          io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
+        })
+        .catch((error) => {
+          if (this.rooms.get(roomCode) !== room) return;
+          room.guideError = error instanceof FacilitationUnavailableError
+            ? error.message
+            : "Gemini could not prepare the conversation guide. The evidence-backed match is still available.";
+          io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
+        });
+    }
   }
 
   decide(io: TypedServer, roomCode: string, participantId: string, decision: Exclude<ConsentDecision, "pending">): { ok: boolean; message?: string } {
