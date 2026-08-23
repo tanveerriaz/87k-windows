@@ -9,5 +9,13 @@ coverage
 playwright-report
 test-results
 screenshots
+output
+assets/video
+docs
+tests
+.claude
+.cursor
+.vite
+.cache
 *.log
 .DS_Store

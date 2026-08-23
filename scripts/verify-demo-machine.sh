@@ -46,8 +46,9 @@ ollama_supported() {
   (( major > 0 || (major == 0 && minor >= 6) ))
 }
 
-if [[ -n "${CLOUD_RUN_DEMO_URL:-}" ]] && command -v curl >/dev/null 2>&1; then
-  if curl -fsS --max-time 8 "${CLOUD_RUN_DEMO_URL%/}/health" 2>/dev/null | grep -q '"facilitator":"gemini"'; then
+HOSTED_DEMO_URL="${RAILWAY_DEMO_URL:-${CLOUD_RUN_DEMO_URL:-}}"
+if [[ -n "$HOSTED_DEMO_URL" ]] && command -v curl >/dev/null 2>&1; then
+  if curl -fsS --max-time 8 "${HOSTED_DEMO_URL%/}/health" 2>/dev/null | grep -q '"status":"ok"'; then
     CLOUD_RUN_STATUS="READY"
   fi
 fi
@@ -83,7 +84,7 @@ if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "arm64" && "$NODE_MAJOR" == 
     PORT="$DEMO_PORT" INFERENCE_PROVIDER=mock node dist/server/index.js >>"$VERIFY_LOG" 2>&1 &
     SERVER_PID=$!
     for _attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
-      if curl -fsS --max-time 2 "http://127.0.0.1:${DEMO_PORT}/health" 2>/dev/null | grep -q '"provider":"mock"'; then
+      if curl -fsS --max-time 2 "http://127.0.0.1:${DEMO_PORT}/health" 2>/dev/null | grep -q '"status":"ok"'; then
         MOCK_STATUS="READY"
         break
       fi

@@ -38,18 +38,7 @@ describe("Express API", () => {
     const response = await fetch(`${baseUrl}/health`);
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body).toMatchObject({
-      status: "ok",
-      provider: "mock",
-      facilitator: "disabled",
-      geminiModel: null,
-      mode: "test",
-      inference: {
-        configured: true,
-        selected: "mock",
-        fallback: "explicit-process-restart-only",
-      },
-    });
+    expect(body).toEqual({ status: "ok" });
     expect(JSON.stringify(body)).not.toContain("GEMINI_API_KEY");
   });
 
@@ -100,7 +89,7 @@ describe("Express API", () => {
     }
   });
 
-  it("reports the routed Gemma and Gemini models without the OpenRouter secret", async () => {
+  it("keeps routed OpenRouter config off the public health endpoint", async () => {
     const routedEnv = readEnv({
       NODE_ENV: "test",
       PORT: "3000",
@@ -123,13 +112,9 @@ describe("Express API", () => {
       const response = await fetch(`http://127.0.0.1:${address.port}/health`);
       expect(response.status).toBe(200);
       const body = await response.json();
-      expect(body).toMatchObject({
-        provider: "openrouter",
-        facilitator: "gemini",
-        gemmaModel: "google/gemma-3-27b-it",
-        geminiModel: "google/gemini-3.6-flash",
-      });
+      expect(body).toEqual({ status: "ok" });
       expect(JSON.stringify(body)).not.toContain("test-openrouter-key");
+      expect(JSON.stringify(body)).not.toContain("openrouter");
     } finally {
       await new Promise<void>((resolve, reject) => routedServer.close((error) => (error ? reject(error) : resolve())));
     }

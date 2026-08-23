@@ -11,7 +11,7 @@ Build a visual-first, live-room hackathon prototype that uses Gemma to create ex
 - Keep one TypeScript repository and one deployable Node process.
 - Use React/Vite, Express, Socket.IO, Zod, MiniSearch and Vitest.
 - Keep shared schemas and Socket.IO event types in `src/shared/`.
-- Use one Cloud Run instance for the hackathon; do not add Redis or a database.
+- Use one hosted instance (Railway); do not add Redis or a database.
 - Keep all Google and admin secrets server-side. Never use `VITE_` for secrets.
 - Use synthetic data only. Do not persist uploads or raw memory text.
 - Never display hidden chain-of-thought. Show evidence, confidence, uncertainty and missing information instead.
@@ -57,9 +57,12 @@ Do not add native mobile apps, authentication, payments, contact exchange, perma
 
 - Keep the 87K WINDOWS wordmark as a sitewide home link, with a small Singapore flag beside it.
 - Credit Tanveer Riaz as the hackathon creator with tanveerriaz.me, the exact tagline **Curious mind. Builder mode! 🇸🇬**, and the public GitHub repo.
-- Landing facade window lights must be real windows lighting in the actual glass, not synthetic overlay or canvas glows that miss the frames.
+- Landing facade window lights must be real windows lighting in the actual glass with continuous natural animation aligned to the frames, not synthetic overlay or canvas glows that miss the frames.
+- Landing page and landing-story audio must use natural human voiceover, not robotic system TTS (e.g. macOS Samantha).
+- Landing story film should use parallel split-screen action (two windows in the same block), not a stiff slideshow assembly.
 
 ## Learned Workspace Facts
 
 - Public GitHub repository: https://github.com/tanveerriaz/87k-windows
 - Creator site for attribution: https://tanveerriaz.me/
+- Public app: https://87k-windows.up.railway.app/ (Railway project `052f7a55-c85f-45d7-8247-f635829b09d0`; see `docs/RAILWAY_DEPLOYMENT.md`).

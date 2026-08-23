@@ -6,7 +6,7 @@
 
 87K Windows helps older people turn joyful lived experience into a consented offer—something another person can hear, learn from or share—so memory becomes social connection.
 
-[**Open the live app**](https://windows-87k-5etw2y36yq-as.a.run.app/) · [Submission video](output/video/87k-windows-submission-final.mp4) · [Landing story film](public/landing-story.mp4) · [Join](https://windows-87k-5etw2y36yq-as.a.run.app/join/demo87) · [Wall](https://windows-87k-5etw2y36yq-as.a.run.app/wall/demo87) · [Admin](https://windows-87k-5etw2y36yq-as.a.run.app/admin/demo87) · [Architecture](docs/ARCHITECTURE.md) · [Demo story](docs/DEMO_SCRIPT.md)
+[**Open the live app**](https://87k-windows.up.railway.app/) · [Submission video](output/video/87k-windows-submission-final.mp4) · [Landing story film](public/landing-story.mp4) · [Join](https://87k-windows.up.railway.app/join/demo87) · [Wall](https://87k-windows.up.railway.app/wall/demo87) · [Admin](https://87k-windows.up.railway.app/admin/demo87) · [Architecture](docs/ARCHITECTURE.md) · [Demo story](docs/DEMO_SCRIPT.md)
 
 The landing page opens with an ~83-second parallel story film — an elder with a story and a newcomer who needs it, in the same block — that explains why the product is named for Singapore's ~87,000 seniors living alone. Real HDB window lights loop in the façade band above the film. Script and sources: [docs/video/landing-story-script.md](docs/video/landing-story-script.md).
 
@@ -14,14 +14,14 @@ The landing page opens with an ~83-second parallel story film — an elder with 
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-0b1118?logo=typescript&logoColor=white)
 ![Gemma](https://img.shields.io/badge/Gemma-real%20inference-c86c43)
 ![Gemini](https://img.shields.io/badge/Gemini%203.6-senior%20facilitator-82b6e8)
-![Cloud Run](https://img.shields.io/badge/Cloud%20Run-Singapore-eda94b?logo=googlecloud&logoColor=0b1118)
+![Railway](https://img.shields.io/badge/Railway-hosted-0B0D0E?logo=railway&logoColor=white)
 ![Data](https://img.shields.io/badge/demo%20data-fictional-83b9a0)
 
 </div>
 
 ![Current 87K Windows landing page with the photographic Singapore housing block and warm amber entrance](assets/video/captures/01-landing-photographic-1920x1080.png)
 
-<p align="center"><sub>Live Cloud Run surface: sitewide <strong>87K WINDOWS 🇸🇬</strong> home link, real-window façade lights, parallel landing film, then storyteller / listener choice. The building is fictional generated artwork; live Canvas light on Wall Mode shows when approved evidence connects two lives.</sub></p>
+<p align="center"><sub>Live Railway surface (after deploy): sitewide <strong>87K WINDOWS 🇸🇬</strong> home link, real-window façade lights, parallel landing film, then storyteller / listener choice. The building is fictional generated artwork; live Canvas light on Wall Mode shows when approved evidence connects two lives.</sub></p>
 
 ## Why this exists
 
@@ -98,7 +98,7 @@ The local prototype uses HTTP between each phone and the Mac, so it must not run
 
 To match the MacBook Air and `gemma3:4b` demo hardware, local inference deliberately handles one story at a time. Additional submissions receive a clear busy response and can retry after the current capsule is ready; there is no parallel model queue.
 
-The public Cloud Run app (`windows-87k` in `asia-southeast1`) currently runs the OpenRouter recovery path: hosted `google/gemma-3-27b-it` for extraction and `google/gemini-3.6-flash` for the same post-match guide. Every active model is labelled on Join / Wall / Admin; neither silently falls back to simulated inference.
+The public Railway app runs the OpenRouter path: hosted `google/gemma-3-27b-it` for extraction and `google/gemini-3.6-flash` for the same post-match guide. Every active model is labelled on Join / Wall / Admin; neither silently falls back to simulated inference. See [Railway deployment](docs/RAILWAY_DEPLOYMENT.md).
 
 ## Architecture
 
@@ -121,7 +121,7 @@ flowchart LR
     Server -->|live room events| Wall
 ```
 
-For the live presentation, one local Node process owns the ephemeral room and serves phones over local Wi-Fi. Cloud Run hosts the same process for online review. There is no account system, database, queue, vector store, analytics SDK or permanent upload storage.
+For the live presentation, one local Node process owns the ephemeral room and serves phones over local Wi-Fi. Railway hosts the same process for online review. There is no account system, database, queue, vector store, analytics SDK or permanent upload storage.
 
 ## Run locally
 
@@ -168,7 +168,7 @@ unset GEMINI_API_KEY
 | Mode | Extraction | Senior facilitation | Role |
 | --- | --- | --- | --- |
 | `demo:judge` | local `gemma3:4b` | `gemini-3.6-flash` | Primary Track 2 judging path |
-| Cloud Run (live) | OpenRouter `google/gemma-3-27b-it` | OpenRouter `google/gemini-3.6-flash` | Public online-review path |
+| Railway (live) | OpenRouter `google/gemma-3-27b-it` | OpenRouter `google/gemini-3.6-flash` | Public online-review path |
 | `demo:gemma` | hosted Gemma via Gemini API | `gemini-3.6-flash` | Alternate hosted local launch |
 | `demo:local` | local `gemma3:4b` | disabled | Offline recovery; not the complete Track 2 story |
 | Test harness | deterministic fixtures | deterministic guide | Automated checks only |
@@ -218,7 +218,8 @@ The critical browser test uses two contexts: participant submission must update 
 - [Architecture](docs/ARCHITECTURE.md)
 - [90-second demo script](docs/DEMO_SCRIPT.md)
 - [Landing story film script](docs/video/landing-story-script.md)
-- [Google Cloud Run deployment](docs/GCP_DEPLOYMENT.md)
+- [Railway deployment](docs/RAILWAY_DEPLOYMENT.md)
+- [Google Cloud Run deployment](docs/GCP_DEPLOYMENT.md) (hackathon ephemeral project; archived)
 - [Generated asset provenance](docs/ASSET_PROVENANCE.md)
 
 ## Creator

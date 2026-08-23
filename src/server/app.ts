@@ -87,28 +87,7 @@ export function createApp(dependencies: AppDependencies): express.Express {
   });
 
   app.get("/health", (_request, response) => {
-    response.status(200).json({
-      status: "ok",
-      provider: env.INFERENCE_PROVIDER,
-      facilitator: env.GEMINI_FACILITATOR,
-      gemmaModel: env.INFERENCE_PROVIDER === "ollama"
-        ? env.OLLAMA_MODEL
-        : env.INFERENCE_PROVIDER === "openrouter"
-          ? env.OPENROUTER_GEMMA_MODEL
-          : env.GEMMA_MODEL,
-      geminiModel: env.GEMINI_FACILITATOR === "gemini"
-        ? env.INFERENCE_PROVIDER === "openrouter"
-          ? env.OPENROUTER_GEMINI_MODEL
-          : env.GEMINI_MODEL
-        : null,
-      mode: env.NODE_ENV,
-      uptimeSeconds: Math.round(process.uptime()),
-      inference: {
-        configured: true,
-        selected: env.INFERENCE_PROVIDER,
-        fallback: "explicit-process-restart-only",
-      },
-    });
+    response.status(200).json({ status: "ok" });
   });
 
   app.post("/api/extract", inferenceLimiter, jsonBody, async (request, response) => {
