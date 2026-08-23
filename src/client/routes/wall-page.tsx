@@ -13,6 +13,7 @@ export function WallPage() {
   const sourceStory = snapshot?.windows.findLast((window) => window.participantId === snapshot.activeSourceId);
   const listenerStory = snapshot?.windows.findLast((window) => window.participantId === snapshot.activeCandidateId);
   const resultSteps = snapshot?.guide ? [...RESULT_STEPS, "Gemini guides"] : RESULT_STEPS;
+  const windowsLitCount = snapshot?.windows.length ?? 0;
 
   return (
     <main className="wall-page">
@@ -26,6 +27,14 @@ export function WallPage() {
           <StatusBadge connected={room.connected} provider={snapshot?.provider} facilitator={snapshot?.facilitator} />
         </div>
       </header>
+
+      {(room.message || room.connectionError) && (
+        <div className="error-banner" role="alert">
+          <span>{room.message ?? room.connectionError}</span>
+          {room.message && <button type="button" className="text-button" onClick={() => room.setMessage(null)}>Dismiss</button>}
+        </div>
+      )}
+
       <section className="wall-stage" aria-live="polite">
         <HdbWallCanvas snapshot={snapshot} />
         {(!snapshot || snapshot.phase === "idle" || snapshot.phase === "reviewing") && (
@@ -66,7 +75,7 @@ export function WallPage() {
                   </div>
                 </div>
                 <article>
-                  <span className="mono-label">PREPARED FICTIONAL INTEREST</span>
+                  <span className="mono-label">{snapshot.connectionConsent ? "LISTENER’S APPROVED REASON" : "PREPARED FICTIONAL INTEREST"}</span>
                   <p>{listenerStory?.safeSummary}</p>
                 </article>
               </div>
@@ -108,7 +117,7 @@ export function WallPage() {
         )}
       </section>
       <footer className="wall-footer">
-        <span>{snapshot?.windows.length ?? 0} WINDOWS LIT</span>
+        <span>{windowsLitCount === 1 ? "1 WINDOW LIT" : `${windowsLitCount} WINDOWS LIT`}</span>
         <span>GEMMA PROTECTS THE MEMORY. GEMINI HELPS PEOPLE BEGIN.</span>
       </footer>
     </main>

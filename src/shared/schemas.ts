@@ -87,7 +87,6 @@ export const RoomSnapshotSchema = z.object({
 export const ExtractRequestSchema = z.object({
   roomCode: z.string().trim().min(3).max(24).regex(/^[a-zA-Z0-9-]+$/),
   memory: z.string().trim().min(8).max(600),
-  photoData: z.string().max(7_000_000).nullable().optional(),
   fixture: z.enum(["radio", "no-match"]).optional(),
 });
 
@@ -99,6 +98,38 @@ export const InviteRequestSchema = z.object({
   roomCode: z.string().trim().min(3).max(24),
   capsule: StoryCapsuleSchema,
   match: MatchResultSchema,
+});
+
+export const RoomCodeSchema = z.string().trim().min(3).max(24).regex(/^[a-zA-Z0-9-]+$/);
+
+export const RoomJoinPayloadSchema = z.object({
+  roomCode: RoomCodeSchema,
+  role: z.enum(["join", "wall", "admin"]),
+  adminSecret: z.string().max(128).optional(), // consumed in Task 6
+});
+
+export const StorySubmittedPayloadSchema = z.object({
+  roomCode: RoomCodeSchema,
+  participantId: z.string().min(1).max(64),
+});
+
+export const CapsuleApprovedPayloadSchema = z.object({
+  roomCode: RoomCodeSchema,
+  participantId: z.string().min(1).max(64),
+  capsuleId: z.string().uuid(),
+});
+
+export const ConsentDecidedPayloadSchema = z.object({
+  roomCode: RoomCodeSchema,
+  participantId: z.string().min(1).max(64),
+  decision: z.enum(["yes", "no"]),
+});
+
+export const RoomOnlyPayloadSchema = z.object({ roomCode: RoomCodeSchema });
+
+export const ProviderChangedPayloadSchema = z.object({
+  roomCode: RoomCodeSchema,
+  provider: ProviderSchema,
 });
 
 export type Provider = z.infer<typeof ProviderSchema>;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildMockCapsule, MockProvider, redactMemory } from "../../src/server/inference/mock-provider";
+import { buildMockCapsule, MockProvider } from "../../src/server/inference/mock-provider";
 import { ProviderOutputError, ProviderTimeoutError } from "../../src/server/inference/provider";
 import { PREPARED_RADIO_MEMORY } from "../../src/shared/demo";
 
@@ -12,14 +12,12 @@ describe("MockProvider", () => {
     expect(capsule.containsPII).toBe(false);
   });
 
-  it("redacts a name, exact address and phone number before preview", () => {
-    const source = "My name is Fictional Tester. I lived at Blk 000 #00-0000. Call 8000 0000 about Queenstown radios.";
-    const redacted = redactMemory(source);
-    expect(redacted.containsPII).toBe(true);
-    expect(redacted.redactions).toEqual(expect.arrayContaining(["name", "exact address", "phone number"]));
-    expect(redacted.safeText).not.toContain("Fictional Tester");
-    expect(redacted.safeText).not.toContain("#00-0000");
-    expect(redacted.safeText).not.toContain("8000 0000");
+  it("flags PII on the capsule via the shared redaction module", () => {
+    const capsule = buildMockCapsule({
+      memory: "My name is Fictional Tester. I lived at Blk 000 #00-0000. Call 8000 0000 about Queenstown radios.",
+    });
+    expect(capsule.containsPII).toBe(true);
+    expect(capsule.redactions).toEqual(expect.arrayContaining(["name", "exact address", "phone number"]));
   });
 
   it("exposes recoverable invalid-output and timeout fixtures", async () => {

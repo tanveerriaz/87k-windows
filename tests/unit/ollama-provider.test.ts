@@ -38,6 +38,23 @@ describe("OllamaProvider", () => {
     expect(fetcher).toHaveBeenCalledOnce();
   });
 
+  it("keeps the model's own PII verdict even when the regex scan finds nothing", async () => {
+    const modelFlaggedCapsule = JSON.stringify({
+      ...JSON.parse(validLocalCapsule),
+      containsPII: true,
+      redactions: ["inferred identity clue"],
+    });
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ response: modelFlaggedCapsule }), { status: 200 }),
+    ) as typeof fetch;
+    const provider = new OllamaProvider("http://127.0.0.1:11434", "gemma3:4b", fetcher, 1000);
+    const capsule = await provider.extract({
+      memory: "I repaired radios in Queenstown in the 1970s and met a fellow enthusiast at a community fair.",
+    });
+    expect(capsule.containsPII).toBe(true);
+    expect(capsule.redactions).toContain("inferred identity clue");
+  });
+
   it("keeps an offer only when the participant explicitly volunteers it", async () => {
     const fetcher = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ response: validLocalCapsule }), { status: 200 }),

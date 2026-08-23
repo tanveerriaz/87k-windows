@@ -2,6 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 const clientPort = 15173;
 const serverPort = 13001;
+export const adminSecret = "test-secret";
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -13,7 +14,7 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
   webServer: {
-    command: `CLIENT_PORT=${clientPort} SERVER_PORT=${serverPort} INFERENCE_PROVIDER=mock GEMINI_FACILITATOR=mock npm run dev`,
+    command: `CLIENT_PORT=${clientPort} SERVER_PORT=${serverPort} INFERENCE_PROVIDER=mock GEMINI_FACILITATOR=mock DEMO_ADMIN_SECRET=${adminSecret} npm run dev`,
     url: `http://127.0.0.1:${clientPort}/health`,
     reuseExistingServer: false,
     timeout: 120_000,

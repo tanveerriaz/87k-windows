@@ -5,13 +5,28 @@ import { PREPARED_NO_MATCH_MEMORY, PREPARED_RADIO_MEMORY } from "../../shared/de
 import type { StoryCapsule } from "../../shared/schemas";
 import { SiteWordmark } from "../components/site-wordmark";
 import { StatusBadge } from "../components/status-badge";
-import { extractCapsule } from "../lib/api";
+import { ApiError, extractCapsule } from "../lib/api";
 import { compressImage } from "../lib/image";
 import { resolveJoinDisplacement, type JoinStage } from "../lib/join-stage";
 import { useRoomSocket } from "../lib/use-room-socket";
 
 const MEMORY_QUESTION = "What small thing made you happy when you were young?";
 const JOURNEY_STEPS = ["You shared", "Gemma protected", "You approved", "A story matched"];
+
+function speakText(text: string, onEnd?: () => void): void {
+  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+    onEnd?.();
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-SG";
+  utterance.rate = 0.82;
+  utterance.pitch = 1;
+  utterance.onend = () => onEnd?.();
+  utterance.onerror = () => onEnd?.();
+  window.speechSynthesis.speak(utterance);
+}
 
 export function JoinPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
@@ -26,7 +41,10 @@ export function JoinPage() {
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [photoLabel, setPhotoLabel] = useState("Prepared fictional radio illustration");
   const [capsule, setCapsule] = useState<StoryCapsule | null>(null);
+  const [capsuleId, setCapsuleId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<"approve" | "decide" | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [listenerLanguage, setListenerLanguage] = useState("English");
@@ -85,12 +103,23 @@ export function JoinPage() {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   }, []);
 
+  useEffect(() => {
+    if (stage !== "processing" && stage !== "listen-processing") {
+      setElapsedSeconds(0);
+      return;
+    }
+    setElapsedSeconds(0);
+    const interval = window.setInterval(() => setElapsedSeconds((seconds) => seconds + 1), 1000);
+    return () => window.clearInterval(interval);
+  }, [stage]);
+
   const chooseFixture = (next: "radio" | "no-match") => {
     setFixture(next);
     setMemory(next === "radio" ? PREPARED_RADIO_MEMORY : PREPARED_NO_MATCH_MEMORY);
     setPhotoData(null);
     setPhotoLabel(next === "radio" ? "Prepared fictional radio illustration" : "Text-only no-match fixture");
     setCapsule(null);
+    setCapsuleId(null);
     setError(null);
   };
 
@@ -111,15 +140,21 @@ export function JoinPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const createCapsule = async () => {
+  const createCapsule = async (isRetry = false) => {
     setStage("processing");
     setError(null);
-    room.submitted(participantId);
+    if (!isRetry) room.submitted(participantId);
     try {
-      const result = await extractCapsule({ roomCode, memory, photoData: null, fixture });
-      setCapsule(result);
+      const result = await extractCapsule({ roomCode, memory, fixture });
+      setCapsule(result.capsule);
+      setCapsuleId(result.capsuleId);
       setStage("review");
     } catch (requestError) {
+      if (requestError instanceof ApiError && requestError.code === "LOCAL_GEMMA_BUSY" && !isRetry) {
+        setError("The local model is helping someone else — retrying in a moment…");
+        window.setTimeout(() => void createCapsule(true), 3_000);
+        return;
+      }
       setError(requestError instanceof Error ? requestError.message : "Nothing was shared. Please try again.");
       setStage("capture");
     }
@@ -151,13 +186,16 @@ export function JoinPage() {
   };
 
   const approve = async () => {
-    if (!capsule) return;
+    if (!capsule || !capsuleId) return;
     setError(null);
+    setPendingAction("approve");
     try {
-      await room.approve(participantId, capsule);
+      await room.approve(participantId, capsuleId);
       setStage("waiting");
     } catch (approvalError) {
       setError(approvalError instanceof Error ? approvalError.message : "The safe capsule was not shared.");
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -171,9 +209,10 @@ export function JoinPage() {
     setError(null);
     room.submitted(participantId);
     try {
-      const listenerCapsule = await extractCapsule({ roomCode, memory: listenerMemory, photoData: null });
-      await room.approve(participantId, listenerCapsule);
-      setCapsule(listenerCapsule);
+      const listenerCapsule = await extractCapsule({ roomCode, memory: listenerMemory });
+      await room.approve(participantId, listenerCapsule.capsuleId);
+      setCapsule(listenerCapsule.capsule);
+      setCapsuleId(listenerCapsule.capsuleId);
       setStage("listen-requested");
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Your listening request could not be prepared.");
@@ -183,21 +222,26 @@ export function JoinPage() {
 
   const decideConnection = async (decision: "yes" | "no") => {
     setError(null);
+    setPendingAction("decide");
     try {
       await room.decide(participantId, decision);
       if (decision === "yes") setStage("listen-requested");
     } catch (decisionError) {
       setError(decisionError instanceof Error ? decisionError.message : "Your choice could not be recorded.");
+    } finally {
+      setPendingAction(null);
     }
   };
 
   const startAgain = () => {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     setIsSpeaking(false);
-    room.reset();
+    setStage(listenerEntry ? "listen-profile" : "welcome");
     setCapsule(null);
-    setStage("capture");
-    chooseFixture("radio");
+    setCapsuleId(null);
+    setError(null);
+    setPendingAction(null);
+    setMemory("");
   };
 
   const speakGuide = () => {
@@ -207,23 +251,35 @@ export function JoinPage() {
       setError("Read aloud is not available in this browser. The full guide remains on screen.");
       return;
     }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance([
-      guide.introduction,
-      ...guide.questions,
-      guide.consentReminder,
-    ].join(" "));
-    utterance.lang = "en-SG";
-    utterance.rate = 0.82;
-    utterance.pitch = 1;
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
     setError(null);
     setIsSpeaking(true);
-    window.speechSynthesis.speak(utterance);
+    speakText([guide.introduction, ...guide.questions, guide.consentReminder].join(" "), () => setIsSpeaking(false));
   };
 
-  const stopGuide = () => {
+  const readReviewAloud = () => {
+    if (!capsule) return;
+    if (isSpeaking) {
+      stopSpeaking();
+      return;
+    }
+    if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+      setError("Read aloud is not available in this browser. The full capsule remains on screen.");
+      return;
+    }
+    const fieldLines: string[] = [];
+    if (capsule.place) fieldLines.push(`Place: ${capsule.place}.`);
+    if (capsule.era) fieldLines.push(`Era: ${capsule.era}.`);
+    capsule.skills.forEach((skill) => fieldLines.push(`Skill: ${skill}.`));
+    capsule.offers.forEach((offer) => fieldLines.push(`Offer: ${offer}.`));
+    capsule.wants.forEach((want) => fieldLines.push(`Wants: ${want}.`));
+    const uncertainLine = capsule.uncertain.length > 0 ? `Uncertain: ${capsule.uncertain.join(". ")}.` : "";
+    const fullText = [capsule.safeSummary, ...fieldLines, uncertainLine].filter(Boolean).join(" ");
+    setError(null);
+    setIsSpeaking(true);
+    speakText(fullText, () => setIsSpeaking(false));
+  };
+
+  const stopSpeaking = () => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   };
@@ -237,6 +293,13 @@ export function JoinPage() {
         </div>
         <StatusBadge connected={room.connected} provider={room.snapshot?.provider} facilitator={room.snapshot?.facilitator} />
       </header>
+
+      {(room.message || room.connectionError) && (
+        <div className="error-banner" role="alert">
+          <span>{room.message ?? room.connectionError}</span>
+          {room.message && <button type="button" className="text-button" onClick={() => room.setMessage(null)}>Dismiss</button>}
+        </div>
+      )}
 
       <section className="join-shell" aria-live="polite">
         <div className={`step-rail ${journeySteps.length === 5 ? "has-guide" : ""}`} aria-label="Progress">
@@ -290,6 +353,7 @@ export function JoinPage() {
             <p className="eyebrow">Your reason stays yours until you approve</p>
             <h1>Gemma is preparing a safe listening capsule.</h1>
             <p>Only your language, time and reason to listen enter the evidence check. No contact details are shared.</p>
+            <p className="processing-elapsed">{elapsedSeconds}s elapsed · This usually takes 10–30 seconds on the local model.</p>
           </div>
         )}
 
@@ -304,8 +368,8 @@ export function JoinPage() {
             </div>
             <p className="privacy-note">Your choice is private until both people have answered. Either person may say no.</p>
             {error && <div className="error-banner" role="alert">{error}</div>}
-            <button className="button button-primary button-block" onClick={() => void decideConnection("yes")}>Yes, I would like to continue</button>
-            <button className="button button-secondary button-block" onClick={() => void decideConnection("no")}>No, not this time</button>
+            <button className="button button-primary button-block" disabled={pendingAction === "decide"} onClick={() => void decideConnection("yes")}>{pendingAction === "decide" ? "Recording your choice…" : "Yes, I would like to continue"}</button>
+            <button className="button button-secondary button-block" disabled={pendingAction === "decide"} onClick={() => void decideConnection("no")}>{pendingAction === "decide" ? "Recording your choice…" : "No, not this time"}</button>
           </div>
         )}
 
@@ -404,6 +468,8 @@ export function JoinPage() {
             <p className="eyebrow">Your words, then the meaning</p>
             <h1>Separating what you said from what may connect.</h1>
             <p>Gemma prepares a small, reviewable memory capsule. It does not fill in names, dates, or details you did not share.</p>
+            <p className="processing-elapsed">{elapsedSeconds}s elapsed · This usually takes 10–30 seconds on the local model.</p>
+            {error && <div className="error-banner" role="status">{error}</div>}
           </div>
         )}
 
@@ -431,13 +497,14 @@ export function JoinPage() {
             ) : (
               <div className="redaction-note"><strong>No identifiers detected</strong><p>Only Gemma’s short interpretation and evidence above enter matching—not the full quote.</p></div>
             )}
-            <details>
+            <details open>
               <summary>What is uncertain?</summary>
               <ul>{capsule.uncertain.map((item) => <li key={item}>{item}</li>)}</ul>
             </details>
+            <button className="button button-secondary button-block" type="button" aria-pressed={isSpeaking} onClick={readReviewAloud}>{isSpeaking ? "Stop reading" : "Read this to me"}</button>
             {error && <div className="error-banner" role="alert">{error}</div>}
-            <button className="button button-primary button-block" onClick={() => void approve()}>Approve and light my window</button>
-            <button className="text-button button-block" onClick={() => setStage("capture")}>Go back and edit</button>
+            <button className="button button-primary button-block" disabled={pendingAction === "approve"} onClick={() => void approve()}>{pendingAction === "approve" ? "Lighting your window…" : "Approve and light my window"}</button>
+            <button className="button button-secondary button-block" onClick={() => setStage("capture")}>Go back and edit</button>
           </div>
         )}
 
@@ -468,7 +535,7 @@ export function JoinPage() {
             <div className="evidence-path" aria-label="Evidence path">
               {room.snapshot.match.evidencePath.map((evidence) => <span key={evidence}>{evidence}</span>)}
             </div>
-            {room.snapshot.guide && (
+            {room.snapshot.guide ? (
               <article className="senior-bridge">
                 <span className="mono-label">GEMINI · SENIOR CONNECTION GUIDE</span>
                 <h2>{room.snapshot.guide.introduction}</h2>
@@ -479,12 +546,15 @@ export function JoinPage() {
                 <p className="consent-reminder">{room.snapshot.guide.consentReminder}</p>
                 <div className="read-aloud-actions">
                   <button className="button button-primary" type="button" aria-pressed={isSpeaking} onClick={speakGuide}>Read this aloud</button>
-                  {isSpeaking && <button className="button button-secondary" type="button" onClick={stopGuide}>Stop reading</button>}
+                  {isSpeaking && <button className="button button-secondary" type="button" onClick={stopSpeaking}>Stop reading</button>}
                 </div>
                 <small>Gemini received only the two approved safe capsules and the visible evidence above—not your raw words.</small>
               </article>
-            )}
-            {room.snapshot.guideError && <div className="error-banner" role="status">{room.snapshot.guideError}</div>}
+            ) : room.snapshot.guideError ? (
+              <div className="error-banner" role="status">{room.snapshot.guideError}</div>
+            ) : room.snapshot.facilitator !== "disabled" ? (
+              <p className="guide-pending" role="status">Gemini is preparing the first questions…</p>
+            ) : null}
             {error && <div className="error-banner" role="alert">{error}</div>}
             <article className="kopi-card">
               <span className="mono-label">SUGGESTED KOPI CARD · FICTIONAL DEMO</span>

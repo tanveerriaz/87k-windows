@@ -1,0 +1,28 @@
+{
+  "id": "02688451-1227-47b9-950e-eefe24a55daf",
+  "observed": [
+    "portable radio",
+    "repair tools"
+  ],
+  "place": "Queenstown",
+  "era": "1970s",
+  "skills": [
+    "radio repair"
+  ],
+  "interests": [
+    "electronics",
+    "old radios"
+  ],
+  "offers": [
+    "teach basic radio repair"
+  ],
+  "wants": [
+    "meet someone interested in restoring a radio"
+  ],
+  "safeSummary": "A fictional memory of repairing radios in Queenstown in the 1970s, with an offer to share the skill.",
+  "containsPII": false,
+  "redactions": [],
+  "uncertain": [
+    "The prepared illustration suggests repair tools; it does not identify a real person."
+  ]
+}

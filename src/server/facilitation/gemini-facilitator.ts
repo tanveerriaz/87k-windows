@@ -1,6 +1,6 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { SeniorBridgeSchema, type SeniorBridge, type StoryCapsule } from "../../shared/schemas";
-import { redactMemory } from "../inference/mock-provider";
+import { redactMemory } from "../privacy/redact";
 import { FacilitationUnavailableError, type ConnectionFacilitator, type FacilitationInput } from "./provider";
 
 type GenerateRequest = Parameters<GoogleGenAI["models"]["generateContent"]>[0];

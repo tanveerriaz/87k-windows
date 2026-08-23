@@ -9,6 +9,7 @@ import { MockProvider } from "../../src/server/inference/mock-provider";
 import { ProviderBusyError } from "../../src/server/inference/provider";
 import type { InferenceProvider } from "../../src/server/inference/provider";
 import { StoryMatcher } from "../../src/server/matching/matcher";
+import { RoomStore } from "../../src/server/rooms";
 import { PREPARED_RADIO_MEMORY } from "../../src/shared/demo";
 
 describe("Express API", () => {
@@ -18,7 +19,9 @@ describe("Express API", () => {
   beforeEach(async () => {
     vi.spyOn(console, "info").mockImplementation(() => undefined);
     const env = readEnv({ NODE_ENV: "test", PORT: "3000", MATCH_THRESHOLD: "0.62" });
-    const app = createApp({ env, provider: new MockProvider(0), matcher: new StoryMatcher() });
+    const matcher = new StoryMatcher();
+    const provider = new MockProvider(0);
+    const app = createApp({ env, provider, matcher, rooms: new RoomStore(120, matcher, provider) });
     server = createServer(app);
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     const address = server.address();
@@ -50,6 +53,53 @@ describe("Express API", () => {
     expect(JSON.stringify(body)).not.toContain("GEMINI_API_KEY");
   });
 
+  it("ignores a spoofed X-Forwarded-For outside production, keeping one shared rate-limit bucket", async () => {
+    const first = await fetch(`${baseUrl}/api/match`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Forwarded-For": "1.1.1.1" },
+      body: JSON.stringify({}),
+    });
+    const second = await fetch(`${baseUrl}/api/match`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Forwarded-For": "2.2.2.2" },
+      body: JSON.stringify({}),
+    });
+    const remaining = (response: Response) => Number(response.headers.get("ratelimit")?.match(/r=(\d+)/)?.[1]);
+    expect(remaining(second)).toBe(remaining(first) - 1);
+  });
+
+  it("trusts X-Forwarded-For behind the single Cloud Run hop in production", async () => {
+    const prodEnv = readEnv({ NODE_ENV: "production", PORT: "3000" });
+    const prodMatcher = new StoryMatcher();
+    const prodProvider = new MockProvider(0);
+    const prodServer = createServer(createApp({
+      env: prodEnv,
+      provider: prodProvider,
+      matcher: prodMatcher,
+      rooms: new RoomStore(120, prodMatcher, prodProvider),
+    }));
+    try {
+      await new Promise<void>((resolve) => prodServer.listen(0, "127.0.0.1", resolve));
+      const address = prodServer.address();
+      if (!address || typeof address === "string") throw new Error("Production test server did not bind.");
+      const prodUrl = `http://127.0.0.1:${address.port}`;
+      const first = await fetch(`${prodUrl}/api/match`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Forwarded-For": "1.1.1.1" },
+        body: JSON.stringify({}),
+      });
+      const second = await fetch(`${prodUrl}/api/match`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Forwarded-For": "2.2.2.2" },
+        body: JSON.stringify({}),
+      });
+      const remaining = (response: Response) => Number(response.headers.get("ratelimit")?.match(/r=(\d+)/)?.[1]);
+      expect(remaining(second)).toBe(remaining(first));
+    } finally {
+      await new Promise<void>((resolve, reject) => prodServer.close((error) => (error ? reject(error) : resolve())));
+    }
+  });
+
   it("reports the routed Gemma and Gemini models without the OpenRouter secret", async () => {
     const routedEnv = readEnv({
       NODE_ENV: "test",
@@ -58,10 +108,13 @@ describe("Express API", () => {
       GEMINI_FACILITATOR: "gemini",
       OPENROUTER_API_KEY: "test-openrouter-key",
     });
+    const routedMatcher = new StoryMatcher();
+    const routedProvider = new MockProvider(0);
     const routedServer = createServer(createApp({
       env: routedEnv,
-      provider: new MockProvider(0),
-      matcher: new StoryMatcher(),
+      provider: routedProvider,
+      matcher: routedMatcher,
+      rooms: new RoomStore(120, routedMatcher, routedProvider),
     }));
     try {
       await new Promise<void>((resolve) => routedServer.listen(0, "127.0.0.1", resolve));
@@ -89,9 +142,10 @@ describe("Express API", () => {
     await mkdir(clientDirectory, { recursive: true });
     await writeFile(join(clientDirectory, "index.html"), "<!doctype html><div id=\"root\"></div>");
     const matcher = new StoryMatcher();
+    const hiddenProvider = new MockProvider(0);
     const cwd = vi.spyOn(process, "cwd").mockReturnValue(hiddenRoot);
     const hiddenEnv = readEnv({ NODE_ENV: "test", PORT: "3000" });
-    const hiddenApp = createApp({ env: hiddenEnv, provider: new MockProvider(0), matcher });
+    const hiddenApp = createApp({ env: hiddenEnv, provider: hiddenProvider, matcher, rooms: new RoomStore(120, matcher, hiddenProvider) });
     cwd.mockRestore();
     const hiddenServer = createServer(hiddenApp);
 
@@ -120,6 +174,7 @@ describe("Express API", () => {
     });
     expect(extraction.status).toBe(200);
     const extracted = await extraction.json();
+    expect(extracted.capsuleId).toEqual(expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i));
 
     const matching = await fetch(`${baseUrl}/api/match`, {
       method: "POST",
@@ -129,6 +184,26 @@ describe("Express API", () => {
     expect(matching.status).toBe(200);
     const matched = await matching.json();
     expect(matched.match).toMatchObject({ decision: "MATCH", candidateId: "story-07" });
+  });
+
+  it("rejects a JSON body over the 64kb limit before it reaches inference", async () => {
+    const response = await fetch(`${baseUrl}/api/extract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomCode: "demo87", memory: "x".repeat(70_000) }),
+    });
+    expect(response.status).toBe(413);
+  });
+
+  it("ignores a photoData field on /api/extract instead of processing it", async () => {
+    const response = await fetch(`${baseUrl}/api/extract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomCode: "demo87", memory: PREPARED_RADIO_MEMORY, photoData: "data:image/png;base64,AAAA" }),
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.capsule).toBeDefined();
   });
 
   it("turns invalid provider output and timeout into recoverable responses", async () => {
@@ -153,7 +228,8 @@ describe("Express API", () => {
       extract: vi.fn().mockRejectedValue(new ProviderBusyError()),
     };
     const localEnv = readEnv({ NODE_ENV: "test", PORT: "3000", INFERENCE_PROVIDER: "ollama" });
-    const localServer = createServer(createApp({ env: localEnv, provider, matcher: new StoryMatcher() }));
+    const localMatcher = new StoryMatcher();
+    const localServer = createServer(createApp({ env: localEnv, provider, matcher: localMatcher, rooms: new RoomStore(120, localMatcher, provider) }));
     await new Promise<void>((resolve) => localServer.listen(0, "127.0.0.1", resolve));
     const address = localServer.address();
     if (!address || typeof address === "string") throw new Error("Local test server did not bind to a TCP port.");

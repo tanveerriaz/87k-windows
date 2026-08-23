@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { GoogleGenAI } from "@google/genai";
 import { StoryCapsuleSchema, type StoryCapsule } from "../../shared/schemas";
+import { redactMemory, unionRedactionVerdicts } from "../privacy/redact";
+import { buildCapsulePrompt } from "./capsule-prompt";
 import { keepExplicitConsent } from "./consent-evidence";
-import { redactMemory } from "./mock-provider";
 import { ProviderOutputError, ProviderTimeoutError, type ExtractInput, type InferenceProvider } from "./provider";
 
 type GenerateRequest = Parameters<GoogleGenAI["models"]["generateContent"]>[0];
@@ -76,20 +77,6 @@ export class GemmaApiProvider implements InferenceProvider {
     this.client = client ?? new GoogleGenAI({ apiKey });
   }
 
-  private prompt(memory: string, repairOutput?: string): string {
-    const repair = repairOutput
-      ? `\nThe previous JSON was invalid. Correct it using the same evidence. Previous JSON:\n${repairOutput.slice(0, 1200)}`
-      : "";
-    return `Create a privacy-safe story capsule from this fictional demo memory.
-Use only explicit evidence. Never infer identity, age, ethnicity, health, address, relationships, or contact details.
-Never turn an activity into an occupation, title, identity, or permanent trait. Phrase safeSummary as "A memory of ...".
-Copy explicit place and era wording faithfully; never pad, reformat, or invent years.
-Populate offers or wants only when the person explicitly volunteers an offer or states a desire; an activity alone is neither.
-Put missing or ambiguous facts in uncertain; use null for an unstated place or era.
-Return only the requested JSON. Do not include reasoning, hidden analysis, markdown, or extra keys.
-Memory: ${JSON.stringify(memory)}${repair}`;
-  }
-
   private async generate(prompt: string): Promise<string> {
     try {
       const response = await this.client.models.generateContent({
@@ -117,13 +104,14 @@ Memory: ${JSON.stringify(memory)}${repair}`;
   private parse(output: string, input: ExtractInput): StoryCapsule {
     const parsed = decodeCapsuleJson(output);
     const sourceRedaction = redactMemory(input.memory);
+    const merged = unionRedactionVerdicts(sourceRedaction, parsed.containsPII, parsed.redactions);
     const candidate = StoryCapsuleSchema.parse({
       ...parsed,
       id: randomUUID(),
       place: parsed.place == null ? null : nullableText(parsed.place),
       era: parsed.era == null ? null : nullableText(parsed.era),
-      containsPII: sourceRedaction.containsPII,
-      redactions: sourceRedaction.redactions,
+      containsPII: merged.containsPII,
+      redactions: merged.redactions,
       ...keepExplicitConsent(input.memory, parsed.offers, parsed.wants),
     });
     const summaryRedaction = redactMemory(candidate.safeSummary);
@@ -137,11 +125,13 @@ Memory: ${JSON.stringify(memory)}${repair}`;
 
   async extract(input: ExtractInput): Promise<StoryCapsule> {
     const safeInput = redactMemory(input.memory).safeText;
-    const firstOutput = await this.generate(this.prompt(safeInput));
+    const firstOutput = await this.generate(buildCapsulePrompt({ memory: safeInput, dialect: "hosted" }));
     try {
       return this.parse(firstOutput, input);
     } catch {
-      const repairedOutput = await this.generate(this.prompt(safeInput, firstOutput));
+      const repairedOutput = await this.generate(
+        buildCapsulePrompt({ memory: safeInput, repairOutput: firstOutput, dialect: "hosted" }),
+      );
       try {
         return this.parse(repairedOutput, input);
       } catch {

@@ -25,13 +25,14 @@ export function roomIpv4Addresses(interfaces: NetworkMap = networkInterfaces()):
   return [...new Set(addresses)];
 }
 
-export function buildRoomUrls(addresses: string[], port: number, roomCode: string): RoomUrls[] {
+export function buildRoomUrls(addresses: string[], port: number, roomCode: string, adminSecret?: string): RoomUrls[] {
   return addresses.map((address) => {
     const origin = `http://${address}:${port}`;
+    const adminUrl = `${origin}/admin/${roomCode}`;
     return {
       phone: `${origin}/join/${roomCode}`,
       wall: `${origin}/wall/${roomCode}`,
-      admin: `${origin}/admin/${roomCode}`,
+      admin: adminSecret ? `${adminUrl}?key=${encodeURIComponent(adminSecret)}` : adminUrl,
     };
   });
 }
@@ -40,7 +41,8 @@ function printRoomUrls(): void {
   const port = Number(process.argv[2] ?? "3000");
   const roomCode = process.argv[3] ?? "demo87";
   const configuredHost = process.argv[4]?.trim();
-  const urls = buildRoomUrls(configuredHost ? [configuredHost] : roomIpv4Addresses(), port, roomCode);
+  const adminSecret = process.env.DEMO_ADMIN_SECRET?.trim() || undefined;
+  const urls = buildRoomUrls(configuredHost ? [configuredHost] : roomIpv4Addresses(), port, roomCode, adminSecret);
   if (urls.length === 0) {
     console.error("No private room network was found. Connect the Mac and phones to the same Wi-Fi or hotspot, then retry.");
     process.exitCode = 1;

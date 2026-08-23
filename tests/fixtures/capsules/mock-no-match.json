@@ -1,0 +1,26 @@
+{
+  "id": "f333f73f-069e-4fff-a9f4-927990608351",
+  "observed": [
+    "text-only synthetic memory"
+  ],
+  "place": "Antarctica",
+  "era": "2010s",
+  "skills": [
+    "cloud cataloguing"
+  ],
+  "interests": [
+    "polar weather archives"
+  ],
+  "offers": [
+    "share cloud classifications"
+  ],
+  "wants": [
+    "compare Antarctic field notes"
+  ],
+  "safeSummary": "A fictional memory about cataloguing polar clouds in Antarctica in the 2010s.",
+  "containsPII": false,
+  "redactions": [],
+  "uncertain": [
+    "No prepared story contains compatible evidence."
+  ]
+}

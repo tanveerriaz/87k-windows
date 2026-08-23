@@ -37,6 +37,21 @@ describe("GemmaApiProvider", () => {
     expect(generateContent).toHaveBeenCalledOnce();
   });
 
+  it("keeps the model's own PII verdict even when the regex scan finds nothing", async () => {
+    const modelFlaggedCapsule = JSON.stringify({
+      ...JSON.parse(validCapsule),
+      containsPII: true,
+      redactions: ["inferred identity clue"],
+    });
+    const generateContent = vi.fn().mockResolvedValue({ text: modelFlaggedCapsule });
+    const provider = new GemmaApiProvider("test-key", "gemma-4-26b-a4b-it", clientWith(generateContent));
+    const capsule = await provider.extract({
+      memory: "I repaired radios in Queenstown in the 1970s and met a fellow enthusiast at a community fair.",
+    });
+    expect(capsule.containsPII).toBe(true);
+    expect(capsule.redactions).toContain("inferred identity clue");
+  });
+
   it("keeps only explicit offers and wants from the person's own words", async () => {
     const generateContent = vi.fn().mockResolvedValue({ text: validCapsule });
     const provider = new GemmaApiProvider("test-key", "gemma-4-26b-a4b-it", clientWith(generateContent));

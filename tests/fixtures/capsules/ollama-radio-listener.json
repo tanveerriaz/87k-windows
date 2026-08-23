@@ -1,0 +1,26 @@
+{
+  "id": "17e69236-f0f2-4abc-a1b2-a185a6b45859",
+  "observed": [
+    "I can listen in English."
+  ],
+  "place": "Queenstown",
+  "era": "the 1970s",
+  "skills": [
+    "listening"
+  ],
+  "interests": [
+    "radio repair"
+  ],
+  "offers": [
+    "I can offer one short conversation this week."
+  ],
+  "wants": [
+    "I want to learn radio repair and hear what Queenstown was like in the 1970s."
+  ],
+  "safeSummary": "A memory of offering a short conversation and expressing interest in radio repair and Queenstown in the 1970s.",
+  "containsPII": false,
+  "redactions": [],
+  "uncertain": [
+    "null"
+  ]
+}

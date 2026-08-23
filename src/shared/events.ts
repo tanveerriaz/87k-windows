@@ -6,7 +6,6 @@ import type {
   Provider,
   RoomSnapshot,
   SeniorBridge,
-  StoryCapsule,
 } from "./schemas";
 
 export type ClientRole = "join" | "wall" | "admin";
@@ -14,6 +13,7 @@ export type ClientRole = "join" | "wall" | "admin";
 export type RoomJoinPayload = {
   roomCode: string;
   role: ClientRole;
+  adminSecret?: string;
 };
 
 export type EventAck = {
@@ -21,10 +21,11 @@ export type EventAck = {
   message?: string;
 };
 
+export type RoomJoinAck = { ok: true; snapshot: RoomSnapshot } | { ok: false; message: string };
+
 export interface ServerToClientEvents {
   "room:snapshot": (snapshot: RoomSnapshot) => void;
   "story:submitted": (payload: { participantId: string }) => void;
-  "capsule:ready": (payload: { participantId: string; capsule: StoryCapsule }) => void;
   "capsule:approved": (payload: { participantId: string }) => void;
   "window:lit": (window: LitWindow) => void;
   "match:started": (payload: { participantId: string }) => void;
@@ -46,15 +47,15 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-  "room:join": (payload: RoomJoinPayload, ack: (snapshot: RoomSnapshot) => void) => void;
+  "room:join": (payload: RoomJoinPayload, ack: (result: RoomJoinAck) => void) => void;
   "story:submitted": (payload: { roomCode: string; participantId: string }, ack?: (result: EventAck) => void) => void;
   "capsule:approved": (
-    payload: { roomCode: string; participantId: string; capsule: StoryCapsule },
-    ack?: (result: EventAck) => void,
+    payload: { roomCode: string; participantId: string; capsuleId: string },
+    ack: (result: EventAck) => void,
   ) => void;
   "consent:decided": (
     payload: { roomCode: string; participantId: string; decision: Exclude<ConsentDecision, "pending"> },
-    ack?: (result: EventAck) => void,
+    ack: (result: EventAck) => void,
   ) => void;
   "demo:reset": (payload: { roomCode: string }, ack?: (result: EventAck) => void) => void;
   "demo:inject": (payload: { roomCode: string }, ack?: (result: EventAck) => void) => void;
@@ -69,4 +70,6 @@ export type InterServerEvents = Record<never, never>;
 export interface SocketData {
   roomCode?: string;
   role?: ClientRole;
+  isAdmin?: boolean;
+  participantIds?: Set<string>;
 }

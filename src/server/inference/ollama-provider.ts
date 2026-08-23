@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { StoryCapsuleSchema, type StoryCapsule } from "../../shared/schemas";
+import { redactMemory, unionRedactionVerdicts } from "../privacy/redact";
+import { buildCapsulePrompt } from "./capsule-prompt";
 import { keepExplicitConsent } from "./consent-evidence";
-import { redactMemory } from "./mock-provider";
 import { ProviderBusyError, ProviderOutputError, ProviderTimeoutError, type ExtractInput, type InferenceProvider } from "./provider";
 
 type FetchLike = typeof fetch;
@@ -21,18 +22,6 @@ export class OllamaProvider implements InferenceProvider {
     private readonly fetcher: FetchLike = fetch,
     private readonly timeoutMs = 35_000,
   ) {}
-
-  private prompt(memory: string, repairOutput?: string): string {
-    const repair = repairOutput
-      ? `\nYour previous answer was invalid. Repair it and return JSON only. Previous answer:\n${repairOutput.slice(0, 1200)}\n`
-      : "";
-    return `You create a privacy-safe story capsule from one fictional demo memory.
-Use only explicit evidence. Do not guess a name, age, ethnicity, health, address, relationship or contact detail.
-Return one JSON object with exactly these keys:
-observed (string array), place (string or null), era (string or null), skills (string array), interests (string array), offers (string array), wants (string array), safeSummary (one short string), containsPII (boolean), redactions (string array), uncertain (string array).
-The input has already had obvious identifiers replaced with [redacted]. Keep those identifiers out of the summary.
-Memory: ${JSON.stringify(memory)}${repair}`;
-  }
 
   private async generate(prompt: string): Promise<string> {
     let response: Response;
@@ -61,18 +50,15 @@ Memory: ${JSON.stringify(memory)}${repair}`;
   }
 
   private parse(output: string, input: ExtractInput): StoryCapsule {
-    const parsed: unknown = JSON.parse(output.replace(JSON_FENCE, "").trim());
+    const parsed = JSON.parse(output.replace(JSON_FENCE, "").trim()) as Record<string, unknown>;
     const sourceRedaction = redactMemory(input.memory);
+    const merged = unionRedactionVerdicts(sourceRedaction, parsed.containsPII, parsed.redactions);
     const candidate = StoryCapsuleSchema.parse({
-      ...(parsed as Record<string, unknown>),
+      ...parsed,
       id: randomUUID(),
-      containsPII: sourceRedaction.containsPII,
-      redactions: sourceRedaction.redactions,
-      ...keepExplicitConsent(
-        input.memory,
-        (parsed as Record<string, unknown>).offers,
-        (parsed as Record<string, unknown>).wants,
-      ),
+      containsPII: merged.containsPII,
+      redactions: merged.redactions,
+      ...keepExplicitConsent(input.memory, parsed.offers, parsed.wants),
     });
     const summaryRedaction = redactMemory(candidate.safeSummary);
     return StoryCapsuleSchema.parse({
@@ -88,11 +74,13 @@ Memory: ${JSON.stringify(memory)}${repair}`;
     this.busy = true;
     try {
       const safeInput = redactMemory(input.memory).safeText;
-      const firstOutput = await this.generate(this.prompt(safeInput));
+      const firstOutput = await this.generate(buildCapsulePrompt({ memory: safeInput, dialect: "ollama" }));
       try {
         return this.parse(firstOutput, input);
       } catch {
-        const repairedOutput = await this.generate(this.prompt(safeInput, firstOutput));
+        const repairedOutput = await this.generate(
+          buildCapsulePrompt({ memory: safeInput, repairOutput: firstOutput, dialect: "ollama" }),
+        );
         try {
           return this.parse(repairedOutput, input);
         } catch {

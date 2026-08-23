@@ -33,4 +33,14 @@ describe("room URL discovery", () => {
       },
     ]);
   });
+
+  it("appends the admin secret as a key query param when provided", () => {
+    expect(buildRoomUrls(["10.0.0.7"], 3000, "demo87", "s3cret")).toEqual([
+      {
+        phone: "http://10.0.0.7:3000/join/demo87",
+        wall: "http://10.0.0.7:3000/wall/demo87",
+        admin: "http://10.0.0.7:3000/admin/demo87?key=s3cret",
+      },
+    ]);
+  });
 });
