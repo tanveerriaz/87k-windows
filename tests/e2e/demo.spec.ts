@@ -28,6 +28,18 @@ test("landing page presents the two human roles at mobile size", async ({ page }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test("landing fits the judging viewport without scroll", async ({ browser }) => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  await page.goto("/");
+  const listen = page.getByRole("link", { name: /I would like to listen/i });
+  await expect(listen).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+  expect(overflow).toBeLessThanOrEqual(0);
+  await expect(listen).toBeInViewport({ ratio: 1 });
+  await expect(page.getByText("No contact details are shared.")).toBeInViewport();
+  await page.close();
+});
+
 test("storyteller, listener and wall reach mutual yes only after two independent choices", async ({ browser }) => {
   const roomCode = `three-${Date.now()}`;
   const storytellerContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
