@@ -10,6 +10,7 @@ import { compressImage } from "../lib/image";
 import { isLang, LANG_LABELS, SPEECH_LOCALE, t, type Lang, type UiStringKey } from "../lib/i18n";
 import { resolveJoinDisplacement, type JoinStage } from "../lib/join-stage";
 import { useRoomSocket } from "../lib/use-room-socket";
+import { pickVoice } from "../lib/voice-picker";
 
 const JOURNEY_STEP_KEYS: UiStringKey[] = ["journeyYouShared", "journeyGemmaProtected", "journeyYouApproved", "journeyStoryMatched"];
 const LANG_OPTIONS = Object.keys(LANG_LABELS) as Lang[];
@@ -55,14 +56,15 @@ function localizedErrorMessage(lang: Lang, error: unknown, fallbackKey: UiString
   return t(lang, fallbackKey);
 }
 
-function speakText(text: string, onEnd?: () => void): void {
+function speakText(text: string, locale: string, voice: SpeechSynthesisVoice | null, onEnd?: () => void): void {
   if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
     onEnd?.();
     return;
   }
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-SG";
+  utterance.lang = locale;
+  if (voice) utterance.voice = voice;
   utterance.rate = 0.82;
   utterance.pitch = 1;
   utterance.onend = () => onEnd?.();
@@ -93,6 +95,7 @@ export function JoinPage() {
     const requested = searchParams.get("lang");
     return requested && isLang(requested) ? requested : "en";
   });
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [listenerTime, setListenerTime] = useState<ListenerTimeId>("short");
   const [listenerReason, setListenerReason] = useState("I want to learn radio repair and hear what Queenstown was like in the 1970s.");
   const room = useRoomSocket(roomCode, "join");
@@ -111,6 +114,8 @@ export function JoinPage() {
     : consent?.candidateParticipantId === participantId
       ? consent.candidateDecision
       : null;
+  const ttsVoice = useMemo(() => pickVoice(availableVoices, SPEECH_LOCALE[lang]), [availableVoices, lang]);
+  const canReadAloudNow = ttsVoice !== null;
 
   useEffect(() => {
     document.documentElement.lang = SPEECH_LOCALE[lang];
@@ -118,6 +123,14 @@ export function JoinPage() {
       document.documentElement.lang = SPEECH_LOCALE.en;
     };
   }, [lang]);
+
+  useEffect(() => {
+    if (!("speechSynthesis" in window)) return;
+    const loadVoices = () => setAvailableVoices(window.speechSynthesis.getVoices());
+    loadVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+  }, []);
 
   useEffect(() => {
     if (lastRoleEntryRef.current === listenerEntry) return;
@@ -232,15 +245,30 @@ export function JoinPage() {
       return;
     }
     const recognition = new SpeechRecognition();
-    recognition.lang = "en-SG";
+    recognition.lang = SPEECH_LOCALE[lang];
     recognition.interimResults = false;
     recognition.continuous = false;
+    let gotResult = false;
+    let hadError = false;
     recognition.onresult = (event) => {
       const transcript = Array.from({ length: event.results.length }, (_, index) => event.results[index][0]?.transcript ?? "").join(" ").trim();
-      if (transcript) setMemory(transcript);
+      if (transcript) {
+        gotResult = true;
+        setMemory(transcript);
+      }
     };
-    recognition.onerror = () => setError(t(lang, "errorVoiceNotClear"));
-    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => {
+      hadError = true;
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+      if (gotResult) return;
+      if (lang !== "en") {
+        setError(t(lang, "errorVoiceLanguageUnavailable"));
+      } else if (hadError) {
+        setError(t(lang, "errorVoiceNotClear"));
+      }
+    };
     setError(null);
     setIsListening(true);
     recognition.start();
@@ -314,7 +342,7 @@ export function JoinPage() {
     }
     setError(null);
     setIsSpeaking(true);
-    speakText([guide.introduction, ...guide.questions, guide.consentReminder].join(" "), () => setIsSpeaking(false));
+    speakText([guide.introduction, ...guide.questions, guide.consentReminder].join(" "), SPEECH_LOCALE[lang], ttsVoice, () => setIsSpeaking(false));
   };
 
   const readReviewAloud = () => {
@@ -337,7 +365,7 @@ export function JoinPage() {
     const fullText = [capsule.safeSummary, ...fieldLines, uncertainLine].filter(Boolean).join(" ");
     setError(null);
     setIsSpeaking(true);
-    speakText(fullText, () => setIsSpeaking(false));
+    speakText(fullText, SPEECH_LOCALE[lang], ttsVoice, () => setIsSpeaking(false));
   };
 
   const stopSpeaking = () => {
@@ -563,7 +591,7 @@ export function JoinPage() {
               <summary>{t(lang, "uncertainSummary")}</summary>
               <ul>{capsule.uncertain.map((item) => <li key={item}>{item}</li>)}</ul>
             </details>
-            <button className="button button-secondary button-block" type="button" aria-pressed={isSpeaking} onClick={readReviewAloud}>{isSpeaking ? t(lang, "stopReadingButton") : t(lang, "readToMeButton")}</button>
+            {canReadAloudNow && <button className="button button-secondary button-block" type="button" aria-pressed={isSpeaking} onClick={readReviewAloud}>{isSpeaking ? t(lang, "stopReadingButton") : t(lang, "readToMeButton")}</button>}
             {error && <div className="error-banner" role="alert">{error}</div>}
             <button className="button button-primary button-block" disabled={pendingAction === "approve"} onClick={() => void approve()}>{pendingAction === "approve" ? t(lang, "approvePending") : t(lang, "approveButton")}</button>
             <button className="button button-secondary button-block" onClick={() => setStage("capture")}>{t(lang, "goBackButton")}</button>
@@ -606,10 +634,12 @@ export function JoinPage() {
                   {room.snapshot.guide.questions.map((question) => <li key={question}>{question}</li>)}
                 </ol>
                 <p className="consent-reminder">{room.snapshot.guide.consentReminder}</p>
-                <div className="read-aloud-actions">
-                  <button className="button button-primary" type="button" aria-pressed={isSpeaking} onClick={speakGuide}>{t(lang, "readAloudButton")}</button>
-                  {isSpeaking && <button className="button button-secondary" type="button" onClick={stopSpeaking}>{t(lang, "stopReadingButton")}</button>}
-                </div>
+                {canReadAloudNow && (
+                  <div className="read-aloud-actions">
+                    <button className="button button-primary" type="button" aria-pressed={isSpeaking} onClick={speakGuide}>{t(lang, "readAloudButton")}</button>
+                    {isSpeaking && <button className="button button-secondary" type="button" onClick={stopSpeaking}>{t(lang, "stopReadingButton")}</button>}
+                  </div>
+                )}
                 <small>{t(lang, "guideDisclaimer")}</small>
               </article>
             ) : room.snapshot.guideError ? (

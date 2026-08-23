@@ -177,6 +177,7 @@ const ENGLISH_KEYS: Record<UiStringKey, true> = {
   errorChoiceNotRecorded: true,
   errorVoiceUnavailable: true,
   errorVoiceNotClear: true,
+  errorVoiceLanguageUnavailable: true,
   errorReadAloudUnavailableGuide: true,
   errorReadAloudUnavailableCapsule: true,
   errorRoomUnreachable: true,
