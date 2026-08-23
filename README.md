@@ -6,9 +6,9 @@
 
 87K Windows helps older people turn joyful lived experience into a consented offer—something another person can hear, learn from or share—so memory becomes social connection.
 
-[**Open the Cloud Run app**](https://windows-87k-5etw2y36yq-as.a.run.app/) · [Submission video](output/video/87k-windows-submission-final.mp4) · [Landing story film](public/landing-story.mp4) · [Join Mode](https://windows-87k-5etw2y36yq-as.a.run.app/join/demo87) · [Wall Mode](https://windows-87k-5etw2y36yq-as.a.run.app/wall/demo87) · [Architecture](docs/ARCHITECTURE.md) · [Demo story](docs/DEMO_SCRIPT.md)
+[**Open the live app**](https://windows-87k-5etw2y36yq-as.a.run.app/) · [Submission video](output/video/87k-windows-submission-final.mp4) · [Landing story film](public/landing-story.mp4) · [Join](https://windows-87k-5etw2y36yq-as.a.run.app/join/demo87) · [Wall](https://windows-87k-5etw2y36yq-as.a.run.app/wall/demo87) · [Admin](https://windows-87k-5etw2y36yq-as.a.run.app/admin/demo87) · [Architecture](docs/ARCHITECTURE.md) · [Demo story](docs/DEMO_SCRIPT.md)
 
-The landing page opens with a 90-second parallel story film — an elder with a story and a newcomer who needs it, in the same block — that explains why the product is named for Singapore's ~87,000 seniors living alone (script and sources: [docs/video/landing-story-script.md](docs/video/landing-story-script.md)).
+The landing page opens with an ~83-second parallel story film — an elder with a story and a newcomer who needs it, in the same block — that explains why the product is named for Singapore's ~87,000 seniors living alone. Real HDB window lights loop in the façade band above the film. Script and sources: [docs/video/landing-story-script.md](docs/video/landing-story-script.md).
 
 [![Quality gates](https://github.com/tanveerriaz/87k-windows/actions/workflows/ci.yml/badge.svg)](https://github.com/tanveerriaz/87k-windows/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-0b1118?logo=typescript&logoColor=white)
@@ -21,7 +21,7 @@ The landing page opens with a 90-second parallel story film — an elder with a 
 
 ![Current 87K Windows landing page with the photographic Singapore housing block and warm amber entrance](assets/video/captures/01-landing-photographic-1920x1080.png)
 
-<p align="center"><sub>The current photographic night experience. The building is fictional generated artwork; live Canvas light shows when approved evidence connects two lives.</sub></p>
+<p align="center"><sub>Live Cloud Run surface: sitewide <strong>87K WINDOWS 🇸🇬</strong> home link, real-window façade lights, parallel landing film, then storyteller / listener choice. The building is fictional generated artwork; live Canvas light on Wall Mode shows when approved evidence connects two lives.</sub></p>
 
 ## Why this exists
 
@@ -98,7 +98,7 @@ The local prototype uses HTTP between each phone and the Mac, so it must not run
 
 To match the MacBook Air and `gemma3:4b` demo hardware, local inference deliberately handles one story at a time. Additional submissions receive a clear busy response and can retry after the current capsule is ready; there is no parallel model queue.
 
-The public Cloud Run recovery path uses OpenRouter-hosted Gemma 3 for extraction and Gemini 3.6 Flash for the same post-match guide. Every active model is labelled; neither silently falls back to simulated inference.
+The public Cloud Run app (`windows-87k` in `asia-southeast1`) currently runs the OpenRouter recovery path: hosted `google/gemma-3-27b-it` for extraction and `google/gemini-3.6-flash` for the same post-match guide. Every active model is labelled on Join / Wall / Admin; neither silently falls back to simulated inference.
 
 ## Architecture
 
@@ -145,10 +145,11 @@ unset GEMINI_API_KEY
 
 `npm run demo:local` is the offline Gemma-only recovery path. `npm run demo:gemma` is the hosted Gemma + Gemini online path.
 
-Open the three surfaces:
+Open the surfaces:
 
 | Surface | Local route | Purpose |
 | --- | --- | --- |
+| Landing | `http://<MAC-LAN-IP>:3000/` | Story film, façade lights, storyteller / listener choice |
 | Join | `http://<MAC-LAN-IP>:3000/join/demo87` | Share, review and approve |
 | Wall | `http://<MAC-LAN-IP>:3000/wall/demo87` | Project the collective moment |
 | Admin | `http://<MAC-LAN-IP>:3000/admin/demo87` | Reset and run the prepared story |
@@ -164,12 +165,11 @@ unset GEMINI_API_KEY
 
 ## Real-model reliability
 
-| Mode | Model | Role |
-| --- | --- | --- |
 | Mode | Extraction | Senior facilitation | Role |
 | --- | --- | --- | --- |
 | `demo:judge` | local `gemma3:4b` | `gemini-3.6-flash` | Primary Track 2 judging path |
-| `demo:gemma` / Cloud Run | hosted Gemma 4 | `gemini-3.6-flash` | Public online-review path |
+| Cloud Run (live) | OpenRouter `google/gemma-3-27b-it` | OpenRouter `google/gemini-3.6-flash` | Public online-review path |
+| `demo:gemma` | hosted Gemma via Gemini API | `gemini-3.6-flash` | Alternate hosted local launch |
 | `demo:local` | local `gemma3:4b` | disabled | Offline recovery; not the complete Track 2 story |
 | Test harness | deterministic fixtures | deterministic guide | Automated checks only |
 
@@ -189,13 +189,14 @@ If neither real model is available, the judged demo stops honestly. It never sil
 ## Repository map
 
 ```text
-src/client/       Join, Wall and Admin surfaces
+src/client/       Landing, Join, Wall and Admin surfaces
 src/server/       inference, matching and ephemeral rooms
 src/shared/       schemas, events and prepared demo copy
+public/           landing story film, façade clip and web statics
 data/             fictional synthetic story fixtures
 assets/           generated artwork, prompts and provenance
 tests/            unit, integration and two-tab browser flow
-docs/             architecture, deployment and submission guides
+docs/             architecture, deployment, video script and submission guides
 ```
 
 ## Verify the complete slice
@@ -216,8 +217,17 @@ The critical browser test uses two contexts: participant submission must update 
 - [Hackathon submission](docs/SUBMISSION.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [90-second demo script](docs/DEMO_SCRIPT.md)
+- [Landing story film script](docs/video/landing-story-script.md)
 - [Google Cloud Run deployment](docs/GCP_DEPLOYMENT.md)
 - [Generated asset provenance](docs/ASSET_PROVENANCE.md)
+
+## Creator
+
+Built by [Tanveer Riaz](https://tanveerriaz.me/) during a hackathon — AI specialist and systems builder in Singapore.
+
+**Curious mind. Builder mode! 🇸🇬**
+
+[tanveerriaz.me](https://tanveerriaz.me/) · [GitHub · 87k-windows](https://github.com/tanveerriaz/87k-windows)
 
 ## Licence
 
