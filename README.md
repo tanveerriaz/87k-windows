@@ -19,9 +19,9 @@ The landing page opens with a 90-second parallel story film — an elder with a 
 
 </div>
 
-![Current 87K Windows landing page with the photographic Singapore housing block and warm amber entrance](assets/video/captures/01-landing-photographic-1920x1080.png)
+![An earlier design iteration of the 87K Windows landing page, with the photographic Singapore housing block and warm amber entrance](assets/video/captures/01-landing-photographic-1920x1080.png)
 
-<p align="center"><sub>The current photographic night experience. The building is fictional generated artwork; live Canvas light shows when approved evidence connects two lives.</sub></p>
+<p align="center"><sub>An earlier design iteration's photographic night hero, captured before the landing film rebuild. The building is fictional generated artwork; live Canvas light shows when approved evidence connects two lives.</sub></p>
 
 ## Why this exists
 
@@ -39,7 +39,7 @@ The story direction is informed by Singapore seniors who continue contributing t
 | --- | --- | --- | --- | --- |
 | One short memory, spoken or typed | A local safe capsule with uncertainty | Nothing enters matching without consent | Transparent code returns a match or `NO MATCH YET` | Two gentle questions can be read aloud slowly |
 
-![Current Join Mode with photographic memory objects, carbon surfaces and warm amber controls](assets/video/captures/02-join-memory-objects-1920x1080.png)
+![An earlier design iteration of Join Mode, with photographic memory objects, carbon surfaces and warm amber controls](assets/video/captures/02-join-memory-objects-1920x1080.png)
 
 The prepared demo is intentionally simple:
 
@@ -48,11 +48,11 @@ The prepared demo is intentionally simple:
 - **Evidence:** `Queenstown` · `1970s` · `radio repair` · `teach ↔ learn`.
 - **Human outcome:** **A potential listener match was found.** The shipped listener is a clearly labelled fictional fixture, not a simulated acceptance from a real person.
 
-![Current matched Wall Mode: two amber windows connected by a fine blue evidence thread](assets/video/captures/04-wall-matched-two-lights-1920x1080.png)
+![An earlier design iteration of matched Wall Mode: two amber windows connected by a fine blue evidence thread](assets/video/captures/04-wall-matched-two-lights-1920x1080.png)
 
 <p align="center"><sub>Two lights and the blue thread appear only after the Queenstown radio evidence clears the deterministic threshold.</sub></p>
 
-![Current honest no-match state: one amber window and no connecting thread](assets/video/captures/05-wall-no-match-one-light-1920x1080.png)
+![An earlier design iteration of the honest no-match state: one amber window and no connecting thread](assets/video/captures/05-wall-no-match-one-light-1920x1080.png)
 
 <p align="center"><sub>Weak evidence keeps one light and returns <code>NO MATCH YET</code>. No connection is fabricated.</sub></p>
 
@@ -60,7 +60,7 @@ The prepared demo is intentionally simple:
 <summary><strong>See the consent-first review step</strong></summary>
 <br />
 
-![Current consent review screen showing exactly what may enter matching](assets/video/captures/03-join-consent-review-1920x1080.png)
+![An earlier design iteration of the consent review screen showing exactly what may enter matching](assets/video/captures/03-join-consent-review-1920x1080.png)
 
 <sub>The participant remains the author: extracted evidence is reviewed before it can light a window or enter matching.</sub>
 </details>
