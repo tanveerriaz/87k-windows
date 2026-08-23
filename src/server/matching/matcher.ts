@@ -24,6 +24,17 @@ function normalize(value: string | null): string {
   return value?.trim().toLowerCase() ?? "";
 }
 
+export function canonicalEra(value: string | null): string | null {
+  const trimmed = normalize(value);
+  if (!trimmed) return null;
+  const match = trimmed.match(/(\d{4})/);
+  if (match) {
+    const decade = Math.floor(Number(match[1]) / 10) * 10;
+    return `${decade}s`;
+  }
+  return trimmed;
+}
+
 function storySearchText(story: StoryCapsule): string {
   return [
     story.place,
@@ -79,6 +90,9 @@ export class StoryMatcher {
     if (normalize(capsule.place) && normalize(capsule.place) === normalize(candidate.place)) {
       score += 0.35;
       evidencePath.push(capsule.place as string);
+    } else if (capsule.place && candidate.place && intersects([capsule.place], [candidate.place])) {
+      score += 0.2;
+      evidencePath.push(capsule.place);
     }
 
     if (
@@ -91,7 +105,7 @@ export class StoryMatcher {
       evidencePath.push(capsule.skills[0] ?? capsule.interests[0] ?? "shared interest");
     }
 
-    if (normalize(capsule.era) && normalize(capsule.era) === normalize(candidate.era)) {
+    if (canonicalEra(capsule.era) && canonicalEra(capsule.era) === canonicalEra(candidate.era)) {
       score += 0.2;
       evidencePath.splice(Math.min(1, evidencePath.length), 0, capsule.era as string);
     }
