@@ -65,7 +65,7 @@ export function registerSocketHandlers(io: TypedServer, rooms: RoomStore, option
       withValidation<typeof CapsuleApprovedPayloadSchema._output, EventAck>(CapsuleApprovedPayloadSchema, (payload, ack) => {
         (socket.data.participantIds ??= new Set()).add(payload.participantId);
         ack?.({ ok: true });
-        void rooms.approve(io, payload.roomCode, payload.participantId, payload.capsule).catch(() => {
+        void rooms.approve(io, payload.roomCode, payload.participantId, payload.capsuleId).catch(() => {
           const message = "The room could not finish matching. Try the prepared story again.";
           rooms.setLastError(payload.roomCode, message);
           io.to(payload.roomCode).emit("room:error", { message });

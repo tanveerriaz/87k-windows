@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Server } from "socket.io";
 import { PREPARED_RADIO_MEMORY } from "../shared/demo";
 import { RoomSnapshotSchema, type ConsentDecision, type LitWindow, type Provider, type RoomSnapshot, type StoryCapsule } from "../shared/schemas";
@@ -24,6 +25,7 @@ function providerName(provider: Provider): string {
 export class RoomStore {
   private readonly rooms = new Map<string, RoomRecord>();
   private readonly capsules = new Map<string, Map<string, StoryCapsule>>();
+  private readonly mintedCapsules = new Map<string, { capsule: StoryCapsule; expiresAt: number }>();
 
   constructor(
     private readonly ttlMinutes: number,
@@ -100,8 +102,30 @@ export class RoomStore {
     };
   }
 
-  async approve(io: TypedServer, roomCode: string, participantId: string, capsule: StoryCapsule): Promise<void> {
+  registerCapsule(capsule: StoryCapsule): string {
+    this.deleteExpiredCapsules();
+    const id = randomUUID();
+    this.mintedCapsules.set(id, { capsule, expiresAt: Date.now() + this.ttlMinutes * 60_000 });
+    return id;
+  }
+
+  takeCapsule(capsuleId: string): StoryCapsule | undefined {
+    const entry = this.mintedCapsules.get(capsuleId);
+    this.mintedCapsules.delete(capsuleId);
+    if (!entry || entry.expiresAt <= Date.now()) return undefined;
+    return entry.capsule;
+  }
+
+  async approve(io: TypedServer, roomCode: string, participantId: string, capsuleId: string): Promise<void> {
+    const capsule = this.takeCapsule(capsuleId);
     const room = this.mutable(roomCode);
+    if (!capsule) {
+      room.lastError = "That story could not be verified. Please share it again.";
+      room.updatedAt = new Date().toISOString();
+      io.to(roomCode).emit("room:error", { message: room.lastError });
+      io.to(roomCode).emit("room:snapshot", RoomSnapshotSchema.parse(room));
+      return;
+    }
     const roomCapsules = this.capsules.get(roomCode) ?? new Map<string, StoryCapsule>();
     if (!roomCapsules.has(participantId) && roomCapsules.size >= 2) {
       room.lastError = "This room already has two participants. Start a new room for another conversation.";
@@ -132,7 +156,6 @@ export class RoomStore {
     room.lastError = null;
     room.updatedAt = new Date().toISOString();
 
-    io.to(roomCode).emit("capsule:ready", { participantId, capsule });
     io.to(roomCode).emit("capsule:approved", { participantId });
     io.to(roomCode).emit("window:lit", sourceWindow);
     io.to(roomCode).emit("match:started", { participantId });
@@ -220,7 +243,8 @@ export class RoomStore {
       memory: PREPARED_RADIO_MEMORY,
       fixture: "radio",
     });
-    await this.approve(io, roomCode, "presenter-demo", capsule);
+    const capsuleId = this.registerCapsule(capsule);
+    await this.approve(io, roomCode, "presenter-demo", capsuleId);
   }
 
   private deleteExpired(): void {
@@ -230,6 +254,13 @@ export class RoomStore {
         this.rooms.delete(roomCode);
         this.capsules.delete(roomCode);
       }
+    }
+  }
+
+  private deleteExpiredCapsules(): void {
+    const now = Date.now();
+    for (const [id, entry] of this.mintedCapsules) {
+      if (entry.expiresAt <= now) this.mintedCapsules.delete(id);
     }
   }
 }

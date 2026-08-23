@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import type { ClientRole, ClientToServerEvents, ServerToClientEvents } from "../../shared/events";
-import type { ConsentDecision, RoomSnapshot, StoryCapsule } from "../../shared/schemas";
+import type { ConsentDecision, RoomSnapshot } from "../../shared/schemas";
 
 type RoomSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -49,9 +49,9 @@ export function useRoomSocket(roomCode: string, role: ClientRole, adminSecret?: 
   );
 
   const approve = useCallback(
-    (participantId: string, capsule: StoryCapsule) =>
+    (participantId: string, capsuleId: string) =>
       new Promise<void>((resolve, reject) => {
-        socket.emit("capsule:approved", { roomCode, participantId, capsule }, (result) => {
+        socket.emit("capsule:approved", { roomCode, participantId, capsuleId }, (result) => {
           if (result.ok) resolve();
           else reject(new Error(result.message ?? "The safe capsule could not be approved."));
         });

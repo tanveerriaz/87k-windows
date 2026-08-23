@@ -17,7 +17,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function extractCapsule(input: ExtractInput): Promise<StoryCapsule> {
+export async function extractCapsule(input: ExtractInput): Promise<{ capsule: StoryCapsule; capsuleId: string }> {
   const response = await fetch("/api/extract", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -28,5 +28,6 @@ export async function extractCapsule(input: ExtractInput): Promise<StoryCapsule>
     const errorBody = body as { code?: string; message?: string };
     throw new ApiError(errorBody.message ?? "The safe capsule could not be created.", errorBody.code ?? "REQUEST_FAILED");
   }
-  return StoryCapsuleSchema.parse((body as { capsule: unknown }).capsule);
+  const { capsule, capsuleId } = body as { capsule: unknown; capsuleId: string };
+  return { capsule: StoryCapsuleSchema.parse(capsule), capsuleId };
 }

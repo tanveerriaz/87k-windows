@@ -20,14 +20,19 @@ import { GemmaApiProvider } from "./inference/gemma-api-provider";
 import { ProviderBusyError, ProviderOutputError, ProviderTimeoutError, type InferenceProvider } from "./inference/provider";
 import { StoryMatcher } from "./matching/matcher";
 import { OpenRouterGenAiClient } from "./openrouter-client";
+import type { RoomStore } from "./rooms";
 
 export type AppDependencies = {
   env: AppEnv;
   provider: InferenceProvider;
   matcher: StoryMatcher;
+  rooms: RoomStore;
 };
 
-export type RuntimeDependencies = AppDependencies & {
+export type RuntimeDependencies = {
+  env: AppEnv;
+  provider: InferenceProvider;
+  matcher: StoryMatcher;
   facilitator: ConnectionFacilitator;
 };
 
@@ -48,7 +53,7 @@ function errorPayload(error: unknown): { status: number; code: string; message: 
 }
 
 export function createApp(dependencies: AppDependencies): express.Express {
-  const { env, provider, matcher } = dependencies;
+  const { env, provider, matcher, rooms } = dependencies;
   const app = express();
 
   app.disable("x-powered-by");
@@ -112,7 +117,8 @@ export function createApp(dependencies: AppDependencies): express.Express {
         }
       }
       const capsule = StoryCapsuleSchema.parse(await provider.extract({ memory: input.memory, fixture: input.fixture }));
-      return response.json({ capsule, provider: env.INFERENCE_PROVIDER });
+      const capsuleId = rooms.registerCapsule(capsule);
+      return response.json({ capsule, capsuleId, provider: env.INFERENCE_PROVIDER });
     } catch (error) {
       const payload = errorPayload(error);
       return response.status(payload.status).json({ code: payload.code, message: payload.message });

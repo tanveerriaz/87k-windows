@@ -9,6 +9,7 @@ import { MockProvider } from "../../src/server/inference/mock-provider";
 import { ProviderBusyError } from "../../src/server/inference/provider";
 import type { InferenceProvider } from "../../src/server/inference/provider";
 import { StoryMatcher } from "../../src/server/matching/matcher";
+import { RoomStore } from "../../src/server/rooms";
 import { PREPARED_RADIO_MEMORY } from "../../src/shared/demo";
 
 describe("Express API", () => {
@@ -18,7 +19,9 @@ describe("Express API", () => {
   beforeEach(async () => {
     vi.spyOn(console, "info").mockImplementation(() => undefined);
     const env = readEnv({ NODE_ENV: "test", PORT: "3000", MATCH_THRESHOLD: "0.62" });
-    const app = createApp({ env, provider: new MockProvider(0), matcher: new StoryMatcher() });
+    const matcher = new StoryMatcher();
+    const provider = new MockProvider(0);
+    const app = createApp({ env, provider, matcher, rooms: new RoomStore(120, matcher, provider) });
     server = createServer(app);
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     const address = server.address();
@@ -58,10 +61,13 @@ describe("Express API", () => {
       GEMINI_FACILITATOR: "gemini",
       OPENROUTER_API_KEY: "test-openrouter-key",
     });
+    const routedMatcher = new StoryMatcher();
+    const routedProvider = new MockProvider(0);
     const routedServer = createServer(createApp({
       env: routedEnv,
-      provider: new MockProvider(0),
-      matcher: new StoryMatcher(),
+      provider: routedProvider,
+      matcher: routedMatcher,
+      rooms: new RoomStore(120, routedMatcher, routedProvider),
     }));
     try {
       await new Promise<void>((resolve) => routedServer.listen(0, "127.0.0.1", resolve));
@@ -89,9 +95,10 @@ describe("Express API", () => {
     await mkdir(clientDirectory, { recursive: true });
     await writeFile(join(clientDirectory, "index.html"), "<!doctype html><div id=\"root\"></div>");
     const matcher = new StoryMatcher();
+    const hiddenProvider = new MockProvider(0);
     const cwd = vi.spyOn(process, "cwd").mockReturnValue(hiddenRoot);
     const hiddenEnv = readEnv({ NODE_ENV: "test", PORT: "3000" });
-    const hiddenApp = createApp({ env: hiddenEnv, provider: new MockProvider(0), matcher });
+    const hiddenApp = createApp({ env: hiddenEnv, provider: hiddenProvider, matcher, rooms: new RoomStore(120, matcher, hiddenProvider) });
     cwd.mockRestore();
     const hiddenServer = createServer(hiddenApp);
 
@@ -120,6 +127,7 @@ describe("Express API", () => {
     });
     expect(extraction.status).toBe(200);
     const extracted = await extraction.json();
+    expect(extracted.capsuleId).toEqual(expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i));
 
     const matching = await fetch(`${baseUrl}/api/match`, {
       method: "POST",
@@ -153,7 +161,8 @@ describe("Express API", () => {
       extract: vi.fn().mockRejectedValue(new ProviderBusyError()),
     };
     const localEnv = readEnv({ NODE_ENV: "test", PORT: "3000", INFERENCE_PROVIDER: "ollama" });
-    const localServer = createServer(createApp({ env: localEnv, provider, matcher: new StoryMatcher() }));
+    const localMatcher = new StoryMatcher();
+    const localServer = createServer(createApp({ env: localEnv, provider, matcher: localMatcher, rooms: new RoomStore(120, localMatcher, provider) }));
     await new Promise<void>((resolve) => localServer.listen(0, "127.0.0.1", resolve));
     const address = localServer.address();
     if (!address || typeof address === "string") throw new Error("Local test server did not bind to a TCP port.");

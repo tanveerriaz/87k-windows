@@ -6,7 +6,6 @@ import type {
   Provider,
   RoomSnapshot,
   SeniorBridge,
-  StoryCapsule,
 } from "./schemas";
 
 export type ClientRole = "join" | "wall" | "admin";
@@ -27,7 +26,6 @@ export type RoomJoinAck = { ok: true; snapshot: RoomSnapshot } | { ok: false; me
 export interface ServerToClientEvents {
   "room:snapshot": (snapshot: RoomSnapshot) => void;
   "story:submitted": (payload: { participantId: string }) => void;
-  "capsule:ready": (payload: { participantId: string; capsule: StoryCapsule }) => void;
   "capsule:approved": (payload: { participantId: string }) => void;
   "window:lit": (window: LitWindow) => void;
   "match:started": (payload: { participantId: string }) => void;
@@ -52,7 +50,7 @@ export interface ClientToServerEvents {
   "room:join": (payload: RoomJoinPayload, ack: (result: RoomJoinAck) => void) => void;
   "story:submitted": (payload: { roomCode: string; participantId: string }, ack?: (result: EventAck) => void) => void;
   "capsule:approved": (
-    payload: { roomCode: string; participantId: string; capsule: StoryCapsule },
+    payload: { roomCode: string; participantId: string; capsuleId: string },
     ack?: (result: EventAck) => void,
   ) => void;
   "consent:decided": (

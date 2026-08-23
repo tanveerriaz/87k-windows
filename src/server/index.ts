@@ -13,12 +13,6 @@ process.on("uncaughtException", (error) => console.error("uncaught exception", e
 process.on("unhandledRejection", (reason) => console.error("unhandled rejection", reason));
 
 const dependencies = defaultDependencies(env);
-const app = createApp(dependencies);
-const httpServer = createServer(app);
-const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(httpServer, {
-  cors: env.NODE_ENV === "development" ? { origin: "http://127.0.0.1:5173" } : undefined,
-  maxHttpBufferSize: env.MAX_UPLOAD_BYTES,
-});
 const rooms = new RoomStore(
   env.ROOM_TTL_MINUTES,
   new StoryMatcher(undefined, env.MATCH_THRESHOLD),
@@ -26,6 +20,12 @@ const rooms = new RoomStore(
   env.INFERENCE_PROVIDER,
   dependencies.facilitator,
 );
+const app = createApp({ ...dependencies, rooms });
+const httpServer = createServer(app);
+const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(httpServer, {
+  cors: env.NODE_ENV === "development" ? { origin: "http://127.0.0.1:5173" } : undefined,
+  maxHttpBufferSize: env.MAX_UPLOAD_BYTES,
+});
 
 registerSocketHandlers(io, rooms, { adminSecret: env.DEMO_ADMIN_SECRET });
 

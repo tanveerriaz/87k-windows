@@ -25,6 +25,7 @@ export function JoinPage() {
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [photoLabel, setPhotoLabel] = useState("Prepared fictional radio illustration");
   const [capsule, setCapsule] = useState<StoryCapsule | null>(null);
+  const [capsuleId, setCapsuleId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -90,6 +91,7 @@ export function JoinPage() {
     setPhotoData(null);
     setPhotoLabel(next === "radio" ? "Prepared fictional radio illustration" : "Text-only no-match fixture");
     setCapsule(null);
+    setCapsuleId(null);
     setError(null);
   };
 
@@ -116,7 +118,8 @@ export function JoinPage() {
     room.submitted(participantId);
     try {
       const result = await extractCapsule({ roomCode, memory, photoData: null, fixture });
-      setCapsule(result);
+      setCapsule(result.capsule);
+      setCapsuleId(result.capsuleId);
       setStage("review");
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Nothing was shared. Please try again.");
@@ -150,10 +153,10 @@ export function JoinPage() {
   };
 
   const approve = async () => {
-    if (!capsule) return;
+    if (!capsule || !capsuleId) return;
     setError(null);
     try {
-      await room.approve(participantId, capsule);
+      await room.approve(participantId, capsuleId);
       setStage("waiting");
     } catch (approvalError) {
       setError(approvalError instanceof Error ? approvalError.message : "The safe capsule was not shared.");
@@ -171,8 +174,9 @@ export function JoinPage() {
     room.submitted(participantId);
     try {
       const listenerCapsule = await extractCapsule({ roomCode, memory: listenerMemory, photoData: null });
-      await room.approve(participantId, listenerCapsule);
-      setCapsule(listenerCapsule);
+      await room.approve(participantId, listenerCapsule.capsuleId);
+      setCapsule(listenerCapsule.capsule);
+      setCapsuleId(listenerCapsule.capsuleId);
       setStage("listen-requested");
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Your listening request could not be prepared.");
@@ -195,6 +199,7 @@ export function JoinPage() {
     setIsSpeaking(false);
     setStage(listenerEntry ? "listen-profile" : "welcome");
     setCapsule(null);
+    setCapsuleId(null);
     setError(null);
     setMemory("");
   };

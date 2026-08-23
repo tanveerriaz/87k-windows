@@ -117,7 +117,7 @@ export const StorySubmittedPayloadSchema = z.object({
 export const CapsuleApprovedPayloadSchema = z.object({
   roomCode: RoomCodeSchema,
   participantId: z.string().min(1).max(64),
-  capsule: StoryCapsuleSchema, // replaced by capsuleId in Task 7
+  capsuleId: z.string().uuid(),
 });
 
 export const ConsentDecidedPayloadSchema = z.object({
