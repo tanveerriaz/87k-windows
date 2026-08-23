@@ -13,6 +13,7 @@ import { useRoomSocket } from "../lib/use-room-socket";
 
 const JOURNEY_STEP_KEYS: UiStringKey[] = ["journeyYouShared", "journeyGemmaProtected", "journeyYouApproved", "journeyStoryMatched"];
 const LANG_OPTIONS = Object.keys(LANG_LABELS) as Lang[];
+// English descriptor for the pre-Task-4 (English-only) capsule pipeline text only — never render this to the participant, use LANG_LABELS for visible text.
 const LANGUAGE_ENGLISH_NAME: Record<Lang, string> = { en: "English", zh: "Mandarin", ms: "Malay", ta: "Tamil" };
 
 type ListenerTimeId = "short" | "quarter" | "visit";
@@ -126,9 +127,9 @@ export function JoinPage() {
       snapshot: room.snapshot,
     });
     if (!next) return;
-    if (next.error) setError(next.error);
+    if (next.error) setError(t(lang, next.error));
     if (next.stage !== stage) setStage(next.stage);
-  }, [listenerEntry, participantId, room.snapshot, stage]);
+  }, [lang, listenerEntry, participantId, room.snapshot, stage]);
 
   useEffect(() => {
     if (!isConsentParticipant || !consent) return;
@@ -342,7 +343,7 @@ export function JoinPage() {
       <header className="mode-header">
         <div>
           <SiteWordmark />
-          <span className="room-label">ROOM {roomCode.toUpperCase()}</span>
+          <span className="room-label">{t(lang, "roomLabelPrefix")} {roomCode.toUpperCase()}</span>
         </div>
         <StatusBadge connected={room.connected} provider={room.snapshot?.provider} facilitator={room.snapshot?.facilitator} />
       </header>
@@ -355,7 +356,7 @@ export function JoinPage() {
       )}
 
       <section className="join-shell" aria-live="polite">
-        <div className={`step-rail ${journeyStepKeys.length === 5 ? "has-guide" : ""}`} aria-label="Progress">
+        <div className={`step-rail ${journeyStepKeys.length === 5 ? "has-guide" : ""}`} aria-label={t(lang, "progressAriaLabel")}>
           {journeyStepKeys.map((stepKey, index) => {
             const activeIndex = stage === "welcome" || stage === "capture"
               ? 0
@@ -390,11 +391,11 @@ export function JoinPage() {
             <p className="eyebrow">{t(lang, "invitationEyebrow")}</p>
             <h1>{room.snapshot?.windows[0]?.safeSummary ?? t(lang, "invitationFallbackHeading")}</h1>
             <article className="safe-invitation-card">
-              <img src={memoryObjects} alt="Fictional keepsakes including a radio and a kopi cup" />
+              <img src={memoryObjects} alt={t(lang, "invitationImageAlt")} />
               <div><span className="mono-label">{t(lang, "whatTheyChoseLabel")}</span><p>{room.snapshot?.windows[0]?.safeSummary ?? t(lang, "invitationFallbackBody")}</p><small>{t(lang, "invitationDisclaimer")}</small></div>
             </article>
             <label className="memory-field"><span>{t(lang, "listenerReasonLabel")}</span><textarea value={listenerReason} maxLength={240} rows={4} onChange={(event) => setListenerReason(event.target.value)} /><small>{listenerReason.length}/240</small></label>
-            <p className="listener-preference">{t(lang, "listenerOfferedPrefix")} <strong>{LANGUAGE_ENGLISH_NAME[lang]}</strong> · <strong>{t(lang, LISTENER_TIME_KEY[listenerTime])}</strong></p>
+            <p className="listener-preference">{t(lang, "listenerOfferedPrefix")} <strong>{LANG_LABELS[lang]}</strong> · <strong>{t(lang, LISTENER_TIME_KEY[listenerTime])}</strong></p>
             {error && <div className="error-banner" role="alert">{error}</div>}
             <button className="button button-primary button-block" disabled={listenerReason.trim().length < 12 || !room.snapshot?.windows[0]} onClick={() => void requestConversation()}>{t(lang, "prepareRequestButton")}</button>
             <button className="text-button button-block" onClick={() => setStage("listen-profile")}>{t(lang, "changeOfferButton")}</button>
@@ -443,8 +444,8 @@ export function JoinPage() {
             <section className="conversation-starter">
               <span className="mono-label">{t(lang, "conversationStarterLabel")}</span>
               {(room.snapshot?.guide?.questions ?? [
-                "What did you enjoy about fixing something that others had given up on?",
-                "What do you remember first when you think of Queenstown?",
+                t(lang, "mutualFallbackQuestion1"),
+                t(lang, "mutualFallbackQuestion2"),
               ]).map((question) => <p key={question}>“{question}”</p>)}
               <small>{room.snapshot?.guide ? t(lang, "geminiOffersLine") : t(lang, "simpleBeginningLine")}</small>
             </section>
@@ -480,7 +481,7 @@ export function JoinPage() {
             <h1>{t(lang, "memoryQuestion")}</h1>
             <p className="capture-intro">{t(lang, "captureIntro")}</p>
             <div className="photo-preview">
-              {photoData ? <img src={photoData} alt="Chosen preview; it has not been shared" /> : fixture === "radio" ? <img src={memoryObjects} alt="Fictional memory objects including a radio, kopi cup and keepsakes" /> : <div className="text-fixture">{t(lang, "noPhotoLabel")}<br />{t(lang, "textFixtureLabel")}</div>}
+              {photoData ? <img src={photoData} alt={t(lang, "previewImageAlt")} /> : fixture === "radio" ? <img src={memoryObjects} alt={t(lang, "memoryObjectsImageAlt")} /> : <div className="text-fixture">{t(lang, "noPhotoLabel")}<br />{t(lang, "textFixtureLabel")}</div>}
               <span>{photoLabelText(lang, photoLabel)}</span>
             </div>
             <input
@@ -586,7 +587,7 @@ export function JoinPage() {
                 <p>{listenerStory?.safeSummary}</p>
               </article>
             </div>
-            <div className="evidence-path" aria-label="Evidence path">
+            <div className="evidence-path" aria-label={t(lang, "evidencePathAriaLabel")}>
               {room.snapshot.match.evidencePath.map((evidence) => <span key={evidence}>{evidence}</span>)}
             </div>
             {room.snapshot.guide ? (
