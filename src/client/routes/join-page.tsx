@@ -7,14 +7,52 @@ import { SiteWordmark } from "../components/site-wordmark";
 import { StatusBadge } from "../components/status-badge";
 import { ApiError, extractCapsule } from "../lib/api";
 import { compressImage } from "../lib/image";
-import { isLang, LANG_LABELS, type Lang } from "../lib/i18n";
+import { isLang, LANG_LABELS, t, type Lang, type UiStringKey } from "../lib/i18n";
 import { resolveJoinDisplacement, type JoinStage } from "../lib/join-stage";
 import { useRoomSocket } from "../lib/use-room-socket";
 
-const MEMORY_QUESTION = "What small thing made you happy when you were young?";
-const JOURNEY_STEPS = ["You shared", "Gemma protected", "You approved", "A story matched"];
+const JOURNEY_STEP_KEYS: UiStringKey[] = ["journeyYouShared", "journeyGemmaProtected", "journeyYouApproved", "journeyStoryMatched"];
 const LANG_OPTIONS = Object.keys(LANG_LABELS) as Lang[];
 const LANGUAGE_ENGLISH_NAME: Record<Lang, string> = { en: "English", zh: "Mandarin", ms: "Malay", ta: "Tamil" };
+
+type ListenerTimeId = "short" | "quarter" | "visit";
+const LISTENER_TIME_OPTIONS: ListenerTimeId[] = ["short", "quarter", "visit"];
+const LISTENER_TIME_ENGLISH: Record<ListenerTimeId, string> = {
+  short: "One short conversation this week",
+  quarter: "15 minutes today",
+  visit: "A visit at a partner centre",
+};
+const LISTENER_TIME_KEY: Record<ListenerTimeId, UiStringKey> = {
+  short: "timeOptionShortConvo",
+  quarter: "timeOption15Min",
+  visit: "timeOptionVisit",
+};
+
+type PhotoLabelState =
+  | { kind: "prepared-radio" }
+  | { kind: "no-match-fixture" }
+  | { kind: "uploaded"; fileName: string };
+
+function photoLabelText(lang: Lang, state: PhotoLabelState): string {
+  if (state.kind === "prepared-radio") return t(lang, "preparedRadioImageLabel");
+  if (state.kind === "no-match-fixture") return t(lang, "noMatchFixtureImageLabel");
+  return `${state.fileName} ${t(lang, "preparedInMemoryOnlySuffix")}`;
+}
+
+/**
+ * Resolves a caught error to display text in the participant's language.
+ * Prefers a `.key` attached by api.ts/use-room-socket.ts for client-authored
+ * friendly errors; falls back to the raw `.message` for dynamic server-
+ * supplied text (which stays English), then to a translated fallback key.
+ */
+function localizedErrorMessage(lang: Lang, error: unknown, fallbackKey: UiStringKey): string {
+  if (error && typeof error === "object") {
+    const key = (error as { key?: unknown }).key;
+    if (typeof key === "string") return t(lang, key as UiStringKey);
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return t(lang, fallbackKey);
+}
 
 function speakText(text: string, onEnd?: () => void): void {
   if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
@@ -42,7 +80,7 @@ export function JoinPage() {
   const [memory, setMemory] = useState(PREPARED_RADIO_MEMORY);
   const [fixture, setFixture] = useState<"radio" | "no-match">("radio");
   const [photoData, setPhotoData] = useState<string | null>(null);
-  const [photoLabel, setPhotoLabel] = useState("Prepared fictional radio illustration");
+  const [photoLabel, setPhotoLabel] = useState<PhotoLabelState>({ kind: "prepared-radio" });
   const [capsule, setCapsule] = useState<StoryCapsule | null>(null);
   const [capsuleId, setCapsuleId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,15 +92,15 @@ export function JoinPage() {
     const requested = searchParams.get("lang");
     return requested && isLang(requested) ? requested : "en";
   });
-  const [listenerTime, setListenerTime] = useState("One short conversation this week");
+  const [listenerTime, setListenerTime] = useState<ListenerTimeId>("short");
   const [listenerReason, setListenerReason] = useState("I want to learn radio repair and hear what Queenstown was like in the 1970s.");
   const room = useRoomSocket(roomCode, "join");
   const preparedImageSelected = fixture === "radio" && photoData === null;
-  const journeySteps = room.snapshot?.phase === "no-match"
-    ? [...JOURNEY_STEPS.slice(0, 3), "Still listening"]
+  const journeyStepKeys: UiStringKey[] = room.snapshot?.phase === "no-match"
+    ? [...JOURNEY_STEP_KEYS.slice(0, 3), "journeyStillListening"]
     : room.snapshot?.guide
-      ? [...JOURNEY_STEPS, "Gemini guides"]
-      : JOURNEY_STEPS;
+      ? [...JOURNEY_STEP_KEYS, "journeyGeminiGuides"]
+      : JOURNEY_STEP_KEYS;
   const sourceStory = room.snapshot?.windows.findLast((window) => window.participantId === room.snapshot?.activeSourceId);
   const listenerStory = room.snapshot?.windows.findLast((window) => window.participantId === room.snapshot?.activeCandidateId);
   const consent = room.snapshot?.connectionConsent;
@@ -132,7 +170,7 @@ export function JoinPage() {
     setFixture(next);
     setMemory(next === "radio" ? PREPARED_RADIO_MEMORY : PREPARED_NO_MATCH_MEMORY);
     setPhotoData(null);
-    setPhotoLabel(next === "radio" ? "Prepared fictional radio illustration" : "Text-only no-match fixture");
+    setPhotoLabel(next === "radio" ? { kind: "prepared-radio" } : { kind: "no-match-fixture" });
     setCapsule(null);
     setCapsuleId(null);
     setError(null);
@@ -143,10 +181,10 @@ export function JoinPage() {
     setError(null);
     try {
       setPhotoData(await compressImage(file));
-      setPhotoLabel(`${file.name} · prepared in memory only`);
+      setPhotoLabel({ kind: "uploaded", fileName: file.name });
       setFixture("radio");
     } catch (imageError) {
-      setError(imageError instanceof Error ? imageError.message : "Use the prepared photo instead.");
+      setError(localizedErrorMessage(lang, imageError, "errorPhotoFallback"));
     }
   };
 
@@ -166,11 +204,11 @@ export function JoinPage() {
       setStage("review");
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.code === "LOCAL_GEMMA_BUSY" && !isRetry) {
-        setError("The local model is helping someone else — retrying in a moment…");
+        setError(t(lang, "errorLocalModelBusy"));
         window.setTimeout(() => void createCapsule(true), 3_000);
         return;
       }
-      setError(requestError instanceof Error ? requestError.message : "Nothing was shared. Please try again.");
+      setError(localizedErrorMessage(lang, requestError, "errorNothingShared"));
       setStage("capture");
     }
   };
@@ -182,7 +220,7 @@ export function JoinPage() {
     const SpeechRecognition = (window as Window & { SpeechRecognition?: RecognitionConstructor; webkitSpeechRecognition?: RecognitionConstructor }).SpeechRecognition
       ?? (window as Window & { webkitSpeechRecognition?: RecognitionConstructor }).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setError("Voice capture is not available in this browser. You can type your memory instead.");
+      setError(t(lang, "errorVoiceUnavailable"));
       return;
     }
     const recognition = new SpeechRecognition();
@@ -193,7 +231,7 @@ export function JoinPage() {
       const transcript = Array.from({ length: event.results.length }, (_, index) => event.results[index][0]?.transcript ?? "").join(" ").trim();
       if (transcript) setMemory(transcript);
     };
-    recognition.onerror = () => setError("We could not hear that clearly. You can try again or type your memory.");
+    recognition.onerror = () => setError(t(lang, "errorVoiceNotClear"));
     recognition.onend = () => setIsListening(false);
     setError(null);
     setIsListening(true);
@@ -208,7 +246,7 @@ export function JoinPage() {
       await room.approve(participantId, capsuleId);
       setStage("waiting");
     } catch (approvalError) {
-      setError(approvalError instanceof Error ? approvalError.message : "The safe capsule was not shared.");
+      setError(localizedErrorMessage(lang, approvalError, "errorApprovalNotShared"));
     } finally {
       setPendingAction(null);
     }
@@ -217,7 +255,7 @@ export function JoinPage() {
   const requestConversation = async () => {
     const listenerMemory = [
       `I can listen in ${LANGUAGE_ENGLISH_NAME[lang]}.`,
-      `I can offer ${listenerTime.toLowerCase()}.`,
+      `I can offer ${LISTENER_TIME_ENGLISH[listenerTime].toLowerCase()}.`,
       listenerReason.trim(),
     ].join(" ");
     setStage("listen-processing");
@@ -230,7 +268,7 @@ export function JoinPage() {
       setCapsuleId(listenerCapsule.capsuleId);
       setStage("listen-requested");
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Your listening request could not be prepared.");
+      setError(localizedErrorMessage(lang, requestError, "errorListeningRequestFailed"));
       setStage("listen-invitation");
     }
   };
@@ -242,7 +280,7 @@ export function JoinPage() {
       await room.decide(participantId, decision);
       if (decision === "yes") setStage("listen-requested");
     } catch (decisionError) {
-      setError(decisionError instanceof Error ? decisionError.message : "Your choice could not be recorded.");
+      setError(localizedErrorMessage(lang, decisionError, "errorChoiceNotRecorded"));
     } finally {
       setPendingAction(null);
     }
@@ -263,7 +301,7 @@ export function JoinPage() {
     const guide = room.snapshot?.guide;
     if (!guide) return;
     if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
-      setError("Read aloud is not available in this browser. The full guide remains on screen.");
+      setError(t(lang, "errorReadAloudUnavailableGuide"));
       return;
     }
     setError(null);
@@ -278,7 +316,7 @@ export function JoinPage() {
       return;
     }
     if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
-      setError("Read aloud is not available in this browser. The full capsule remains on screen.");
+      setError(t(lang, "errorReadAloudUnavailableCapsule"));
       return;
     }
     const fieldLines: string[] = [];
@@ -312,13 +350,13 @@ export function JoinPage() {
       {(room.message || room.connectionError) && (
         <div className="error-banner" role="alert">
           <span>{room.message ?? room.connectionError}</span>
-          {room.message && <button type="button" className="text-button" onClick={() => room.setMessage(null)}>Dismiss</button>}
+          {room.message && <button type="button" className="text-button" onClick={() => room.setMessage(null)}>{t(lang, "dismissButton")}</button>}
         </div>
       )}
 
       <section className="join-shell" aria-live="polite">
-        <div className={`step-rail ${journeySteps.length === 5 ? "has-guide" : ""}`} aria-label="Progress">
-          {journeySteps.map((label, index) => {
+        <div className={`step-rail ${journeyStepKeys.length === 5 ? "has-guide" : ""}`} aria-label="Progress">
+          {journeyStepKeys.map((stepKey, index) => {
             const activeIndex = stage === "welcome" || stage === "capture"
               ? 0
               : stage === "processing" || stage === "review"
@@ -326,124 +364,124 @@ export function JoinPage() {
                 : stage === "waiting"
                   ? 2
                   : 3;
-            return <span key={label} className={index <= activeIndex ? "is-active" : ""}>{label}</span>;
+            return <span key={stepKey} className={index <= activeIndex ? "is-active" : ""}>{t(lang, stepKey)}</span>;
           })}
         </div>
 
         {listenerEntry && (stage === "listen-profile" || stage === "listen-invitation" || stage === "listen-processing" || stage === "listen-requested" || stage === "consent" || stage === "mutual-yes") && (
-          <div className="role-switch"><Link to={`/join/${roomCode}?role=share`}>I have a story</Link><span aria-hidden="true">/</span><strong>I would like to listen</strong></div>
+          <div className="role-switch"><Link to={`/join/${roomCode}?role=share`}>{t(lang, "roleSwitchHaveStory")}</Link><span aria-hidden="true">/</span><strong>{t(lang, "roleSwitchWouldListen")}</strong></div>
         )}
 
         {stage === "listen-profile" && (
           <div className="join-panel listener-panel">
-            <p className="eyebrow">Offer attention, not advice</p>
-            <h1>I would like to listen.</h1>
-            <p className="listener-intro">Start with what you can genuinely offer. You will only see a storyteller’s approved invitation—not their private memory or contact details.</p>
-            <label className="listener-field"><span>Language I am comfortable using</span><select value={lang} onChange={(event) => changeLang(event.target.value as Lang)}>{LANG_OPTIONS.map((code) => <option key={code} value={code}>{LANG_LABELS[code]}</option>)}</select></label>
-            <label className="listener-field"><span>Time I can offer</span><select value={listenerTime} onChange={(event) => setListenerTime(event.target.value)}><option>One short conversation this week</option><option>15 minutes today</option><option>A visit at a partner centre</option></select></label>
+            <p className="eyebrow">{t(lang, "listenProfileEyebrow")}</p>
+            <h1>{t(lang, "listenProfileHeading")}</h1>
+            <p className="listener-intro">{t(lang, "listenProfileIntro")}</p>
+            <label className="listener-field"><span>{t(lang, "languageFieldLabel")}</span><select value={lang} onChange={(event) => changeLang(event.target.value as Lang)}>{LANG_OPTIONS.map((code) => <option key={code} value={code}>{LANG_LABELS[code]}</option>)}</select></label>
+            <label className="listener-field"><span>{t(lang, "timeFieldLabel")}</span><select value={listenerTime} onChange={(event) => setListenerTime(event.target.value as ListenerTimeId)}>{LISTENER_TIME_OPTIONS.map((id) => <option key={id} value={id}>{t(lang, LISTENER_TIME_KEY[id])}</option>)}</select></label>
             {error && <div className="error-banner" role="alert">{error}</div>}
-            <button className="button button-primary button-block" onClick={() => setStage("listen-invitation")}>See a safe story invitation</button>
-            <p className="privacy-note">A trusted community partner would verify listeners before real matching.</p>
+            <button className="button button-primary button-block" onClick={() => setStage("listen-invitation")}>{t(lang, "seeInvitationButton")}</button>
+            <p className="privacy-note">{t(lang, "listenerPrivacyNote")}</p>
           </div>
         )}
 
         {stage === "listen-invitation" && (
           <div className="join-panel listener-panel listener-invitation">
-            <p className="eyebrow">Approved story invitation</p>
-            <h1>{room.snapshot?.windows[0]?.safeSummary ?? "A storyteller has not lit a window yet."}</h1>
+            <p className="eyebrow">{t(lang, "invitationEyebrow")}</p>
+            <h1>{room.snapshot?.windows[0]?.safeSummary ?? t(lang, "invitationFallbackHeading")}</h1>
             <article className="safe-invitation-card">
               <img src={memoryObjects} alt="Fictional keepsakes including a radio and a kopi cup" />
-              <div><span className="mono-label">WHAT THEY CHOSE TO SHARE</span><p>{room.snapshot?.windows[0]?.safeSummary ?? "Ask the storyteller to share first, then return to this room."}</p><small>Approved safe capsule only · no raw words or identifiers</small></div>
+              <div><span className="mono-label">{t(lang, "whatTheyChoseLabel")}</span><p>{room.snapshot?.windows[0]?.safeSummary ?? t(lang, "invitationFallbackBody")}</p><small>{t(lang, "invitationDisclaimer")}</small></div>
             </article>
-            <label className="memory-field"><span>Why would you like to listen?</span><textarea value={listenerReason} maxLength={240} rows={4} onChange={(event) => setListenerReason(event.target.value)} /><small>{listenerReason.length}/240</small></label>
-            <p className="listener-preference">You offered: <strong>{LANGUAGE_ENGLISH_NAME[lang]}</strong> · <strong>{listenerTime}</strong></p>
+            <label className="memory-field"><span>{t(lang, "listenerReasonLabel")}</span><textarea value={listenerReason} maxLength={240} rows={4} onChange={(event) => setListenerReason(event.target.value)} /><small>{listenerReason.length}/240</small></label>
+            <p className="listener-preference">{t(lang, "listenerOfferedPrefix")} <strong>{LANGUAGE_ENGLISH_NAME[lang]}</strong> · <strong>{t(lang, LISTENER_TIME_KEY[listenerTime])}</strong></p>
             {error && <div className="error-banner" role="alert">{error}</div>}
-            <button className="button button-primary button-block" disabled={listenerReason.trim().length < 12 || !room.snapshot?.windows[0]} onClick={() => void requestConversation()}>Prepare my listening request with Gemma</button>
-            <button className="text-button button-block" onClick={() => setStage("listen-profile")}>Change what I can offer</button>
+            <button className="button button-primary button-block" disabled={listenerReason.trim().length < 12 || !room.snapshot?.windows[0]} onClick={() => void requestConversation()}>{t(lang, "prepareRequestButton")}</button>
+            <button className="text-button button-block" onClick={() => setStage("listen-profile")}>{t(lang, "changeOfferButton")}</button>
           </div>
         )}
 
         {stage === "listen-processing" && (
           <div className="join-panel processing-panel">
-            <p className="eyebrow">Your reason stays yours until you approve</p>
-            <h1>Gemma is preparing a safe listening capsule.</h1>
-            <p>Only your language, time and reason to listen enter the evidence check. No contact details are shared.</p>
-            <p className="processing-elapsed">{elapsedSeconds}s elapsed · This usually takes 10–30 seconds on the local model.</p>
+            <p className="eyebrow">{t(lang, "listenProcessingEyebrow")}</p>
+            <h1>{t(lang, "listenProcessingHeading")}</h1>
+            <p>{t(lang, "listenProcessingBody")}</p>
+            <p className="processing-elapsed">{elapsedSeconds}{t(lang, "elapsedSuffix")}</p>
           </div>
         )}
 
         {stage === "consent" && consent && isConsentParticipant && (
           <div className="join-panel listener-panel consent-state-panel">
-            <p className="eyebrow">A possible human connection</p>
-            <h1>Would you like this conversation to begin?</h1>
+            <p className="eyebrow">{t(lang, "consentEyebrow")}</p>
+            <h1>{t(lang, "consentHeading")}</h1>
             <p>{room.snapshot?.match?.why}</p>
             <div className="story-pair">
-              <article><span className="mono-label">STORYTELLER</span><p>{sourceStory?.safeSummary}</p></article>
-              <article><span className="mono-label">LISTENER</span><p>{listenerStory?.safeSummary}</p></article>
+              <article><span className="mono-label">{t(lang, "storytellerLabel")}</span><p>{sourceStory?.safeSummary}</p></article>
+              <article><span className="mono-label">{t(lang, "listenerLabel")}</span><p>{listenerStory?.safeSummary}</p></article>
             </div>
-            <p className="privacy-note">Your choice is private until both people have answered. Either person may say no.</p>
+            <p className="privacy-note">{t(lang, "consentPrivacyNote")}</p>
             {error && <div className="error-banner" role="alert">{error}</div>}
-            <button className="button button-primary button-block" disabled={pendingAction === "decide"} onClick={() => void decideConnection("yes")}>{pendingAction === "decide" ? "Recording your choice…" : "Yes, I would like to continue"}</button>
-            <button className="button button-secondary button-block" disabled={pendingAction === "decide"} onClick={() => void decideConnection("no")}>{pendingAction === "decide" ? "Recording your choice…" : "No, not this time"}</button>
+            <button className="button button-primary button-block" disabled={pendingAction === "decide"} onClick={() => void decideConnection("yes")}>{pendingAction === "decide" ? t(lang, "consentPending") : t(lang, "consentYesButton")}</button>
+            <button className="button button-secondary button-block" disabled={pendingAction === "decide"} onClick={() => void decideConnection("no")}>{pendingAction === "decide" ? t(lang, "consentPending") : t(lang, "consentNoButton")}</button>
           </div>
         )}
 
         {stage === "listen-requested" && (
           <div className="join-panel listener-panel consent-state-panel">
-            <p className="eyebrow">Your choice is recorded</p>
-            <h1>Waiting for the other person.</h1>
-            <p>Nothing is arranged unless they independently say yes. You may close this page; the room keeps no contact details.</p>
-            <div className="consent-ledger"><span>Your choice</span><strong>{myConsentDecision === "yes" ? "Yes" : "Request sent"}</strong><span>The other person</span><strong>Waiting</strong></div>
+            <p className="eyebrow">{t(lang, "requestedEyebrow")}</p>
+            <h1>{t(lang, "requestedHeading")}</h1>
+            <p>{t(lang, "requestedBody")}</p>
+            <div className="consent-ledger"><span>{t(lang, "yourChoiceLabel")}</span><strong>{myConsentDecision === "yes" ? t(lang, "yesLabel") : t(lang, "requestSentLabel")}</strong><span>{t(lang, "otherPersonLabel")}</span><strong>{t(lang, "waitingLabel")}</strong></div>
           </div>
         )}
 
         {stage === "mutual-yes" && (
           <div className="join-panel listener-panel mutual-yes-panel">
-            <p className="eyebrow">Two independent yeses</p>
-            <h1>A listening conversation is ready.</h1>
-            <div className="mutual-cards"><article><span className="mono-label">STORYTELLER</span><strong>Yes, I would like to share.</strong></article><article><span className="mono-label">LISTENER</span><strong>Yes, I have time to listen.</strong></article></div>
+            <p className="eyebrow">{t(lang, "mutualEyebrow")}</p>
+            <h1>{t(lang, "mutualHeading")}</h1>
+            <div className="mutual-cards"><article><span className="mono-label">{t(lang, "storytellerLabel")}</span><strong>{t(lang, "mutualStorytellerYes")}</strong></article><article><span className="mono-label">{t(lang, "listenerLabel")}</span><strong>{t(lang, "mutualListenerYes")}</strong></article></div>
             <section className="conversation-starter">
-              <span className="mono-label">TWO OPTIONAL FIRST QUESTIONS</span>
+              <span className="mono-label">{t(lang, "conversationStarterLabel")}</span>
               {(room.snapshot?.guide?.questions ?? [
                 "What did you enjoy about fixing something that others had given up on?",
                 "What do you remember first when you think of Queenstown?",
               ]).map((question) => <p key={question}>“{question}”</p>)}
-              <small>{room.snapshot?.guide ? "Gemini offers a beginning. Then it steps away." : "A simple beginning based only on the approved capsules."}</small>
+              <small>{room.snapshot?.guide ? t(lang, "geminiOffersLine") : t(lang, "simpleBeginningLine")}</small>
             </section>
-            <button className="button button-primary button-block" onClick={() => setStage("listen-profile")}>Offer another conversation</button>
+            <button className="button button-primary button-block" onClick={() => setStage("listen-profile")}>{t(lang, "offerAnotherButton")}</button>
           </div>
         )}
 
         {stage === "result" && room.snapshot?.phase === "no-match" && (isConsentParticipant || listenerEntry) && (
           <div className="join-panel result-panel no-match-panel">
-            <p className="eyebrow">Consent respected</p>
-            <h1>No connection was opened.</h1>
-            <p>One person said no, or the evidence was not strong enough. Both stories remain separate and no invitation was created.</p>
-            <Link className="button button-primary button-block" to="/">Return to the two chairs</Link>
+            <p className="eyebrow">{t(lang, "consentRespectedEyebrow")}</p>
+            <h1>{t(lang, "noConnectionHeading")}</h1>
+            <p>{t(lang, "noConnectionBody")}</p>
+            <Link className="button button-primary button-block" to="/">{t(lang, "returnHomeButton")}</Link>
           </div>
         )}
 
         {stage === "welcome" && (
           <div className="join-panel welcome-panel">
-            <p className="eyebrow">Your words stay private until you choose to light a window</p>
-            <h1>There is one question worth asking.</h1>
-            <p>{MEMORY_QUESTION}</p>
-            <p className="welcome-support">You can speak, type, or bring an old photo. First, you will see what Gemma noticed—and what remains only your words.</p>
-            <label className="listener-field welcome-language-field"><span>Language</span><select value={lang} onChange={(event) => changeLang(event.target.value as Lang)}>{LANG_OPTIONS.map((code) => <option key={code} value={code}>{LANG_LABELS[code]}</option>)}</select></label>
-            <button className="button button-primary button-block" onClick={() => setStage("capture")}>Share a prepared memory</button>
-            <Link className="text-link role-cross-link" to={`/join/${roomCode}?role=listen`}>I would like to listen instead</Link>
-            <p className="privacy-note">Synthetic demo only · No account · Nothing stored</p>
+            <p className="eyebrow">{t(lang, "welcomeEyebrow")}</p>
+            <h1>{t(lang, "welcomeHeading")}</h1>
+            <p>{t(lang, "memoryQuestion")}</p>
+            <p className="welcome-support">{t(lang, "welcomeSupport")}</p>
+            <label className="listener-field welcome-language-field"><span>{t(lang, "languageSelectorLabel")}</span><select value={lang} onChange={(event) => changeLang(event.target.value as Lang)}>{LANG_OPTIONS.map((code) => <option key={code} value={code}>{LANG_LABELS[code]}</option>)}</select></label>
+            <button className="button button-primary button-block" onClick={() => setStage("capture")}>{t(lang, "shareMemoryButton")}</button>
+            <Link className="text-link role-cross-link" to={`/join/${roomCode}?role=listen`}>{t(lang, "listenInsteadLink")}</Link>
+            <p className="privacy-note">{t(lang, "welcomePrivacyNote")}</p>
           </div>
         )}
 
         {stage === "capture" && (
           <div className="join-panel capture-panel">
-            <p className="eyebrow">One gentle question</p>
-            <h1>{MEMORY_QUESTION}</h1>
-            <p className="capture-intro">There is no right answer. A small detail is enough.</p>
+            <p className="eyebrow">{t(lang, "captureEyebrow")}</p>
+            <h1>{t(lang, "memoryQuestion")}</h1>
+            <p className="capture-intro">{t(lang, "captureIntro")}</p>
             <div className="photo-preview">
-              {photoData ? <img src={photoData} alt="Chosen preview; it has not been shared" /> : fixture === "radio" ? <img src={memoryObjects} alt="Fictional memory objects including a radio, kopi cup and keepsakes" /> : <div className="text-fixture">NO PHOTO<br />TEXT FIXTURE</div>}
-              <span>{photoLabel}</span>
+              {photoData ? <img src={photoData} alt="Chosen preview; it has not been shared" /> : fixture === "radio" ? <img src={memoryObjects} alt="Fictional memory objects including a radio, kopi cup and keepsakes" /> : <div className="text-fixture">{t(lang, "noPhotoLabel")}<br />{t(lang, "textFixtureLabel")}</div>}
+              <span>{photoLabelText(lang, photoLabel)}</span>
             </div>
             <input
               ref={fileInputRef}
@@ -454,97 +492,97 @@ export function JoinPage() {
               onChange={(event) => void handleFile(event.target.files?.[0])}
             />
             <div className="capture-actions">
-              <button className="button button-secondary" onClick={() => fileInputRef.current?.click()}>Add an old photo</button>
+              <button className="button button-secondary" onClick={() => fileInputRef.current?.click()}>{t(lang, "addPhotoButton")}</button>
               {preparedImageSelected ? (
-                <span className="prepared-image-status" role="status">Prepared demo image selected</span>
+                <span className="prepared-image-status" role="status">{t(lang, "preparedImageStatus")}</span>
               ) : (
-                <button className="text-button" onClick={restorePreparedImage}>Restore prepared demo image</button>
+                <button className="text-button" onClick={restorePreparedImage}>{t(lang, "restorePreparedImageButton")}</button>
               )}
             </div>
-            <p className="field-help">A photo is an optional memory cue. It stays in this browser and is never sent to Gemma. If camera access is denied, choose a file or keep the prepared illustration.</p>
+            <p className="field-help">{t(lang, "photoHelpText")}</p>
             <label className="memory-field">
-              <span>Your words</span>
-              <textarea value={memory} maxLength={600} rows={4} placeholder="I remember…" onChange={(event) => setMemory(event.target.value)} />
+              <span>{t(lang, "yourWordsLabel")}</span>
+              <textarea value={memory} maxLength={600} rows={4} placeholder={t(lang, "yourWordsPlaceholder")} onChange={(event) => setMemory(event.target.value)} />
               <small>{memory.length}/600</small>
             </label>
             <button className="voice-button" type="button" onClick={captureVoice} aria-pressed={isListening}>
               <span className="voice-ring" aria-hidden="true" />
-              <span>{isListening ? "Listening… pause when you need to" : "Speak your memory"}</span>
-              <small>Voice stays editable</small>
+              <span>{isListening ? t(lang, "listeningStatus") : t(lang, "speakMemoryButton")}</span>
+              <small>{t(lang, "voiceStaysEditableNote")}</small>
             </button>
-            <button className="fixture-link" onClick={() => chooseFixture("no-match")}>Use no-match fixture</button>
+            <button className="fixture-link" onClick={() => chooseFixture("no-match")}>{t(lang, "noMatchFixtureLink")}</button>
             {error && <div className="error-banner" role="alert">{error}</div>}
-            <button className="button button-primary button-block" disabled={memory.trim().length < 8} onClick={() => void createCapsule()}>Create my safe capsule</button>
+            <button className="button button-primary button-block" disabled={memory.trim().length < 8} onClick={() => void createCapsule()}>{t(lang, "createCapsuleButton")}</button>
           </div>
         )}
 
         {stage === "processing" && (
           <div className="join-panel processing-panel">
             <div className="processing-window" aria-hidden="true"><span /><span /><span /><span /></div>
-            <p className="eyebrow">Your words, then the meaning</p>
-            <h1>Separating what you said from what may connect.</h1>
-            <p>Gemma prepares a small, reviewable memory capsule. It does not fill in names, dates, or details you did not share.</p>
-            <p className="processing-elapsed">{elapsedSeconds}s elapsed · This usually takes 10–30 seconds on the local model.</p>
+            <p className="eyebrow">{t(lang, "processingEyebrow")}</p>
+            <h1>{t(lang, "processingHeading")}</h1>
+            <p>{t(lang, "processingBody")}</p>
+            <p className="processing-elapsed">{elapsedSeconds}{t(lang, "elapsedSuffix")}</p>
             {error && <div className="error-banner" role="status">{error}</div>}
           </div>
         )}
 
         {stage === "review" && capsule && (
           <div className="join-panel review-panel">
-            <p className="eyebrow">You remain the author</p>
-            <h1>You decide what enters matching.</h1>
+            <p className="eyebrow">{t(lang, "reviewEyebrow")}</p>
+            <h1>{t(lang, "reviewHeading")}</h1>
             <section className="words-card">
-              <span className="mono-label">YOUR WORDS</span>
+              <span className="mono-label">{t(lang, "yourWordsCardLabel")}</span>
               <blockquote>“{memory}”</blockquote>
             </section>
             <section className="meaning-card">
-              <span className="mono-label">WHAT GEMMA NOTICED</span>
+              <span className="mono-label">{t(lang, "whatGemmaNoticedLabel")}</span>
               <p>{capsule.safeSummary}</p>
             </section>
             <div className="capsule-evidence">
-              {capsule.place && <span><small>PLACE</small>{capsule.place}</span>}
-              {capsule.era && <span><small>ERA</small>{capsule.era}</span>}
-              {capsule.skills.map((skill) => <span key={skill}><small>SKILL</small>{skill}</span>)}
-              {capsule.offers.map((offer) => <span key={offer}><small>OFFER</small>{offer}</span>)}
-              {capsule.wants.map((want) => <span key={want}><small>WANTS</small>{want}</span>)}
+              {capsule.place && <span><small>{t(lang, "placeLabel")}</small>{capsule.place}</span>}
+              {capsule.era && <span><small>{t(lang, "eraLabel")}</small>{capsule.era}</span>}
+              {capsule.skills.map((skill) => <span key={skill}><small>{t(lang, "skillLabel")}</small>{skill}</span>)}
+              {capsule.offers.map((offer) => <span key={offer}><small>{t(lang, "offerLabel")}</small>{offer}</span>)}
+              {capsule.wants.map((want) => <span key={want}><small>{t(lang, "wantsLabel")}</small>{want}</span>)}
             </div>
             {capsule.redactions.length > 0 ? (
-              <div className="redaction-note"><strong>Removed before sharing</strong><p>{capsule.redactions.join(", ")}</p></div>
+              <div className="redaction-note"><strong>{t(lang, "removedBeforeSharingTitle")}</strong><p>{capsule.redactions.join(", ")}</p></div>
             ) : (
-              <div className="redaction-note"><strong>No identifiers detected</strong><p>Only Gemma’s short interpretation and evidence above enter matching—not the full quote.</p></div>
+              <div className="redaction-note"><strong>{t(lang, "noIdentifiersTitle")}</strong><p>{t(lang, "noIdentifiersBody")}</p></div>
             )}
             <details open>
-              <summary>What is uncertain?</summary>
+              <summary>{t(lang, "uncertainSummary")}</summary>
               <ul>{capsule.uncertain.map((item) => <li key={item}>{item}</li>)}</ul>
             </details>
-            <button className="button button-secondary button-block" type="button" aria-pressed={isSpeaking} onClick={readReviewAloud}>{isSpeaking ? "Stop reading" : "Read this to me"}</button>
+            <button className="button button-secondary button-block" type="button" aria-pressed={isSpeaking} onClick={readReviewAloud}>{isSpeaking ? t(lang, "stopReadingButton") : t(lang, "readToMeButton")}</button>
             {error && <div className="error-banner" role="alert">{error}</div>}
-            <button className="button button-primary button-block" disabled={pendingAction === "approve"} onClick={() => void approve()}>{pendingAction === "approve" ? "Lighting your window…" : "Approve and light my window"}</button>
-            <button className="button button-secondary button-block" onClick={() => setStage("capture")}>Go back and edit</button>
+            <button className="button button-primary button-block" disabled={pendingAction === "approve"} onClick={() => void approve()}>{pendingAction === "approve" ? t(lang, "approvePending") : t(lang, "approveButton")}</button>
+            <button className="button button-secondary button-block" onClick={() => setStage("capture")}>{t(lang, "goBackButton")}</button>
           </div>
         )}
 
         {stage === "waiting" && (
           <div className="join-panel waiting-panel">
             <div className="window-beacon" aria-hidden="true" />
-            <p className="eyebrow">Your window is lit</p>
-            <h1>Your story is now visible as a warm light.</h1>
-            <p>Your approved capsule is being checked for a shared human thread. If the evidence holds, Gemini will prepare a gentle way to begin.</p>
+            <p className="eyebrow">{t(lang, "waitingEyebrow")}</p>
+            <h1>{t(lang, "waitingHeading")}</h1>
+            <p>{t(lang, "waitingBody")}</p>
           </div>
         )}
 
         {stage === "result" && room.snapshot?.phase === "matched" && room.snapshot.activeSourceId === participantId && room.snapshot.match && room.snapshot.invite && (
           <div className="join-panel result-panel">
-            <p className="eyebrow">Your result</p>
+            <p className="eyebrow">{t(lang, "resultEyebrow")}</p>
             <h1>{room.snapshot.invite.title}</h1>
             <p className="result-summary">{room.snapshot.match.why}</p>
             <div className="story-pair">
               <article>
-                <span className="mono-label">YOUR MEMORY</span>
+                <span className="mono-label">{t(lang, "yourMemoryLabel")}</span>
                 <p>{sourceStory?.safeSummary}</p>
               </article>
               <article>
-                <span className="mono-label">LISTENER’S APPROVED REASON</span>
+                <span className="mono-label">{t(lang, "listenerApprovedReasonLabel")}</span>
                 <p>{listenerStory?.safeSummary}</p>
               </article>
             </div>
@@ -553,43 +591,43 @@ export function JoinPage() {
             </div>
             {room.snapshot.guide ? (
               <article className="senior-bridge">
-                <span className="mono-label">GEMINI · SENIOR CONNECTION GUIDE</span>
+                <span className="mono-label">{t(lang, "guideLabel")}</span>
                 <h2>{room.snapshot.guide.introduction}</h2>
-                <p className="bridge-intro">Two optional questions, written for a slower conversation:</p>
+                <p className="bridge-intro">{t(lang, "twoQuestionsIntro")}</p>
                 <ol>
                   {room.snapshot.guide.questions.map((question) => <li key={question}>{question}</li>)}
                 </ol>
                 <p className="consent-reminder">{room.snapshot.guide.consentReminder}</p>
                 <div className="read-aloud-actions">
-                  <button className="button button-primary" type="button" aria-pressed={isSpeaking} onClick={speakGuide}>Read this aloud</button>
-                  {isSpeaking && <button className="button button-secondary" type="button" onClick={stopSpeaking}>Stop reading</button>}
+                  <button className="button button-primary" type="button" aria-pressed={isSpeaking} onClick={speakGuide}>{t(lang, "readAloudButton")}</button>
+                  {isSpeaking && <button className="button button-secondary" type="button" onClick={stopSpeaking}>{t(lang, "stopReadingButton")}</button>}
                 </div>
-                <small>Gemini received only the two approved safe capsules and the visible evidence above—not your raw words.</small>
+                <small>{t(lang, "guideDisclaimer")}</small>
               </article>
             ) : room.snapshot.guideError ? (
               <div className="error-banner" role="status">{room.snapshot.guideError}</div>
             ) : room.snapshot.facilitator !== "disabled" ? (
-              <p className="guide-pending" role="status">Gemini is preparing the first questions…</p>
+              <p className="guide-pending" role="status">{t(lang, "guidePendingStatus")}</p>
             ) : null}
             {error && <div className="error-banner" role="alert">{error}</div>}
             <article className="kopi-card">
-              <span className="mono-label">SUGGESTED KOPI CARD · FICTIONAL DEMO</span>
+              <span className="mono-label">{t(lang, "kopiCardLabel")}</span>
               <h2>{room.snapshot.invite.invitation}</h2>
               <p>{room.snapshot.invite.activity}</p>
-              <small>Both people independently chose yes. No contact details are exchanged here, and either person may pause or stop.</small>
+              <small>{t(lang, "kopiDisclaimer")}</small>
             </article>
-            <button className="button button-secondary button-block" onClick={startAgain}>Run the demo again</button>
+            <button className="button button-secondary button-block" onClick={startAgain}>{t(lang, "runAgainButton")}</button>
           </div>
         )}
 
         {stage === "result" && room.snapshot?.phase === "no-match" && !room.snapshot.connectionConsent && room.snapshot.activeSourceId === participantId && (
           <div className="join-panel result-panel no-match-panel">
-            <p className="eyebrow">Honest by design</p>
-            <h1>NO MATCH YET</h1>
-            <p className="no-match-human">We haven’t found the right listener yet.</p>
+            <p className="eyebrow">{t(lang, "honestDesignEyebrow")}</p>
+            <h1>{t(lang, "noMatchYetHeading")}</h1>
+            <p className="no-match-human">{t(lang, "noMatchHumanLine")}</p>
             <p>{room.snapshot.match?.why}</p>
-            <div className="no-match-rule">No invitation was created, and your story remains safe.</div>
-            <button className="button button-primary button-block" onClick={startAgain}>Try the prepared radio story</button>
+            <div className="no-match-rule">{t(lang, "noMatchRuleLine")}</div>
+            <button className="button button-primary button-block" onClick={startAgain}>{t(lang, "tryPreparedStoryButton")}</button>
           </div>
         )}
       </section>

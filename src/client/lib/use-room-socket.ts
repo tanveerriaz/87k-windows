@@ -2,11 +2,23 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import type { ClientRole, ClientToServerEvents, ServerToClientEvents } from "../../shared/events";
 import type { ConsentDecision, RoomSnapshot } from "../../shared/schemas";
+import type { UiStringKey } from "./i18n";
 
 type RoomSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 const ACK_TIMEOUT_MS = 8_000;
 const ACK_TIMEOUT_MESSAGE = "The room did not respond. Check the connection and try again.";
+const APPROVAL_FAILED_MESSAGE = "The safe capsule could not be approved.";
+const CHOICE_NOT_RECORDED_MESSAGE = "Your choice could not be recorded.";
+
+/**
+ * Attaches a UiStringKey to a client-authored friendly Error so join-page.tsx
+ * (the only consumer of `approve`/`decide`) can render it in the participant's
+ * language. Server-supplied `result.message` text has no key and stays English.
+ */
+function friendlyError(message: string, key: UiStringKey): Error {
+  return Object.assign(new Error(message), { key });
+}
 
 export function useRoomSocket(roomCode: string, role: ClientRole, adminSecret?: string) {
   const [snapshot, setSnapshot] = useState<RoomSnapshot | null>(null);
@@ -60,9 +72,9 @@ export function useRoomSocket(roomCode: string, role: ClientRole, adminSecret?: 
     (participantId: string, capsuleId: string) =>
       new Promise<void>((resolve, reject) => {
         socket.timeout(ACK_TIMEOUT_MS).emit("capsule:approved", { roomCode, participantId, capsuleId }, (err, result) => {
-          if (err) return reject(new Error(ACK_TIMEOUT_MESSAGE));
+          if (err) return reject(friendlyError(ACK_TIMEOUT_MESSAGE, "errorRoomNoResponse"));
           if (result.ok) return resolve();
-          reject(new Error(result.message ?? "The safe capsule could not be approved."));
+          reject(result.message ? new Error(result.message) : friendlyError(APPROVAL_FAILED_MESSAGE, "errorApprovalFailed"));
         });
       }),
     [roomCode, socket],
@@ -77,9 +89,9 @@ export function useRoomSocket(roomCode: string, role: ClientRole, adminSecret?: 
     (participantId: string, decision: Exclude<ConsentDecision, "pending">) =>
       new Promise<void>((resolve, reject) => {
         socket.timeout(ACK_TIMEOUT_MS).emit("consent:decided", { roomCode, participantId, decision }, (err, result) => {
-          if (err) return reject(new Error(ACK_TIMEOUT_MESSAGE));
+          if (err) return reject(friendlyError(ACK_TIMEOUT_MESSAGE, "errorRoomNoResponse"));
           if (result.ok) return resolve();
-          reject(new Error(result.message ?? "Your choice could not be recorded."));
+          reject(result.message ? new Error(result.message) : friendlyError(CHOICE_NOT_RECORDED_MESSAGE, "errorChoiceNotRecorded"));
         });
       }),
     [roomCode, socket],

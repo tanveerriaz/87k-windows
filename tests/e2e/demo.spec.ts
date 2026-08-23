@@ -187,6 +187,16 @@ test("review panel meets AA contrast and offers read-aloud", async ({ page }) =>
   expect(editBox?.height).toBeGreaterThanOrEqual(48);
 });
 
+test("the storyteller welcome panel renders in the selected language", async ({ page }) => {
+  await page.goto("/join/demo87?lang=zh");
+  await expect(page.getByText("小时候，什么小事让你开心？")).toBeVisible();
+  await expect(page.getByRole("button", { name: "分享一段预设的记忆" })).toBeVisible();
+
+  await page.goto("/join/demo87?lang=en");
+  await expect(page.getByText("What small thing made you happy when you were young?")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Share a prepared memory" })).toBeVisible();
+});
+
 test("admin labels the development harness honestly", async ({ page }) => {
   const roomCode = `admin-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 800 });
