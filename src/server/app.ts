@@ -57,10 +57,10 @@ export function createApp(dependencies: AppDependencies): express.Express {
   const app = express();
 
   app.disable("x-powered-by");
-  // Cloud Run is the single trusted proxy in front of this service. Trusting
-  // exactly one hop lets Express recover the visitor address without trusting
-  // arbitrary client-supplied forwarding chains.
-  app.set("trust proxy", 1);
+  // Cloud Run is the single trusted proxy in front of this service, but only
+  // in production. Outside production there is no proxy in front of Express,
+  // so trusting X-Forwarded-For would let any client spoof its own req.ip.
+  app.set("trust proxy", env.NODE_ENV === "production" ? 1 : false);
 
   const inferenceLimiter = rateLimit({
     windowMs: 60_000,

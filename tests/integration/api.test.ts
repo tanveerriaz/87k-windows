@@ -53,6 +53,53 @@ describe("Express API", () => {
     expect(JSON.stringify(body)).not.toContain("GEMINI_API_KEY");
   });
 
+  it("ignores a spoofed X-Forwarded-For outside production, keeping one shared rate-limit bucket", async () => {
+    const first = await fetch(`${baseUrl}/api/match`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Forwarded-For": "1.1.1.1" },
+      body: JSON.stringify({}),
+    });
+    const second = await fetch(`${baseUrl}/api/match`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Forwarded-For": "2.2.2.2" },
+      body: JSON.stringify({}),
+    });
+    const remaining = (response: Response) => Number(response.headers.get("ratelimit")?.match(/r=(\d+)/)?.[1]);
+    expect(remaining(second)).toBe(remaining(first) - 1);
+  });
+
+  it("trusts X-Forwarded-For behind the single Cloud Run hop in production", async () => {
+    const prodEnv = readEnv({ NODE_ENV: "production", PORT: "3000" });
+    const prodMatcher = new StoryMatcher();
+    const prodProvider = new MockProvider(0);
+    const prodServer = createServer(createApp({
+      env: prodEnv,
+      provider: prodProvider,
+      matcher: prodMatcher,
+      rooms: new RoomStore(120, prodMatcher, prodProvider),
+    }));
+    try {
+      await new Promise<void>((resolve) => prodServer.listen(0, "127.0.0.1", resolve));
+      const address = prodServer.address();
+      if (!address || typeof address === "string") throw new Error("Production test server did not bind.");
+      const prodUrl = `http://127.0.0.1:${address.port}`;
+      const first = await fetch(`${prodUrl}/api/match`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Forwarded-For": "1.1.1.1" },
+        body: JSON.stringify({}),
+      });
+      const second = await fetch(`${prodUrl}/api/match`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Forwarded-For": "2.2.2.2" },
+        body: JSON.stringify({}),
+      });
+      const remaining = (response: Response) => Number(response.headers.get("ratelimit")?.match(/r=(\d+)/)?.[1]);
+      expect(remaining(second)).toBe(remaining(first));
+    } finally {
+      await new Promise<void>((resolve, reject) => prodServer.close((error) => (error ? reject(error) : resolve())));
+    }
+  });
+
   it("reports the routed Gemma and Gemini models without the OpenRouter secret", async () => {
     const routedEnv = readEnv({
       NODE_ENV: "test",
