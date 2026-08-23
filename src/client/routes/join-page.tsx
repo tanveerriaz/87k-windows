@@ -12,6 +12,21 @@ import { useRoomSocket } from "../lib/use-room-socket";
 const MEMORY_QUESTION = "What small thing made you happy when you were young?";
 const JOURNEY_STEPS = ["You shared", "Gemma protected", "You approved", "A story matched"];
 
+function speakText(text: string, onEnd?: () => void): void {
+  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+    onEnd?.();
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-SG";
+  utterance.rate = 0.82;
+  utterance.pitch = 1;
+  utterance.onend = () => onEnd?.();
+  utterance.onerror = () => onEnd?.();
+  window.speechSynthesis.speak(utterance);
+}
+
 export function JoinPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
   const [searchParams] = useSearchParams();
@@ -235,23 +250,35 @@ export function JoinPage() {
       setError("Read aloud is not available in this browser. The full guide remains on screen.");
       return;
     }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance([
-      guide.introduction,
-      ...guide.questions,
-      guide.consentReminder,
-    ].join(" "));
-    utterance.lang = "en-SG";
-    utterance.rate = 0.82;
-    utterance.pitch = 1;
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
     setError(null);
     setIsSpeaking(true);
-    window.speechSynthesis.speak(utterance);
+    speakText([guide.introduction, ...guide.questions, guide.consentReminder].join(" "), () => setIsSpeaking(false));
   };
 
-  const stopGuide = () => {
+  const readReviewAloud = () => {
+    if (!capsule) return;
+    if (isSpeaking) {
+      stopSpeaking();
+      return;
+    }
+    if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+      setError("Read aloud is not available in this browser. The full capsule remains on screen.");
+      return;
+    }
+    const fieldLines: string[] = [];
+    if (capsule.place) fieldLines.push(`Place: ${capsule.place}.`);
+    if (capsule.era) fieldLines.push(`Era: ${capsule.era}.`);
+    capsule.skills.forEach((skill) => fieldLines.push(`Skill: ${skill}.`));
+    capsule.offers.forEach((offer) => fieldLines.push(`Offer: ${offer}.`));
+    capsule.wants.forEach((want) => fieldLines.push(`Wants: ${want}.`));
+    const uncertainLine = capsule.uncertain.length > 0 ? `Uncertain: ${capsule.uncertain.join(". ")}.` : "";
+    const fullText = [capsule.safeSummary, ...fieldLines, uncertainLine].filter(Boolean).join(" ");
+    setError(null);
+    setIsSpeaking(true);
+    speakText(fullText, () => setIsSpeaking(false));
+  };
+
+  const stopSpeaking = () => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   };
@@ -469,13 +496,14 @@ export function JoinPage() {
             ) : (
               <div className="redaction-note"><strong>No identifiers detected</strong><p>Only Gemma’s short interpretation and evidence above enter matching—not the full quote.</p></div>
             )}
-            <details>
+            <details open>
               <summary>What is uncertain?</summary>
               <ul>{capsule.uncertain.map((item) => <li key={item}>{item}</li>)}</ul>
             </details>
+            <button className="button button-secondary button-block" type="button" aria-pressed={isSpeaking} onClick={readReviewAloud}>{isSpeaking ? "Stop reading" : "Read this to me"}</button>
             {error && <div className="error-banner" role="alert">{error}</div>}
             <button className="button button-primary button-block" disabled={pendingAction === "approve"} onClick={() => void approve()}>{pendingAction === "approve" ? "Lighting your window…" : "Approve and light my window"}</button>
-            <button className="text-button button-block" onClick={() => setStage("capture")}>Go back and edit</button>
+            <button className="button button-secondary button-block" onClick={() => setStage("capture")}>Go back and edit</button>
           </div>
         )}
 
@@ -517,7 +545,7 @@ export function JoinPage() {
                 <p className="consent-reminder">{room.snapshot.guide.consentReminder}</p>
                 <div className="read-aloud-actions">
                   <button className="button button-primary" type="button" aria-pressed={isSpeaking} onClick={speakGuide}>Read this aloud</button>
-                  {isSpeaking && <button className="button button-secondary" type="button" onClick={stopGuide}>Stop reading</button>}
+                  {isSpeaking && <button className="button button-secondary" type="button" onClick={stopSpeaking}>Stop reading</button>}
                 </div>
                 <small>Gemini received only the two approved safe capsules and the visible evidence above—not your raw words.</small>
               </article>

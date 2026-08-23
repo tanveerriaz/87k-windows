@@ -159,6 +159,31 @@ test("storyteller no-match remains honest", async ({ page }) => {
   await wallContext.close();
 });
 
+test("review panel meets AA contrast and offers read-aloud", async ({ page }) => {
+  const roomCode = `review-${Date.now()}`;
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`/join/${roomCode}?role=share`);
+  await submitStory(page);
+
+  const reviewPanel = page.locator(".review-panel");
+  await expect(reviewPanel.getByRole("button", { name: /read this to me/i })).toBeVisible();
+
+  const cta = page.getByRole("button", { name: /approve and light my window/i });
+  const bg = await cta.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(bg).toBe("rgb(158, 79, 44)"); // #9e4f2c
+
+  const placeLabel = reviewPanel.locator(".capsule-evidence small").first();
+  const placeLabelSize = await placeLabel.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(placeLabelSize).toBeGreaterThanOrEqual(16);
+
+  await expect(reviewPanel.locator("details")).toHaveJSProperty("open", true);
+  await expect(reviewPanel.getByRole("listitem").first()).toBeVisible();
+
+  const editButton = page.getByRole("button", { name: "Go back and edit" });
+  const editBox = await editButton.boundingBox();
+  expect(editBox?.height).toBeGreaterThanOrEqual(48);
+});
+
 test("admin labels the development harness honestly", async ({ page }) => {
   const roomCode = `admin-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 800 });

@@ -175,7 +175,7 @@ p {
 }
 
 .button-primary {
-  background: var(--red);
+  background: #9e4f2c;
   color: var(--white);
 }
 
@@ -767,7 +767,7 @@ p {
 
 .capsule-evidence small {
   color: var(--blue-soft);
-  font: 500 9px/1 var(--mono);
+  font: 500 16px/1.2 var(--mono);
 }
 
 .redaction-note {
