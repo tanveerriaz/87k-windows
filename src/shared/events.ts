@@ -72,4 +72,6 @@ export type InterServerEvents = Record<never, never>;
 export interface SocketData {
   roomCode?: string;
   role?: ClientRole;
+  isAdmin?: boolean;
+  participantIds?: Set<string>;
 }

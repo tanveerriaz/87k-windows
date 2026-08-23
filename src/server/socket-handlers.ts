@@ -6,7 +6,6 @@ import {
   ProviderSchema,
   RoomJoinPayloadSchema,
   RoomOnlyPayloadSchema,
-  StoryCapsuleSchema,
   StorySubmittedPayloadSchema,
 } from "../shared/schemas";
 import type { EventAck, RoomJoinAck } from "../shared/events";
@@ -30,7 +29,11 @@ function withValidation<T, A extends { ok: boolean }>(
   };
 }
 
-export function registerSocketHandlers(io: TypedServer, rooms: RoomStore): void {
+export type SocketHandlerOptions = {
+  adminSecret?: string;
+};
+
+export function registerSocketHandlers(io: TypedServer, rooms: RoomStore, options: SocketHandlerOptions = {}): void {
   io.on("connection", (socket) => {
     socket.on(
       "room:join",
@@ -38,6 +41,7 @@ export function registerSocketHandlers(io: TypedServer, rooms: RoomStore): void 
         const roomCode = payload.roomCode.trim().toLowerCase();
         socket.data.roomCode = roomCode;
         socket.data.role = payload.role;
+        socket.data.isAdmin = payload.role === "admin" && Boolean(options.adminSecret) && payload.adminSecret === options.adminSecret;
         void socket.join(roomCode);
         const snapshot = rooms.get(roomCode);
         ack?.({ ok: true, snapshot });
@@ -48,6 +52,7 @@ export function registerSocketHandlers(io: TypedServer, rooms: RoomStore): void 
     socket.on(
       "story:submitted",
       withValidation<typeof StorySubmittedPayloadSchema._output, EventAck>(StorySubmittedPayloadSchema, (payload, ack) => {
+        (socket.data.participantIds ??= new Set()).add(payload.participantId);
         rooms.markSubmitted(payload.roomCode);
         io.to(payload.roomCode).emit("story:submitted", { participantId: payload.participantId });
         io.to(payload.roomCode).emit("room:snapshot", rooms.get(payload.roomCode));
@@ -58,13 +63,9 @@ export function registerSocketHandlers(io: TypedServer, rooms: RoomStore): void 
     socket.on(
       "capsule:approved",
       withValidation<typeof CapsuleApprovedPayloadSchema._output, EventAck>(CapsuleApprovedPayloadSchema, (payload, ack) => {
-        const parsed = StoryCapsuleSchema.safeParse(payload.capsule);
-        if (!parsed.success) {
-          ack?.({ ok: false, message: "The safe capsule could not be validated." });
-          return;
-        }
+        (socket.data.participantIds ??= new Set()).add(payload.participantId);
         ack?.({ ok: true });
-        void rooms.approve(io, payload.roomCode, payload.participantId, parsed.data).catch(() => {
+        void rooms.approve(io, payload.roomCode, payload.participantId, payload.capsule).catch(() => {
           const message = "The room could not finish matching. Try the prepared story again.";
           rooms.setLastError(payload.roomCode, message);
           io.to(payload.roomCode).emit("room:error", { message });
@@ -76,6 +77,10 @@ export function registerSocketHandlers(io: TypedServer, rooms: RoomStore): void 
     socket.on(
       "consent:decided",
       withValidation<typeof ConsentDecidedPayloadSchema._output, EventAck>(ConsentDecidedPayloadSchema, (payload, ack) => {
+        if (!socket.data.participantIds?.has(payload.participantId)) {
+          ack?.({ ok: false, message: "You can only answer for yourself." });
+          return;
+        }
         const result = rooms.decide(io, payload.roomCode, payload.participantId, payload.decision);
         ack?.(result);
       }),
@@ -84,6 +89,10 @@ export function registerSocketHandlers(io: TypedServer, rooms: RoomStore): void 
     socket.on(
       "demo:reset",
       withValidation<typeof RoomOnlyPayloadSchema._output, EventAck>(RoomOnlyPayloadSchema, (payload, ack) => {
+        if (!socket.data.isAdmin) {
+          ack?.({ ok: false, message: "Presenter access required." });
+          return;
+        }
         const snapshot = rooms.reset(payload.roomCode);
         io.to(payload.roomCode).emit("demo:reset", snapshot);
         io.to(payload.roomCode).emit("room:snapshot", snapshot);
@@ -94,6 +103,10 @@ export function registerSocketHandlers(io: TypedServer, rooms: RoomStore): void 
     socket.on(
       "demo:inject",
       withValidation<typeof RoomOnlyPayloadSchema._output, EventAck>(RoomOnlyPayloadSchema, (payload, ack) => {
+        if (!socket.data.isAdmin) {
+          ack?.({ ok: false, message: "Presenter access required." });
+          return;
+        }
         ack?.({ ok: true });
         void rooms.inject(io, payload.roomCode).catch(() => {
           const message = "The prepared story could not be injected. Reset the room and try again.";
@@ -106,6 +119,10 @@ export function registerSocketHandlers(io: TypedServer, rooms: RoomStore): void 
     socket.on(
       "provider:changed",
       withValidation<typeof ProviderChangedPayloadSchema._output, EventAck>(ProviderChangedPayloadSchema, (payload, ack) => {
+        if (!socket.data.isAdmin) {
+          ack?.({ ok: false, message: "Presenter access required." });
+          return;
+        }
         const parsed = ProviderSchema.safeParse(payload.provider);
         if (!parsed.success) {
           ack?.({ ok: false, message: "Unknown provider." });

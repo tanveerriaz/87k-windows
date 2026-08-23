@@ -18,7 +18,7 @@ describe("socket payload validation", () => {
     httpServer = createServer();
     const io = new Server(httpServer);
     const rooms = new RoomStore(120, new StoryMatcher(undefined, 0.62), new MockProvider(), "mock", new DisabledFacilitator());
-    registerSocketHandlers(io, rooms);
+    registerSocketHandlers(io, rooms, { adminSecret: "test-secret" });
     await new Promise<void>((resolve) => httpServer.listen(0, resolve));
     url = `http://127.0.0.1:${(httpServer.address() as AddressInfo).port}`;
   });
@@ -45,6 +45,17 @@ describe("socket payload validation", () => {
     const ack = await new Promise((resolve) => {
       client.emit("room:join", { roomCode: "x".repeat(10_000), role: "join" }, (r: unknown) => resolve(r));
     });
+    expect(ack).toMatchObject({ ok: false });
+  });
+
+  it("rejects demo:reset from a non-admin socket", async () => {
+    const ack = await new Promise((r) => client.emit("demo:reset", { roomCode: "demo87" }, (x: unknown) => r(x)));
+    expect(ack).toMatchObject({ ok: false });
+  });
+
+  it("rejects consent:decided for a participantId the socket does not own", async () => {
+    const ack = await new Promise((r) =>
+      client.emit("consent:decided", { roomCode: "demo87", participantId: "someone-else", decision: "yes" }, (x: unknown) => r(x)));
     expect(ack).toMatchObject({ ok: false });
   });
 });

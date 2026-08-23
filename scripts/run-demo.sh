@@ -6,6 +6,8 @@ MODE="${1:-}"
 MODEL="gemma3:4b"
 DEMO_PORT="${DEMO_PORT:-3000}"
 ROOM_CODE="${ROOM_CODE:-demo87}"
+DEMO_ADMIN_SECRET="${DEMO_ADMIN_SECRET:-$(uuidgen)}"
+export DEMO_ADMIN_SECRET
 
 if [[ "$MODE" != "mock" && "$MODE" != "local" && "$MODE" != "gemma" && "$MODE" != "judge" ]]; then
   echo "Usage: ./scripts/run-demo.sh mock|local|gemma|judge" >&2

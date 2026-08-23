@@ -193,10 +193,10 @@ export function JoinPage() {
   const startAgain = () => {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     setIsSpeaking(false);
-    room.reset();
+    setStage(listenerEntry ? "listen-profile" : "welcome");
     setCapsule(null);
-    setStage("capture");
-    chooseFixture("radio");
+    setError(null);
+    setMemory("");
   };
 
   const speakGuide = () => {

@@ -27,7 +27,7 @@ const rooms = new RoomStore(
   dependencies.facilitator,
 );
 
-registerSocketHandlers(io, rooms);
+registerSocketHandlers(io, rooms, { adminSecret: env.DEMO_ADMIN_SECRET });
 
 httpServer.listen(env.PORT, "0.0.0.0", () => {
   console.info(`87K Windows server listening on http://0.0.0.0:${env.PORT} with ${env.INFERENCE_PROVIDER} inference and ${env.GEMINI_FACILITATOR} facilitation`);

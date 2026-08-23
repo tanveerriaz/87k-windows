@@ -7,7 +7,8 @@ import { useRoomSocket } from "../lib/use-room-socket";
 
 export function AdminPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
-  const room = useRoomSocket(roomCode, "admin");
+  const adminSecret = useMemo(() => new URLSearchParams(window.location.search).get("key") ?? undefined, []);
+  const room = useRoomSocket(roomCode, "admin", adminSecret);
   const joinUrl = useMemo(() => `${window.location.origin}/join/${roomCode}`, [roomCode]);
   const activeProvider = room.snapshot?.provider;
   const provider = providerPresentation(activeProvider);

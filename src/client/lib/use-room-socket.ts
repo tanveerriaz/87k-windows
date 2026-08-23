@@ -5,7 +5,7 @@ import type { ConsentDecision, RoomSnapshot, StoryCapsule } from "../../shared/s
 
 type RoomSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-export function useRoomSocket(roomCode: string, role: ClientRole) {
+export function useRoomSocket(roomCode: string, role: ClientRole, adminSecret?: string) {
   const [snapshot, setSnapshot] = useState<RoomSnapshot | null>(null);
   const [connected, setConnected] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export function useRoomSocket(roomCode: string, role: ClientRole) {
     const joinRoom = () => {
       setConnected(true);
       setMessage(null);
-      socket.emit("room:join", { roomCode, role }, (result) => {
+      socket.emit("room:join", { roomCode, role, adminSecret }, (result) => {
         if (result.ok) setSnapshot(result.snapshot);
         else setMessage(result.message);
       });
@@ -41,7 +41,7 @@ export function useRoomSocket(roomCode: string, role: ClientRole) {
       socket.off("provider:changed", onProvider);
       socket.disconnect();
     };
-  }, [role, roomCode, socket]);
+  }, [adminSecret, role, roomCode, socket]);
 
   const submitted = useCallback(
     (participantId: string) => socket.emit("story:submitted", { roomCode, participantId }),
