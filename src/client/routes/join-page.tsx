@@ -7,11 +7,14 @@ import { SiteWordmark } from "../components/site-wordmark";
 import { StatusBadge } from "../components/status-badge";
 import { ApiError, extractCapsule } from "../lib/api";
 import { compressImage } from "../lib/image";
+import { isLang, LANG_LABELS, type Lang } from "../lib/i18n";
 import { resolveJoinDisplacement, type JoinStage } from "../lib/join-stage";
 import { useRoomSocket } from "../lib/use-room-socket";
 
 const MEMORY_QUESTION = "What small thing made you happy when you were young?";
 const JOURNEY_STEPS = ["You shared", "Gemma protected", "You approved", "A story matched"];
+const LANG_OPTIONS = Object.keys(LANG_LABELS) as Lang[];
+const LANGUAGE_ENGLISH_NAME: Record<Lang, string> = { en: "English", zh: "Mandarin", ms: "Malay", ta: "Tamil" };
 
 function speakText(text: string, onEnd?: () => void): void {
   if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
@@ -30,7 +33,7 @@ function speakText(text: string, onEnd?: () => void): void {
 
 export function JoinPage() {
   const roomCode = (useParams().roomCode ?? "demo87").toLowerCase();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const listenerEntry = searchParams.get("role") === "listen";
   const lastRoleEntryRef = useRef(listenerEntry);
   const participantId = useMemo(() => crypto.randomUUID(), []);
@@ -47,7 +50,10 @@ export function JoinPage() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [listenerLanguage, setListenerLanguage] = useState("English");
+  const [lang, setLang] = useState<Lang>(() => {
+    const requested = searchParams.get("lang");
+    return requested && isLang(requested) ? requested : "en";
+  });
   const [listenerTime, setListenerTime] = useState("One short conversation this week");
   const [listenerReason, setListenerReason] = useState("I want to learn radio repair and hear what Queenstown was like in the 1970s.");
   const room = useRoomSocket(roomCode, "join");
@@ -112,6 +118,15 @@ export function JoinPage() {
     const interval = window.setInterval(() => setElapsedSeconds((seconds) => seconds + 1), 1000);
     return () => window.clearInterval(interval);
   }, [stage]);
+
+  const changeLang = (next: Lang) => {
+    setLang(next);
+    setSearchParams((previous) => {
+      const params = new URLSearchParams(previous);
+      params.set("lang", next);
+      return params;
+    }, { replace: true });
+  };
 
   const chooseFixture = (next: "radio" | "no-match") => {
     setFixture(next);
@@ -201,7 +216,7 @@ export function JoinPage() {
 
   const requestConversation = async () => {
     const listenerMemory = [
-      `I can listen in ${listenerLanguage}.`,
+      `I can listen in ${LANGUAGE_ENGLISH_NAME[lang]}.`,
       `I can offer ${listenerTime.toLowerCase()}.`,
       listenerReason.trim(),
     ].join(" ");
@@ -324,7 +339,7 @@ export function JoinPage() {
             <p className="eyebrow">Offer attention, not advice</p>
             <h1>I would like to listen.</h1>
             <p className="listener-intro">Start with what you can genuinely offer. You will only see a storyteller’s approved invitation—not their private memory or contact details.</p>
-            <label className="listener-field"><span>Language I am comfortable using</span><select value={listenerLanguage} onChange={(event) => setListenerLanguage(event.target.value)}><option>English</option><option>Mandarin</option><option>Malay</option><option>Tamil</option></select></label>
+            <label className="listener-field"><span>Language I am comfortable using</span><select value={lang} onChange={(event) => changeLang(event.target.value as Lang)}>{LANG_OPTIONS.map((code) => <option key={code} value={code}>{LANG_LABELS[code]}</option>)}</select></label>
             <label className="listener-field"><span>Time I can offer</span><select value={listenerTime} onChange={(event) => setListenerTime(event.target.value)}><option>One short conversation this week</option><option>15 minutes today</option><option>A visit at a partner centre</option></select></label>
             {error && <div className="error-banner" role="alert">{error}</div>}
             <button className="button button-primary button-block" onClick={() => setStage("listen-invitation")}>See a safe story invitation</button>
@@ -341,7 +356,7 @@ export function JoinPage() {
               <div><span className="mono-label">WHAT THEY CHOSE TO SHARE</span><p>{room.snapshot?.windows[0]?.safeSummary ?? "Ask the storyteller to share first, then return to this room."}</p><small>Approved safe capsule only · no raw words or identifiers</small></div>
             </article>
             <label className="memory-field"><span>Why would you like to listen?</span><textarea value={listenerReason} maxLength={240} rows={4} onChange={(event) => setListenerReason(event.target.value)} /><small>{listenerReason.length}/240</small></label>
-            <p className="listener-preference">You offered: <strong>{listenerLanguage}</strong> · <strong>{listenerTime}</strong></p>
+            <p className="listener-preference">You offered: <strong>{LANGUAGE_ENGLISH_NAME[lang]}</strong> · <strong>{listenerTime}</strong></p>
             {error && <div className="error-banner" role="alert">{error}</div>}
             <button className="button button-primary button-block" disabled={listenerReason.trim().length < 12 || !room.snapshot?.windows[0]} onClick={() => void requestConversation()}>Prepare my listening request with Gemma</button>
             <button className="text-button button-block" onClick={() => setStage("listen-profile")}>Change what I can offer</button>
@@ -414,6 +429,7 @@ export function JoinPage() {
             <h1>There is one question worth asking.</h1>
             <p>{MEMORY_QUESTION}</p>
             <p className="welcome-support">You can speak, type, or bring an old photo. First, you will see what Gemma noticed—and what remains only your words.</p>
+            <label className="listener-field welcome-language-field"><span>Language</span><select value={lang} onChange={(event) => changeLang(event.target.value as Lang)}>{LANG_OPTIONS.map((code) => <option key={code} value={code}>{LANG_LABELS[code]}</option>)}</select></label>
             <button className="button button-primary button-block" onClick={() => setStage("capture")}>Share a prepared memory</button>
             <Link className="text-link role-cross-link" to={`/join/${roomCode}?role=listen`}>I would like to listen instead</Link>
             <p className="privacy-note">Synthetic demo only · No account · Nothing stored</p>
