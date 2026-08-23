@@ -14,7 +14,7 @@ function request() {
     contents: "Prepare a safe capsule.",
     config: {
       temperature: 0.1,
-      maxOutputTokens: 600,
+      maxOutputTokens: 1200,
       responseMimeType: "application/json",
       responseJsonSchema: responseSchema,
       abortSignal: AbortSignal.timeout(1_000),
@@ -47,7 +47,7 @@ describe("OpenRouterGenAiClient", () => {
       model: "google/gemma-3-27b-it",
       messages: [{ role: "user", content: "Prepare a safe capsule." }],
       temperature: 0.1,
-      max_tokens: 600,
+      max_tokens: 1200,
       stream: false,
       provider: { require_parameters: true, order: ["deepinfra"] },
       response_format: {

@@ -85,7 +85,7 @@ export class GemmaApiProvider implements InferenceProvider {
         config: {
           abortSignal: AbortSignal.timeout(this.timeoutMs),
           temperature: 0.1,
-          maxOutputTokens: 600,
+          maxOutputTokens: 1200,
           responseMimeType: "application/json",
           responseJsonSchema: CAPSULE_JSON_SCHEMA,
         },
