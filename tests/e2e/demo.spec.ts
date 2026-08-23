@@ -16,8 +16,9 @@ async function submitStory(page: Page, role: "share" | "listen" = "share") {
 test("landing page presents the two human roles at mobile size", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(page.getByAltText("Two empty chairs facing a small lamp in a quiet community room")).toBeVisible();
+  await expect(page.getByRole("link", { name: "87K Windows home, Singapore" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "What story should not disappear?" })).toBeVisible();
+  await expect(page.locator("video[src*='landing-story']")).toBeVisible();
   await expect(page.getByRole("link", { name: "I have a story" })).toHaveAttribute("href", "/join/demo87?role=share");
   await expect(page.getByRole("link", { name: "I would like to listen" })).toHaveAttribute("href", "/join/demo87?role=listen");
   await expect(page.getByText("No contact details are shared.", { exact: true })).toBeVisible();
