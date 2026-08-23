@@ -10,8 +10,8 @@ export type VoiceCandidate = {
  * (for example) zh-CN is preferred over zh-TW when picking for "zh-SG".
  */
 const REGIONAL_FALLBACK: Partial<Record<string, string>> = {
-  "zh-SG": "zh-CN",
-  "ta-SG": "ta-IN",
+  "zh-sg": "zh-cn",
+  "ta-sg": "ta-in",
 };
 
 function languagePrefix(bcp47: string): string {
@@ -36,9 +36,9 @@ export function pickVoice<T extends VoiceCandidate>(voices: readonly T[], locale
   const exact = bestOf(voices.filter((voice) => voice.lang.toLowerCase() === normalizedLocale));
   if (exact) return exact;
 
-  const fallbackLocale = REGIONAL_FALLBACK[locale];
+  const fallbackLocale = REGIONAL_FALLBACK[normalizedLocale];
   if (fallbackLocale) {
-    const fallback = bestOf(voices.filter((voice) => voice.lang.toLowerCase() === fallbackLocale.toLowerCase()));
+    const fallback = bestOf(voices.filter((voice) => voice.lang.toLowerCase() === fallbackLocale));
     if (fallback) return fallback;
   }
 

@@ -22,6 +22,7 @@ function loadFixture(name: string): StoryCapsule {
 function minimalCapsule(overrides: Partial<StoryCapsule>): StoryCapsule {
   return {
     id: "fixture",
+    language: "en",
     observed: [],
     place: null,
     era: null,
@@ -103,5 +104,29 @@ describe("StoryMatcher", () => {
     const noMatch = loadFixture(`${provider}-no-match.json`);
     const result = matcher.matchPair(radio, noMatch, "a", "b");
     expect(result.decision).toBe("NO_MATCH");
+  });
+
+  it("matches a real Ollama gemma3:4b zh capsule against the real English listener fixture (captured, not fabricated — see task-4-report.md)", () => {
+    const zhCapsule = loadFixture("ollama-radio-zh.json");
+    const listener = loadFixture("ollama-radio-listener.json");
+    expect(zhCapsule.language).toBe("zh");
+    expect(zhCapsule.place).toBe("Queenstown");
+    expect(zhCapsule.era).toBe("1970s");
+    expect(zhCapsule.skills).toEqual(["radio repair"]);
+    const result = matcher.matchPair(zhCapsule, listener, "a", "b");
+    expect(result.decision).toBe("MATCH");
+    expect(result.confidence).toBeGreaterThanOrEqual(0.62);
+  });
+
+  it("matches a zh-language capsule (Chinese safeSummary, canonical English fields) against the English listener fixture", () => {
+    const zhCapsule = buildMockCapsule({ memory: PREPARED_RADIO_MEMORY, fixture: "radio", language: "zh" });
+    expect(zhCapsule.language).toBe("zh");
+    expect(zhCapsule.safeSummary).toMatch(/[一-鿿]/);
+    expect(zhCapsule.place).toBe("Queenstown");
+    expect(zhCapsule.era).toBe("1970s");
+    expect(zhCapsule.skills).toEqual(["radio repair"]);
+    const result = matcher.matchPair(zhCapsule, listenerFixtureCapsule, "a", "b");
+    expect(result.decision).toBe("MATCH");
+    expect(result.confidence).toBeGreaterThanOrEqual(0.62);
   });
 });

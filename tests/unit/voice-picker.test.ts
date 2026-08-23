@@ -56,6 +56,17 @@ describe("pickVoice", () => {
     const voices = [voice("ZH-cn")];
     expect(pickVoice(voices, "zh-SG")).toEqual(voice("ZH-cn"));
   });
+
+  it("looks up the regional fallback case-insensitively even when the requested locale's casing differs", () => {
+    // Two candidates: an unrelated same-language localService voice (zh-TW)
+    // and the correct regional-fallback voice (zh-CN, cloud). If the
+    // REGIONAL_FALLBACK lookup used the raw (non-normalized) locale, "ZH-SG"
+    // would miss the "zh-SG" key entirely, fall through to the generic
+    // same-language tier, and wrongly prefer the localService zh-TW voice.
+    const voices = [voice("zh-TW", true), voice("zh-CN", false)];
+    expect(pickVoice(voices, "ZH-SG")).toEqual(voice("zh-CN", false));
+    expect(pickVoice(voices, "zh-sg")).toEqual(voice("zh-CN", false));
+  });
 });
 
 describe("canReadAloud", () => {

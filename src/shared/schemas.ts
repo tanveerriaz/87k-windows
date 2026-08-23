@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const ProviderSchema = z.enum(["mock", "gemma-api", "openrouter", "ollama"]);
 export const FacilitatorSchema = z.enum(["disabled", "gemini", "mock"]);
+export const LanguageSchema = z.enum(["en", "zh", "ms", "ta"]);
 
 export const SeniorBridgeSchema = z.object({
   introduction: z.string().trim().min(1).max(240),
@@ -14,6 +15,7 @@ export const SeniorBridgeSchema = z.object({
 
 export const StoryCapsuleSchema = z.object({
   id: z.string().min(1),
+  language: LanguageSchema.default("en"),
   observed: z.array(z.string()),
   place: z.string().nullable(),
   era: z.string().nullable(),
@@ -88,6 +90,7 @@ export const ExtractRequestSchema = z.object({
   roomCode: z.string().trim().min(3).max(24).regex(/^[a-zA-Z0-9-]+$/),
   memory: z.string().trim().min(8).max(600),
   fixture: z.enum(["radio", "no-match"]).optional(),
+  language: LanguageSchema.default("en"),
 });
 
 export const MatchRequestSchema = z.object({
@@ -134,6 +137,7 @@ export const ProviderChangedPayloadSchema = z.object({
 
 export type Provider = z.infer<typeof ProviderSchema>;
 export type Facilitator = z.infer<typeof FacilitatorSchema>;
+export type Language = z.infer<typeof LanguageSchema>;
 export type SeniorBridge = z.infer<typeof SeniorBridgeSchema>;
 export type StoryCapsule = z.infer<typeof StoryCapsuleSchema>;
 export type MatchResult = z.infer<typeof MatchResultSchema>;

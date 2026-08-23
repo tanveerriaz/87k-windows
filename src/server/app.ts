@@ -114,7 +114,7 @@ export function createApp(dependencies: AppDependencies): express.Express {
   app.post("/api/extract", inferenceLimiter, jsonBody, async (request, response) => {
     try {
       const input = ExtractRequestSchema.parse(request.body);
-      const capsule = StoryCapsuleSchema.parse(await provider.extract({ memory: input.memory, fixture: input.fixture }));
+      const capsule = StoryCapsuleSchema.parse(await provider.extract({ memory: input.memory, fixture: input.fixture, language: input.language }));
       const capsuleId = rooms.registerCapsule(capsule);
       return response.json({ capsule, capsuleId, provider: env.INFERENCE_PROVIDER });
     } catch (error) {

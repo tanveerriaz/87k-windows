@@ -67,6 +67,20 @@ describe("OllamaProvider", () => {
     expect(capsule.wants).toEqual([]);
   });
 
+  it("trusts the model's offers/wants for a non-English memory instead of gating on English consent phrasing", async () => {
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ response: validLocalCapsule }), { status: 200 }),
+    ) as typeof fetch;
+    const provider = new OllamaProvider("http://127.0.0.1:11434", "gemma3:4b", fetcher, 1000);
+    const capsule = await provider.extract({
+      memory: "我以前在女皇镇修理收音机，我很乐意教基本的收音机维修。",
+      language: "zh",
+    });
+    expect(capsule.language).toBe("zh");
+    expect(capsule.offers).toEqual(["teach radio repair"]);
+    expect(capsule.wants).toEqual(["meet a learner"]);
+  });
+
   it("repairs invalid JSON once", async () => {
     const fetcher = vi
       .fn()

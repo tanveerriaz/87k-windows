@@ -5,6 +5,7 @@ import { FacilitationUnavailableError } from "../../src/server/facilitation/prov
 
 const source: StoryCapsule = {
   id: "PRIVATE-SOURCE-ID",
+  language: "en",
   observed: ["do not forward this observation"],
   place: "Queenstown",
   era: "1970s",

@@ -56,9 +56,10 @@ export class OllamaProvider implements InferenceProvider {
     const candidate = StoryCapsuleSchema.parse({
       ...parsed,
       id: randomUUID(),
+      language: input.language ?? "en",
       containsPII: merged.containsPII,
       redactions: merged.redactions,
-      ...keepExplicitConsent(input.memory, parsed.offers, parsed.wants),
+      ...keepExplicitConsent(input.memory, parsed.offers, parsed.wants, input.language),
     });
     const summaryRedaction = redactMemory(candidate.safeSummary);
     return StoryCapsuleSchema.parse({
@@ -74,12 +75,12 @@ export class OllamaProvider implements InferenceProvider {
     this.busy = true;
     try {
       const safeInput = redactMemory(input.memory).safeText;
-      const firstOutput = await this.generate(buildCapsulePrompt({ memory: safeInput, dialect: "ollama" }));
+      const firstOutput = await this.generate(buildCapsulePrompt({ memory: safeInput, dialect: "ollama", language: input.language }));
       try {
         return this.parse(firstOutput, input);
       } catch {
         const repairedOutput = await this.generate(
-          buildCapsulePrompt({ memory: safeInput, repairOutput: firstOutput, dialect: "ollama" }),
+          buildCapsulePrompt({ memory: safeInput, repairOutput: firstOutput, dialect: "ollama", language: input.language }),
         );
         try {
           return this.parse(repairedOutput, input);

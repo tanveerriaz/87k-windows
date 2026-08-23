@@ -1,10 +1,11 @@
-import { StoryCapsuleSchema, type StoryCapsule } from "../../shared/schemas";
+import { StoryCapsuleSchema, type Language, type StoryCapsule } from "../../shared/schemas";
 import type { UiStringKey } from "./i18n";
 
 type ExtractInput = {
   roomCode: string;
   memory: string;
   fixture?: "radio" | "no-match";
+  language?: Language;
 };
 
 const UNAVAILABLE_MESSAGE = "We couldn't reach the room right now. Please try again in a moment.";
