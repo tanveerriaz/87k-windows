@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import { useParams } from "react-router-dom";
+import { SiteWordmark } from "../components/site-wordmark";
 import { StatusBadge } from "../components/status-badge";
 import { facilitatorPresentation, providerPresentation } from "../lib/provider-presentation";
 import { useRoomSocket } from "../lib/use-room-socket";
@@ -29,7 +30,7 @@ export function AdminPage() {
     <main className="admin-page">
       <header className="mode-header admin-header">
         <div>
-          <span className="wordmark">87K WINDOWS</span>
+          <SiteWordmark />
           <span className="room-label">PRESENTER · {roomCode.toUpperCase()}</span>
         </div>
         <StatusBadge connected={room.connected} provider={room.snapshot?.provider} facilitator={room.snapshot?.facilitator} />

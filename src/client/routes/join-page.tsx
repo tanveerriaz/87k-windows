@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import memoryObjects from "../../../assets/generated/memory-objects.jpg";
 import { PREPARED_NO_MATCH_MEMORY, PREPARED_RADIO_MEMORY } from "../../shared/demo";
 import type { StoryCapsule } from "../../shared/schemas";
+import { SiteWordmark } from "../components/site-wordmark";
 import { StatusBadge } from "../components/status-badge";
 import { extractCapsule } from "../lib/api";
 import { compressImage } from "../lib/image";
@@ -231,7 +232,7 @@ export function JoinPage() {
     <main className="join-page">
       <header className="mode-header">
         <div>
-          <span className="wordmark">87K WINDOWS</span>
+          <SiteWordmark />
           <span className="room-label">ROOM {roomCode.toUpperCase()}</span>
         </div>
         <StatusBadge connected={room.connected} provider={room.snapshot?.provider} facilitator={room.snapshot?.facilitator} />

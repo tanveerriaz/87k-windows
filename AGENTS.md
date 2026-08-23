@@ -52,3 +52,14 @@ Test the critical flow with at least two tabs: participant submission must updat
 ## Scope exclusions
 
 Do not add native mobile apps, authentication, payments, contact exchange, permanent storage, vector databases, queues, microservices or a self-hosted cloud GPU unless the user changes the scope.
+
+## Learned User Preferences
+
+- Keep the 87K WINDOWS wordmark as a sitewide home link, with a small Singapore flag beside it.
+- Credit Tanveer Riaz as the hackathon creator with tanveerriaz.me, the exact tagline **Curious mind. Builder mode! 🇸🇬**, and the public GitHub repo.
+- Landing facade window lights must be real windows lighting in the actual glass, not synthetic overlay or canvas glows that miss the frames.
+
+## Learned Workspace Facts
+
+- Public GitHub repository: https://github.com/tanveerriaz/87k-windows
+- Creator site for attribution: https://tanveerriaz.me/

@@ -1,20 +1,49 @@
 import { Link } from "react-router-dom";
+import { SiteWordmark } from "../components/site-wordmark";
 
 export function LandingPage() {
   return (
     <main className="landing-page two-chairs-page">
       <nav className="landing-nav">
-        <span className="wordmark">87K WINDOWS</span>
+        <SiteWordmark />
         <span className="mono-label">A SAFE PLACE TO BEGIN</span>
       </nav>
+      <div className="landing-facade-band" aria-hidden="true">
+        <img
+          className="landing-facade-still"
+          src="/assets/landing-facade-still.jpg"
+          alt=""
+          width={1280}
+          height={720}
+          decoding="async"
+        />
+        <video
+          className="landing-facade-video"
+          src="/assets/landing-facade-ambient.mp4"
+          poster="/assets/landing-facade-still.jpg"
+          muted
+          autoPlay
+          loop
+          playsInline
+          preload="metadata"
+        />
+      </div>
       <section className="two-chairs-hero">
         <div className="two-chairs-intro">
           <p className="eyebrow">A story needs a willing listener</p>
           <h1>What story should not disappear?</h1>
         </div>
         <figure className="two-chairs-visual">
-          <img src="/assets/two-chairs-hero.png" alt="Two empty chairs facing a small lamp in a quiet community room" />
-          <figcaption><span>ONE PERSON READY TO SPEAK</span><i aria-hidden="true" /><span>ONE PERSON READY TO LISTEN</span></figcaption>
+          <video
+            src="/landing-story.mp4?v=mix4"
+            poster="/landing-story-poster.jpg"
+            controls
+            muted
+            autoPlay
+            playsInline
+            preload="auto"
+            aria-label="The story of 87K Windows: why the product is named for the roughly 87,000 seniors living alone in Singapore, told through a storyteller and a listener in the same block"
+          />
         </figure>
         <div className="two-chairs-copy">
           <p className="landing-copy">87K Windows helps one person share a memory and another choose to listen. Gemma protects the story. Gemini helps the conversation begin, then steps away.</p>
@@ -36,9 +65,29 @@ export function LandingPage() {
         </div>
       </section>
       <footer className="two-chairs-footer">
-        <span>GEMMA PROTECTS THE STORY</span>
-        <span>GEMINI HELPS THE FIRST MINUTE</span>
-        <Link to="/wall/demo87">View the living wall</Link>
+        <div className="two-chairs-footer-meta">
+          <span>GEMMA PROTECTS THE STORY</span>
+          <span>GEMINI HELPS THE FIRST MINUTE</span>
+          <span>MUSIC: “I GIORNI” · CLAVIER-MUSIC · PIXABAY</span>
+          <Link to="/wall/demo87">View the living wall</Link>
+        </div>
+        <div className="site-credit">
+          <p>
+            Built by{" "}
+            <a href="https://tanveerriaz.me/" rel="noopener noreferrer" target="_blank">
+              Tanveer Riaz
+            </a>
+            {" "}during a hackathon — AI specialist and systems builder in Singapore.
+          </p>
+          <p className="site-credit-tagline">Curious mind. Builder mode! 🇸🇬</p>
+          <p className="site-credit-links">
+            <a href="https://tanveerriaz.me/" rel="noopener noreferrer" target="_blank">tanveerriaz.me</a>
+            <span aria-hidden="true">·</span>
+            <a href="https://github.com/tanveerriaz/87k-windows" rel="noopener noreferrer" target="_blank">
+              GitHub · 87k-windows
+            </a>
+          </p>
+        </div>
       </footer>
     </main>
   );

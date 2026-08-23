@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { HdbWallCanvas } from "../components/hdb-wall-canvas";
+import { SiteWordmark } from "../components/site-wordmark";
 import { StatusBadge } from "../components/status-badge";
 import { useRoomSocket } from "../lib/use-room-socket";
 
@@ -17,7 +18,7 @@ export function WallPage() {
     <main className="wall-page">
       <header className="wall-header">
         <div>
-          <span className="wordmark">87K WINDOWS</span>
+          <SiteWordmark />
           <p>Lives witnessed. Human threads revealed.</p>
         </div>
         <div className="wall-room">

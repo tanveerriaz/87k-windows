@@ -47,5 +47,138 @@
       "sha256": "ad52eb81d6cfe4bc964d31edf881e3de3b0a41fb770c6bca088552414394d9a8",
       "review": "approved"
     }
-  ]
+  ],
+  "landingStoryFilm": {
+    "version": "v2.1-fal-mei-motion",
+    "script": "docs/video/landing-story-script.md",
+    "master": {
+      "file": "output/video/87k-landing-story.mp4",
+      "durationSeconds": 83,
+      "dimensions": "1920x1080",
+      "sha256": "d905a6784a37787f4426276f763a6ff0bb31728892f598aaa8fd09cd6138e070"
+    },
+    "webDelivery": {
+      "file": "public/landing-story.mp4",
+      "dimensions": "1280x720",
+      "sha256": "fb3f328bfe304e7dd756ab3f676014d904462e7d437dbf0c7ca4ec0758578154"
+    },
+    "poster": {
+      "file": "public/landing-story-poster.jpg",
+      "sha256": "3a929d46239053fab9653d740cd31faa5a80be28824ef32c73a847821a326964"
+    },
+    "characters": "Fictional AI-generated people (owner-approved amendment: faces shown). Uncle Heng and Mei do not depict real persons.",
+    "characterReferences": [
+      {
+        "file": "assets/video/landing/refs/uncle-heng-ref.png",
+        "provider": "local flux2-klein-4b",
+        "seed": 870001,
+        "sha256": "079501dac7c503b0a628689a1a8a287f26177c30729f60a42980fa1dfeca76dc"
+      },
+      {
+        "file": "assets/video/landing/refs/mei-ref.png",
+        "provider": "local flux2-klein-4b",
+        "seed": 870012,
+        "sha256": "3ffa798cf7f053f6643a82db885766f049464a2d670b7dd5a8c3e1fe1a559faf"
+      }
+    ],
+    "generatedClips": [
+      {
+        "file": "assets/video/landing/clips/heng-1-shelf.mp4",
+        "provider": "Genspark",
+        "model": "fal-ai/bytedance/seedance-2.0 (mini tier, reference-to-video)",
+        "sha256": "43063a53dc7fdc626029d17ec54a4c77027e70654d952903d91facc99dd7e3b2"
+      },
+      {
+        "file": "assets/video/landing/clips/heng-2-tuning.mp4",
+        "provider": "Genspark",
+        "model": "fal-ai/bytedance/seedance-2.0 (mini tier, reference-to-video)",
+        "sha256": "60fa4f0ca27feb32ffad25077694b8b46a6acb5d1e400067c3b77bda2670bdc7"
+      },
+      {
+        "file": "assets/video/landing/clips/heng-3-window.mp4",
+        "provider": "Genspark",
+        "model": "fal-ai/bytedance/seedance-2.0 (mini tier, reference-to-video)",
+        "sha256": "d0fd509cb047549d9394fc85b77780ca570cfebae315b4b1862529be887d2cc2"
+      },
+      {
+        "file": "assets/video/landing/clips/mei-1-drawer.mp4",
+        "provider": "Genspark",
+        "model": "fal-ai/bytedance/seedance-2.0 (mini tier, reference-to-video)",
+        "sha256": "3c0495ff2b6afcbd452b00f591bdb202332eb5f6cbf703e0bea031785eb35cec"
+      },
+      {
+        "file": "assets/video/landing/clips/mei-2-radio.mp4",
+        "provider": "fal.ai",
+        "model": "bytedance/seedance-2.0/fast/image-to-video",
+        "durationSeconds": 5,
+        "sha256": "91f8a56d48b9477162d059baf1eba01870039e48ca36753e692d76482cc035cb"
+      },
+      {
+        "file": "assets/video/landing/clips/mei-3-window.mp4",
+        "provider": "fal.ai",
+        "model": "bytedance/seedance-2.0/fast/image-to-video",
+        "durationSeconds": 5,
+        "sha256": "76297cdcc10c0f3bf465763a2edc99eb00189b1d21c70cf7422369de4a80040c"
+      }
+    ],
+    "generatedStills": [
+      {
+        "file": "assets/video/landing/stills/mei-2-radio-v2.jpg",
+        "provider": "Genspark \u2192 fal-ai/z-image/turbo",
+        "sha256": "dd4b2b8209b860bdd51b82cfc2d3a221a156a13909c5ab8b480d78bb3402a35b"
+      },
+      {
+        "file": "assets/video/landing/stills/mei-3-window-v2.jpg",
+        "provider": "Genspark \u2192 fal-ai/z-image/turbo",
+        "sha256": "d88601192f5a9bead87c15972172e9c25abc4bfe95ef85d38f3cfd6a389c43c9"
+      },
+      {
+        "file": "assets/video/landing/stills/two-windows-dark.png",
+        "provider": "local flux2-klein-4b",
+        "seed": 870200,
+        "sha256": "45df34bf0e3e640425b176cfbad6217a69ee57817b3087b4a838cecd97358a12"
+      },
+      {
+        "file": "assets/video/landing/stills/facade-lit-v2.png",
+        "provider": "local flux2-klein-4b",
+        "seed": 870210,
+        "sha256": "2c504b1e497f58b2af5d6583765c532961735a511be523b6446492ae7bedce0c"
+      }
+    ],
+    "interfaceCaptures": "Real product captures only: assets/video/landing/captures/* (production, 2026-08-23) and assets/video/captures/03,04 (existing reviewed set).",
+    "narration": {
+      "tool": "Genspark \u2192 fal-ai/minimax/speech-2.8-hd",
+      "voice": "Wise_Woman",
+      "file": "assets/video/landing/audio/vo-natural.mp3",
+      "provenance": "assets/video/landing/audio/vo-natural.provenance.md",
+      "sha256": "ca016e88b0e65247a92664bbe548a278de8b999f7ad658022080f037bc241d53",
+      "note": "Replaced macOS Samantha (v1) \u2014 robotic TTS was the main quality complaint."
+    },
+    "music": {
+      "file": "assets/video/landing/audio/bgm-i-giorni.mp3",
+      "title": "I Giorni",
+      "artist": "Clavier-Music",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/license-summary/",
+      "sourceUrl": "https://pixabay.com/music/modern-classical-i-giorni-205574/",
+      "attributionShownOn": "landing page footer",
+      "sha256": "4f8ff0e1cbdfa6bcaf555f7c12b62c189e195dcdc87acc0066305faa1ddbf76e",
+      "mix": "sidechain duck under VO; bed 0.45 \u2192 ducked; VO 1.6; stereo AAC; VO padded so music fills end card"
+    },
+    "craft": {
+      "splitSeam": "soft amber hairline overlay",
+      "roleLabels": "storyteller / listener fade-in on Act 2 open",
+      "merge": "xfade dissolve from consent split into Wall Mode",
+      "buildScript": "scripts/build-landing-video.sh",
+      "overlays": "scripts/gen-landing-overlays-v2.py"
+    },
+    "budgetNotes": "v2.1: Minimax VO + z-image stills via Genspark; Mei 2/3 motion via fal Seedance 2.0 fast i2v using fal_api_key; reused Heng\u00d73 + Mei drawer; free local flux fa\u00e7ade beats.",
+    "statistics": {
+      "41,200 (2015) and 88,400 (2025)": "MSF Family Trends Report 2026",
+      "sources": [
+        "https://www.asiaone.com/lifestyle/family-trends-report-2026-elderly-living-alone",
+        "https://data.gov.sg/datasets/d_45acf574880ac493ec638f72338e62d5/view"
+      ]
+    }
+  }
 }

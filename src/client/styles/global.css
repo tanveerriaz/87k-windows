@@ -131,9 +131,20 @@ p {
 }
 
 .wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
   font-weight: 600;
   letter-spacing: .055em;
+}
+
+.wordmark-flag {
+  display: inline-block;
+  flex: none;
+  font-size: 16px;
+  line-height: 1;
+  transform: translateY(-0.5px);
 }
 
 .mono-label,
@@ -1959,6 +1970,14 @@ p {
     scroll-behavior: auto !important;
     transition-duration: .01ms !important;
   }
+
+  .landing-facade-video {
+    display: none;
+  }
+
+  .landing-facade-still {
+    display: block;
+  }
 }
 
 /* Two Chairs: the first screen explains the two human roles before showing the wall. */
@@ -1971,11 +1990,96 @@ p {
   background: #101116;
 }
 
+/* Static façade moved into LandingFacadeCanvas (animated window lights). */
 .two-chairs-page::before {
-  background-image: url("../../../assets/generated/photographic-hdb-wall.png");
-  background-position: top center;
-  background-repeat: no-repeat;
-  background-size: auto 320px;
+  background-image: none;
+}
+
+.landing-facade-band {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, calc(100vw - 40px));
+  height: clamp(240px, 36vw, 480px);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(244, 234, 216, .14);
+  background: #0a0c10;
+}
+
+.landing-facade-band img,
+.landing-facade-band video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+a.wordmark {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.wordmark:hover,
+a.wordmark:focus-visible {
+  color: var(--bone, #f4ead8);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.two-chairs-footer {
+  width: min(1180px, calc(100vw - 40px));
+  display: grid;
+  gap: 14px;
+  margin: 0 auto;
+  padding: 18px 0;
+  border-top: 1px solid rgba(244, 234, 216, .2);
+  color: var(--smoke);
+  font: 600 10px/1.35 var(--mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.two-chairs-footer-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.two-chairs-footer a { color: var(--blue-soft); text-underline-offset: 4px; }
+
+.site-credit {
+  display: grid;
+  gap: 6px;
+  max-width: 720px;
+  color: rgba(210, 197, 174, .78);
+  font: 500 12px/1.45 var(--sans, system-ui, sans-serif);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.site-credit a {
+  color: var(--bone, #f4ead8);
+  text-underline-offset: 3px;
+}
+
+.site-credit-tagline {
+  margin: 0;
+  color: rgba(244, 234, 216, .92);
+  font: 600 13px/1.4 var(--sans, system-ui, sans-serif);
+}
+
+.site-credit-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  font: 600 11px/1.4 var(--mono);
+  letter-spacing: .04em;
+  text-transform: uppercase;
 }
 
 .two-chairs-page .landing-nav,
@@ -2038,12 +2142,11 @@ p {
 
 .two-chairs-visual { position: relative; margin: 0; align-self: stretch; min-height: 420px; overflow: hidden; border: 1px solid rgba(244, 234, 216, .16); background: #0e1013; }
 .two-chairs-visual img { width: 100%; height: 100%; object-fit: cover; object-position: center; filter: saturate(.78) contrast(1.05); }
+.two-chairs-visual video { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; background: #0e1013; }
+.two-chairs-visual:has(video) { min-height: 0; aspect-ratio: 16 / 9; align-self: center; }
 .two-chairs-visual figcaption { position: absolute; right: 16px; bottom: 14px; left: 16px; z-index: 1; display: grid; grid-template-columns: 1fr 34px 1fr; align-items: center; gap: 8px; color: var(--white); font: 600 9px/1.25 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
 .two-chairs-visual figcaption span:last-child { text-align: right; }
 .two-chairs-visual figcaption i { height: 1px; background: var(--amber); box-shadow: 0 0 10px rgba(237, 169, 75, .55); }
-
-.two-chairs-footer { width: min(1180px, calc(100vw - 40px)); display: flex; justify-content: space-between; gap: 18px; margin: 0 auto; padding: 18px 0; border-top: 1px solid rgba(244, 234, 216, .2); color: var(--smoke); font: 600 10px/1.35 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
-.two-chairs-footer a { color: var(--blue-soft); text-underline-offset: 4px; }
 
 .role-cross-link { display: block; width: max-content; margin: 18px auto 0; font-size: 16px; }
 .role-switch { display: flex; justify-content: center; gap: 8px; margin: -4px 0 24px; color: var(--smoke); font-size: 15px; }
@@ -2069,16 +2172,30 @@ p {
 
 @media (max-width: 760px) {
   .two-chairs-page { display: block; overflow: visible; }
-  .two-chairs-page .landing-nav, .two-chairs-hero, .two-chairs-footer { width: calc(100% - 32px); }
+  .two-chairs-page .landing-nav, .landing-facade-band, .two-chairs-hero, .two-chairs-footer { width: calc(100% - 32px); }
   .two-chairs-page .landing-nav { min-height: 68px; }
   .two-chairs-page .landing-nav .mono-label { display: none; }
+  .landing-facade-band { height: clamp(180px, 48vw, 280px); }
   .two-chairs-hero { display: flex; flex-direction: column; gap: 22px; padding: 22px 0 34px; }
   .two-chairs-intro h1 { margin: 10px 0 0; font-size: clamp(50px, 14vw, 66px); }
   .two-chairs-copy .landing-copy { font-size: 18px; }
   .two-chairs-visual { width: 100%; min-height: 300px; max-height: 43svh; }
   .two-chairs-visual img { min-height: 300px; }
   .role-choice { min-height: 86px; }
-  .two-chairs-footer { display: grid; grid-template-columns: 1fr 1fr; padding: 16px 0 28px; font-size: 9px; }.two-chairs-footer a { grid-column: 1 / -1; }
+  .two-chairs-footer {
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 16px 0 28px;
+    font-size: 9px;
+  }
+  .two-chairs-footer-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .two-chairs-footer-meta a { grid-column: 1 / -1; }
+  .site-credit { max-width: none; font-size: 12px; }
+  .site-credit-tagline { font-size: 13px; }
   .safe-invitation-card { grid-template-columns: 1fr; }.safe-invitation-card img { width: 100%; height: 120px; min-height: 0; }.safe-invitation-card div { padding: 0 16px 16px; }
   .mutual-cards { grid-template-columns: 1fr; }
 }
