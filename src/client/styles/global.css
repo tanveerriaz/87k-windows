@@ -2038,6 +2038,8 @@ p {
 
 .two-chairs-visual { position: relative; margin: 0; align-self: stretch; min-height: 420px; overflow: hidden; border: 1px solid rgba(244, 234, 216, .16); background: #0e1013; }
 .two-chairs-visual img { width: 100%; height: 100%; object-fit: cover; object-position: center; filter: saturate(.78) contrast(1.05); }
+.two-chairs-visual video { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; background: #0e1013; }
+.two-chairs-visual:has(video) { min-height: 0; aspect-ratio: 16 / 9; align-self: center; }
 .two-chairs-visual figcaption { position: absolute; right: 16px; bottom: 14px; left: 16px; z-index: 1; display: grid; grid-template-columns: 1fr 34px 1fr; align-items: center; gap: 8px; color: var(--white); font: 600 9px/1.25 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
 .two-chairs-visual figcaption span:last-child { text-align: right; }
 .two-chairs-visual figcaption i { height: 1px; background: var(--amber); box-shadow: 0 0 10px rgba(237, 169, 75, .55); }

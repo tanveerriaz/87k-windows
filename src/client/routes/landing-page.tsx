@@ -13,8 +13,16 @@ export function LandingPage() {
           <h1>What story should not disappear?</h1>
         </div>
         <figure className="two-chairs-visual">
-          <img src="/assets/two-chairs-hero.png" alt="Two empty chairs facing a small lamp in a quiet community room" />
-          <figcaption><span>ONE PERSON READY TO SPEAK</span><i aria-hidden="true" /><span>ONE PERSON READY TO LISTEN</span></figcaption>
+          <video
+            src="/landing-story.mp4"
+            poster="/landing-story-poster.jpg"
+            controls
+            muted
+            autoPlay
+            playsInline
+            preload="metadata"
+            aria-label="The story of 87K Windows: why the product is named for the roughly 87,000 seniors living alone in Singapore, told through a storyteller and a listener in the same block"
+          />
         </figure>
         <div className="two-chairs-copy">
           <p className="landing-copy">87K Windows helps one person share a memory and another choose to listen. Gemma protects the story. Gemini helps the conversation begin, then steps away.</p>
@@ -38,6 +46,7 @@ export function LandingPage() {
       <footer className="two-chairs-footer">
         <span>GEMMA PROTECTS THE STORY</span>
         <span>GEMINI HELPS THE FIRST MINUTE</span>
+        <span>MUSIC: “WHOLESOME” · KEVIN MACLEOD · CC BY 4.0</span>
         <Link to="/wall/demo87">View the living wall</Link>
       </footer>
     </main>

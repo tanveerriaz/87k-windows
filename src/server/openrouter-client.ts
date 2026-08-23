@@ -51,7 +51,7 @@ export class OpenRouterGenAiClient {
           : undefined,
         provider: {
           require_parameters: true,
-          only: request.model === "google/gemma-3-27b-it" ? ["deepinfra"] : undefined,
+          order: request.model === "google/gemma-3-27b-it" ? ["deepinfra"] : undefined,
         },
         response_format: {
           type: "json_schema",
