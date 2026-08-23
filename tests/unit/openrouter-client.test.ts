@@ -49,7 +49,7 @@ describe("OpenRouterGenAiClient", () => {
       temperature: 0.1,
       max_tokens: 1200,
       stream: false,
-      provider: { require_parameters: true, order: ["deepinfra"] },
+      provider: { require_parameters: true, order: ["deepinfra", "parasail", "novita"] },
       response_format: {
         type: "json_schema",
         json_schema: { name: "structured_response", strict: true, schema: responseSchema },
