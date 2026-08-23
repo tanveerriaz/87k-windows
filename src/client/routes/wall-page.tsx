@@ -26,6 +26,14 @@ export function WallPage() {
           <StatusBadge connected={room.connected} provider={snapshot?.provider} facilitator={snapshot?.facilitator} />
         </div>
       </header>
+
+      {(room.message || room.connectionError) && (
+        <div className="error-banner" role="alert">
+          <span>{room.message ?? room.connectionError}</span>
+          {room.message && <button type="button" className="text-button" onClick={() => room.setMessage(null)}>Dismiss</button>}
+        </div>
+      )}
+
       <section className="wall-stage" aria-live="polite">
         <HdbWallCanvas snapshot={snapshot} />
         {(!snapshot || snapshot.phase === "idle" || snapshot.phase === "reviewing") && (

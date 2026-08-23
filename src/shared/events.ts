@@ -51,11 +51,11 @@ export interface ClientToServerEvents {
   "story:submitted": (payload: { roomCode: string; participantId: string }, ack?: (result: EventAck) => void) => void;
   "capsule:approved": (
     payload: { roomCode: string; participantId: string; capsuleId: string },
-    ack?: (result: EventAck) => void,
+    ack: (result: EventAck) => void,
   ) => void;
   "consent:decided": (
     payload: { roomCode: string; participantId: string; decision: Exclude<ConsentDecision, "pending"> },
-    ack?: (result: EventAck) => void,
+    ack: (result: EventAck) => void,
   ) => void;
   "demo:reset": (payload: { roomCode: string }, ack?: (result: EventAck) => void) => void;
   "demo:inject": (payload: { roomCode: string }, ack?: (result: EventAck) => void) => void;

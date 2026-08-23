@@ -4,7 +4,7 @@ import memoryObjects from "../../../assets/generated/memory-objects.jpg";
 import { PREPARED_NO_MATCH_MEMORY, PREPARED_RADIO_MEMORY } from "../../shared/demo";
 import type { StoryCapsule } from "../../shared/schemas";
 import { StatusBadge } from "../components/status-badge";
-import { extractCapsule } from "../lib/api";
+import { ApiError, extractCapsule } from "../lib/api";
 import { compressImage } from "../lib/image";
 import { resolveJoinDisplacement, type JoinStage } from "../lib/join-stage";
 import { useRoomSocket } from "../lib/use-room-socket";
@@ -27,6 +27,8 @@ export function JoinPage() {
   const [capsule, setCapsule] = useState<StoryCapsule | null>(null);
   const [capsuleId, setCapsuleId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<"approve" | "decide" | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [listenerLanguage, setListenerLanguage] = useState("English");
@@ -85,6 +87,16 @@ export function JoinPage() {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   }, []);
 
+  useEffect(() => {
+    if (stage !== "processing" && stage !== "listen-processing") {
+      setElapsedSeconds(0);
+      return;
+    }
+    setElapsedSeconds(0);
+    const interval = window.setInterval(() => setElapsedSeconds((seconds) => seconds + 1), 1000);
+    return () => window.clearInterval(interval);
+  }, [stage]);
+
   const chooseFixture = (next: "radio" | "no-match") => {
     setFixture(next);
     setMemory(next === "radio" ? PREPARED_RADIO_MEMORY : PREPARED_NO_MATCH_MEMORY);
@@ -112,16 +124,21 @@ export function JoinPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const createCapsule = async () => {
+  const createCapsule = async (isRetry = false) => {
     setStage("processing");
     setError(null);
-    room.submitted(participantId);
+    if (!isRetry) room.submitted(participantId);
     try {
       const result = await extractCapsule({ roomCode, memory, photoData: null, fixture });
       setCapsule(result.capsule);
       setCapsuleId(result.capsuleId);
       setStage("review");
     } catch (requestError) {
+      if (requestError instanceof ApiError && requestError.code === "LOCAL_GEMMA_BUSY" && !isRetry) {
+        setError("The local model is helping someone else — retrying in a moment…");
+        window.setTimeout(() => void createCapsule(true), 3_000);
+        return;
+      }
       setError(requestError instanceof Error ? requestError.message : "Nothing was shared. Please try again.");
       setStage("capture");
     }
@@ -155,11 +172,14 @@ export function JoinPage() {
   const approve = async () => {
     if (!capsule || !capsuleId) return;
     setError(null);
+    setPendingAction("approve");
     try {
       await room.approve(participantId, capsuleId);
       setStage("waiting");
     } catch (approvalError) {
       setError(approvalError instanceof Error ? approvalError.message : "The safe capsule was not shared.");
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -186,11 +206,14 @@ export function JoinPage() {
 
   const decideConnection = async (decision: "yes" | "no") => {
     setError(null);
+    setPendingAction("decide");
     try {
       await room.decide(participantId, decision);
       if (decision === "yes") setStage("listen-requested");
     } catch (decisionError) {
       setError(decisionError instanceof Error ? decisionError.message : "Your choice could not be recorded.");
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -201,6 +224,7 @@ export function JoinPage() {
     setCapsule(null);
     setCapsuleId(null);
     setError(null);
+    setPendingAction(null);
     setMemory("");
   };
 
@@ -241,6 +265,13 @@ export function JoinPage() {
         </div>
         <StatusBadge connected={room.connected} provider={room.snapshot?.provider} facilitator={room.snapshot?.facilitator} />
       </header>
+
+      {(room.message || room.connectionError) && (
+        <div className="error-banner" role="alert">
+          <span>{room.message ?? room.connectionError}</span>
+          {room.message && <button type="button" className="text-button" onClick={() => room.setMessage(null)}>Dismiss</button>}
+        </div>
+      )}
 
       <section className="join-shell" aria-live="polite">
         <div className={`step-rail ${journeySteps.length === 5 ? "has-guide" : ""}`} aria-label="Progress">
@@ -294,6 +325,7 @@ export function JoinPage() {
             <p className="eyebrow">Your reason stays yours until you approve</p>
             <h1>Gemma is preparing a safe listening capsule.</h1>
             <p>Only your language, time and reason to listen enter the evidence check. No contact details are shared.</p>
+            <p className="processing-elapsed">{elapsedSeconds}s elapsed · This usually takes 10–30 seconds on the local model.</p>
           </div>
         )}
 
@@ -308,8 +340,8 @@ export function JoinPage() {
             </div>
             <p className="privacy-note">Your choice is private until both people have answered. Either person may say no.</p>
             {error && <div className="error-banner" role="alert">{error}</div>}
-            <button className="button button-primary button-block" onClick={() => void decideConnection("yes")}>Yes, I would like to continue</button>
-            <button className="button button-secondary button-block" onClick={() => void decideConnection("no")}>No, not this time</button>
+            <button className="button button-primary button-block" disabled={pendingAction === "decide"} onClick={() => void decideConnection("yes")}>{pendingAction === "decide" ? "Recording your choice…" : "Yes, I would like to continue"}</button>
+            <button className="button button-secondary button-block" disabled={pendingAction === "decide"} onClick={() => void decideConnection("no")}>{pendingAction === "decide" ? "Recording your choice…" : "No, not this time"}</button>
           </div>
         )}
 
@@ -408,6 +440,8 @@ export function JoinPage() {
             <p className="eyebrow">Your words, then the meaning</p>
             <h1>Separating what you said from what may connect.</h1>
             <p>Gemma prepares a small, reviewable memory capsule. It does not fill in names, dates, or details you did not share.</p>
+            <p className="processing-elapsed">{elapsedSeconds}s elapsed · This usually takes 10–30 seconds on the local model.</p>
+            {error && <div className="error-banner" role="status">{error}</div>}
           </div>
         )}
 
@@ -440,7 +474,7 @@ export function JoinPage() {
               <ul>{capsule.uncertain.map((item) => <li key={item}>{item}</li>)}</ul>
             </details>
             {error && <div className="error-banner" role="alert">{error}</div>}
-            <button className="button button-primary button-block" onClick={() => void approve()}>Approve and light my window</button>
+            <button className="button button-primary button-block" disabled={pendingAction === "approve"} onClick={() => void approve()}>{pendingAction === "approve" ? "Lighting your window…" : "Approve and light my window"}</button>
             <button className="text-button button-block" onClick={() => setStage("capture")}>Go back and edit</button>
           </div>
         )}
