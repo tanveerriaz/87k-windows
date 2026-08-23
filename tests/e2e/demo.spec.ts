@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { adminSecret } from "../../playwright.config";
 
 async function submitStory(page: Page, role: "share" | "listen" = "share") {
   if (role === "share") {
@@ -58,6 +59,7 @@ test("storyteller, listener and wall reach mutual yes only after two independent
   await storyteller.getByRole("button", { name: "Approve and light my window" }).click();
   await expect(storyteller.getByText("Your story is now visible as a warm light.")).toBeVisible();
   await expect(listener.getByRole("button", { name: "See a safe story invitation" })).toBeVisible();
+  await expect(wall.getByText("1 WINDOW LIT", { exact: true })).toBeVisible();
   await submitStory(listener, "listen");
 
   await expect(storyteller.getByRole("heading", { name: "Would you like this conversation to begin?" })).toBeVisible({ timeout: 15_000 });
@@ -75,6 +77,25 @@ test("storyteller, listener and wall reach mutual yes only after two independent
   await expect(storyteller.getByRole("heading", { name: "You both said yes." })).toBeVisible();
   await expect(wall.locator("canvas")).toHaveAttribute("data-wall-state", "matched");
   await expect(wall.locator("canvas")).toHaveAttribute("data-has-thread", "true");
+  await expect(wall.getByText("2 WINDOWS LIT", { exact: true })).toBeVisible();
+
+  const guide = wall.locator(".wall-guide");
+  const clipped = await guide.evaluate((el) => el.scrollHeight > el.clientHeight + 1);
+  expect(clipped).toBe(false);
+  const chip = wall.locator(".wall-evidence .evidence-path span").first();
+  const chipSize = await chip.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(chipSize).toBeGreaterThanOrEqual(20);
+  const guideQuestion = wall.locator(".wall-guide ol li").first();
+  const guideQuestionSize = await guideQuestion.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(guideQuestionSize).toBeGreaterThanOrEqual(22);
+  const railLabel = wall.locator(".wall-journey > span strong").first();
+  const railLabelSize = await railLabel.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(railLabelSize).toBeGreaterThanOrEqual(16);
+  const stageBox = await wall.locator(".wall-stage").boundingBox();
+  const revealBox = await wall.locator(".wall-reveal").boundingBox();
+  const facadeRatio = (stageBox!.height - revealBox!.height) / stageBox!.height;
+  expect(facadeRatio).toBeGreaterThanOrEqual(0.55);
+
   await storytellerContext.close();
   await listenerContext.close();
   await wallContext.close();
@@ -141,7 +162,7 @@ test("storyteller no-match remains honest", async ({ page }) => {
 test("admin labels the development harness honestly", async ({ page }) => {
   const roomCode = `admin-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto(`/admin/${roomCode}`);
+  await page.goto(`/admin/${roomCode}?key=${adminSecret}`);
   await expect(page.getByRole("heading", { name: "Keep the room moving." })).toBeVisible();
   await expect(page.getByAltText(new RegExp(`QR code for .*${roomCode}`))).toBeVisible();
   await page.getByRole("button", { name: "Run prepared story", exact: true }).click();

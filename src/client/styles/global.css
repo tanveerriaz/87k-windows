@@ -1108,7 +1108,7 @@ p {
 }
 
 .wall-result-main .eyebrow {
-  margin-bottom: 8px;
+  margin-bottom: 3px;
   color: var(--red);
 }
 
@@ -1123,7 +1123,8 @@ p {
 .wall-result-summary {
   margin: 0;
   color: #43615d;
-  font-size: 16px;
+  font-size: 14px;
+  line-height: 1.2;
 }
 
 .wall-journey {
@@ -1142,7 +1143,7 @@ p {
   padding: 9px 10px;
   border-right: 1px solid #c4b396;
   color: #365753;
-  font-size: 12px;
+  font-size: 16px;
 }
 
 .wall-journey > span:last-child {
@@ -1151,7 +1152,7 @@ p {
 
 .wall-journey small {
   color: var(--red);
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .wall-journey strong {
@@ -1245,16 +1246,16 @@ p {
 
 .wall-invite small {
   display: block;
-  margin-top: 8px;
-  padding-top: 14px;
+  margin-top: 2px;
+  padding-top: 4px;
   border-top: 1px solid #c4b396;
   color: #6b5e4b;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .wall-guide {
   justify-content: flex-start;
-  overflow: hidden;
+  overflow: auto;
   border-color: #2d7c70;
   box-shadow: inset 5px 0 0 #2d7c70, 8px 8px 0 rgba(7, 59, 57, .18);
 }
@@ -1266,20 +1267,22 @@ p {
 
 .wall-guide ol {
   display: grid;
-  gap: 9px;
+  gap: 3px;
   margin: 0;
-  padding-left: 24px;
+  padding-left: 20px;
   color: #163e3b;
   font-size: 15px;
-  line-height: 1.35;
+  line-height: 1.15;
 }
 
 .wall-guide .wall-consent {
-  margin-top: 14px;
-  padding: 10px;
+  margin-top: 4px;
+  padding: 4px 8px;
   border-left: 3px solid var(--red);
   background: #eadfc9;
   color: #163e3b;
+  font-size: 13px;
+  line-height: 1.2;
   font-weight: 700;
 }
 
@@ -1311,7 +1314,7 @@ p {
   border-top: 1px solid #365d58;
   background: #073b39;
   color: var(--silver);
-  font: 500 9px/1 var(--mono);
+  font: 500 14px/1 var(--mono);
   letter-spacing: .05em;
 }
 
@@ -1428,13 +1431,12 @@ p {
 
 .wall-reveal {
   inset: auto 24px 22px;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 330px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 440px);
   align-items: end;
 }
 
 .wall-result-main,
 .wall-invite {
-  max-height: 300px;
   border-color: rgba(213, 200, 179, .28);
   background: rgba(5, 9, 12, .88);
   box-shadow: 0 24px 70px rgba(0, 0, 0, .46);
@@ -1443,7 +1445,7 @@ p {
 }
 
 .wall-result-main {
-  padding: 18px 20px;
+  padding: 6px 16px;
 }
 
 .wall-result-main h1,
@@ -1455,8 +1457,8 @@ p {
 }
 
 .wall-result-main h1 {
-  margin-bottom: 5px;
-  font-size: clamp(30px, 3vw, 44px);
+  margin-bottom: 3px;
+  font-size: clamp(24px, 2.4vw, 33px);
 }
 
 .wall-result-summary,
@@ -1465,33 +1467,33 @@ p {
 }
 
 .wall-journey {
-  margin-top: 9px;
+  margin-top: 3px;
   border-color: rgba(213, 200, 179, .2);
 }
 
 .wall-journey > span {
-  padding: 6px 8px;
+  padding: 3px 8px;
   border-color: rgba(213, 200, 179, .2);
   color: var(--silver);
 }
 
 .wall-story-pair {
-  grid-template-columns: minmax(0, 1fr) minmax(160px, .7fr) minmax(0, 1fr);
-  margin-top: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, .9fr) minmax(0, 1fr);
+  margin-top: 3px;
 }
 
 .wall-story-pair > article,
 .wall-evidence {
-  min-height: 104px;
-  padding: 12px;
+  min-height: 48px;
+  padding: 4px;
   border-color: rgba(213, 200, 179, .24);
   background: rgba(18, 24, 30, .84);
 }
 
 .wall-story-pair > article p {
-  margin-top: 10px;
-  font-size: clamp(15px, 1.25vw, 19px);
-  line-height: 1.18;
+  margin-top: 6px;
+  font-size: clamp(14px, 1.1vw, 17px);
+  line-height: 1.15;
 }
 
 .wall-evidence {
@@ -1499,33 +1501,35 @@ p {
 }
 
 .wall-evidence .evidence-path {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 4px;
-  margin-top: 7px;
+  margin-top: 6px;
 }
 
 .wall-evidence .evidence-path span {
-  padding: 4px 7px;
+  padding: 2px 5px;
   border-color: rgba(130, 182, 232, .45);
   background: rgba(6, 12, 18, .8);
   color: #dceeff;
-  font-size: 9px;
+  font-size: 20px;
 }
 
 .wall-invite {
-  padding: 18px;
+  padding: 6px 14px;
   overflow: auto;
   border-color: rgba(130, 182, 232, .48);
 }
 
 .wall-invite h2,
 .wall-guide h2 {
-  margin: 10px 0;
-  font-size: clamp(24px, 2.2vw, 33px);
+  margin: 0 0 5px;
+  font-size: clamp(20px, 1.9vw, 28px);
 }
 
 .wall-invite p,
 .wall-guide ol {
-  font-size: 13px;
+  font-size: 22px;
 }
 
 .wall-invite small {

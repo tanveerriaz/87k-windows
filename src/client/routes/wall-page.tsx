@@ -12,6 +12,7 @@ export function WallPage() {
   const sourceStory = snapshot?.windows.findLast((window) => window.participantId === snapshot.activeSourceId);
   const listenerStory = snapshot?.windows.findLast((window) => window.participantId === snapshot.activeCandidateId);
   const resultSteps = snapshot?.guide ? [...RESULT_STEPS, "Gemini guides"] : RESULT_STEPS;
+  const windowsLitCount = snapshot?.windows.length ?? 0;
 
   return (
     <main className="wall-page">
@@ -107,7 +108,7 @@ export function WallPage() {
         )}
       </section>
       <footer className="wall-footer">
-        <span>{snapshot?.windows.length ?? 0} WINDOWS LIT</span>
+        <span>{windowsLitCount === 1 ? "1 WINDOW LIT" : `${windowsLitCount} WINDOWS LIT`}</span>
         <span>GEMMA PROTECTS THE MEMORY. GEMINI HELPS PEOPLE BEGIN.</span>
       </footer>
     </main>
