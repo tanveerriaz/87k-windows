@@ -10,10 +10,26 @@ const EXPLICIT_WANT_EN = /\b(i want|i wish|i hope|i would like|i'm looking for|i
 // specific to "want [something]" and less likely to read as "I think".
 const EXPLICIT_OFFER_ZH = ["我愿意", "我可以", "愿意教"];
 const EXPLICIT_WANT_ZH = ["我想要", "想学"];
-// Chinese negates by inserting a negator immediately before the verb, so a
-// curated phrase like 愿意教 still occurs as a substring of 不愿意教 — the
-// veto must reject a match with one of these immediately before it.
-const ZH_NEGATORS = ["不", "没", "别", "未", "无"];
+// Chinese negates by inserting a negator immediately before the verb, and a
+// negator need not be the immediate preceding character — clause-medial
+// insertions (我不 愿意教别人 with a space, 我不，愿意教别人 with a comma) and
+// compound negators (我不是很愿意教别人) still negate a phrase several
+// characters away. The veto therefore rejects if ANY negator appears
+// anywhere between the previous sentence boundary and the match — commas
+// and spaces do not stop the scan, only 。！？.!? do. This is deliberately
+// fail-closed: a negator earlier in the same clause for an unrelated
+// reason (e.g. "别人不知道，我愿意教别人") will also reject a genuine offer.
+// That false-rejection is an accepted trade-off in exchange for closing
+// the negation bypasses above.
+const ZH_NEGATORS = ["不", "没", "未", "无", "甭", "勿", "莫", "并非", "不是", "毫无"];
+// "别" alone means "don't" (a negator) but is also the first character of
+// "别人" ("other people"), which is the object of nearly every curated
+// offer phrase's natural phrasing ("愿意教别人" = "willing to teach
+// others"). Counting "别人" itself as a negator hit would reject the
+// curated phrases against their own ordinary use, so "别" only counts as a
+// negator when NOT immediately followed by "人".
+const ZH_BIE_NEGATOR = /别(?!人)/;
+const ZH_SENTENCE_BOUNDARY = /[。！？.!?]/;
 
 // TRANSLATION REVIEW: machine-drafted, needs native check
 const EXPLICIT_OFFER_MS = /\b(saya boleh|saya sudi|saya sanggup)\b/i;
@@ -27,38 +43,61 @@ const EXPLICIT_WANT_TA = ["நான் கற்க விரும்புக
 // Tamil negates clause-finally (a verb suffixed with …வில்லை, e.g.
 // நினைக்கவில்லை "did not think", சொல்லவில்லை "did not say"), after the
 // matched phrase has already occurred, not immediately before it — so the
-// zh "check the preceding character" approach doesn't apply here. Instead,
-// reject a match if its own clause (up to the next sentence boundary) also
-// contains a negation marker. Two distinct forms: the verb suffix "வில்லை"
-// (consonant + dependent vowel sign, U+0BB5 U+0BBF…) and the standalone
-// negator "இல்லை" (independent vowel, U+0B87…) — these are different
-// Unicode sequences despite looking similar, so both are checked.
+// zh "scan before the match" approach doesn't apply here. Reject a match
+// if its own clause (up to the next sentence boundary) contains a negation
+// marker, AND also reject if the immediately following sentence contains
+// one — a dangling negation ("நான் விரும்புகிறேன். ஆனால் இல்லை." — "I want
+// to. But no.") negates the previous sentence's claim from outside its own
+// clause. This is deliberately fail-closed: an unrelated negation in the
+// following sentence will also reject a genuine want/offer, an accepted
+// trade-off for closing the dangling-negation bypass. Two distinct marker
+// forms: the verb suffix "வில்லை" (consonant + dependent vowel sign,
+// U+0BB5 U+0BBF…) and the standalone negator "இல்லை" (independent vowel,
+// U+0B87…) — these are different Unicode sequences despite looking
+// similar, so both are checked.
 const TA_NEGATION_MARKERS = ["வில்லை", "இல்லை"];
 const SENTENCE_BOUNDARY = /[.!?।]/;
 
-/** True if `phrase` occurs in `memory` at least once with no zh negator immediately before it. */
+function zhClauseBeforeHasNegator(memory: string, matchIndex: number): boolean {
+  let boundary = -1;
+  for (let i = 0; i < matchIndex; i++) {
+    if (ZH_SENTENCE_BOUNDARY.test(memory[i])) boundary = i;
+  }
+  const span = memory.slice(boundary + 1, matchIndex);
+  return ZH_NEGATORS.some((negator) => span.includes(negator)) || ZH_BIE_NEGATOR.test(span);
+}
+
+/** True if `phrase` occurs in `memory` at least once with no zh negator anywhere earlier in its clause. */
 function zhPhraseHoldsUnnegated(memory: string, phrase: string): boolean {
   let from = 0;
   for (;;) {
     const index = memory.indexOf(phrase, from);
     if (index === -1) return false;
-    const precedingChar = memory[index - 1];
-    if (precedingChar === undefined || !ZH_NEGATORS.includes(precedingChar)) return true;
+    if (!zhClauseBeforeHasNegator(memory, index)) return true;
     from = index + 1;
   }
 }
 
-/** True if `phrase` occurs in `memory` at least once whose containing clause has no …இல்லை negation after it. */
+function taNegatedNearby(memory: string, matchEnd: number): boolean {
+  const rest = memory.slice(matchEnd);
+  const ownBoundaryOffset = rest.search(SENTENCE_BOUNDARY);
+  const ownClause = ownBoundaryOffset === -1 ? rest : rest.slice(0, ownBoundaryOffset);
+  if (TA_NEGATION_MARKERS.some((marker) => ownClause.includes(marker))) return true;
+  if (ownBoundaryOffset === -1) return false;
+  const afterOwnBoundary = rest.slice(ownBoundaryOffset + 1);
+  const nextBoundaryOffset = afterOwnBoundary.search(SENTENCE_BOUNDARY);
+  const nextSentence = nextBoundaryOffset === -1 ? afterOwnBoundary : afterOwnBoundary.slice(0, nextBoundaryOffset);
+  return TA_NEGATION_MARKERS.some((marker) => nextSentence.includes(marker));
+}
+
+/** True if `phrase` occurs in `memory` at least once whose own clause and following sentence both hold no …இல்லை negation. */
 function taPhraseHoldsUnnegated(memory: string, phrase: string): boolean {
   let from = 0;
   for (;;) {
     const index = memory.indexOf(phrase, from);
     if (index === -1) return false;
     const matchEnd = index + phrase.length;
-    const rest = memory.slice(matchEnd);
-    const boundaryOffset = rest.search(SENTENCE_BOUNDARY);
-    const clauseTail = boundaryOffset === -1 ? rest : rest.slice(0, boundaryOffset);
-    if (!TA_NEGATION_MARKERS.some((marker) => clauseTail.includes(marker))) return true;
+    if (!taNegatedNearby(memory, matchEnd)) return true;
     from = index + 1;
   }
 }

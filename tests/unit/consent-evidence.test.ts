@@ -165,4 +165,72 @@ describe("keepExplicitConsent", () => {
       expect(result.wants).toEqual(MODEL_WANTS);
     });
   });
+
+  // Re-review round: bypasses of the F1 fix itself — a negator that isn't
+  // the character immediately before the match (zh), and a dangling
+  // negation in the following sentence (ta). Fail-closed clause scanning
+  // closes these; positive controls confirm the widened scan still doesn't
+  // over-reject ordinary multi-clause phrasing.
+  describe("F1 residual bypass probes (re-review)", () => {
+    it("zh bypass: '我不是很愿意教别人' (compound negator, not immediately before the phrase) — offer rejected", () => {
+      const result = keepExplicitConsent("我不是很愿意教别人。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.offers).toEqual([]);
+    });
+
+    it("zh bypass: '我不 愿意教别人' (space between negator and phrase) — offer rejected", () => {
+      const result = keepExplicitConsent("我不 愿意教别人。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.offers).toEqual([]);
+    });
+
+    it("zh bypass: '我不，愿意教别人' (comma between negator and phrase) — offer rejected", () => {
+      const result = keepExplicitConsent("我不，愿意教别人。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.offers).toEqual([]);
+    });
+
+    it("zh bypass: '我甭愿意教别人' (negator outside the original curated list) — offer rejected", () => {
+      const result = keepExplicitConsent("我甭愿意教别人。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.offers).toEqual([]);
+    });
+
+    it("ta bypass: 'நான் விரும்புகிறேன். ஆனால் இல்லை.' (dangling negation in the following sentence) — want rejected", () => {
+      const result = keepExplicitConsent("நான் விரும்புகிறேன். ஆனால் இல்லை.", MODEL_OFFERS, MODEL_WANTS, "ta");
+      expect(result.wants).toEqual([]);
+    });
+
+    it("zh multi-clause positive control: comma-joined clause with no negator anywhere keeps the offer", () => {
+      const result = keepExplicitConsent("早上跑步，我愿意教别人。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.offers).toEqual(MODEL_OFFERS);
+    });
+
+    it("zh multi-clause positive control: negator in an earlier, unrelated sentence doesn't reject the next sentence's offer", () => {
+      const result = keepExplicitConsent("我从来不喜欢唱歌。我愿意教别人修理收音机。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.offers).toEqual(MODEL_OFFERS);
+    });
+
+    it("zh regression: '别人' in an earlier clause is not itself mistaken for the '别' negator", () => {
+      const result = keepExplicitConsent(
+        "1970年代，我在女皇镇修理收音机。我愿意教别人基本的收音机维修，我想要认识喜欢修复老收音机的人。",
+        MODEL_OFFERS,
+        MODEL_WANTS,
+        "zh",
+      );
+      expect(result.offers).toEqual(MODEL_OFFERS);
+      expect(result.wants).toEqual(MODEL_WANTS);
+    });
+
+    it("ta multi-clause positive control: offer with a negation-free own clause and following sentence is kept", () => {
+      const result = keepExplicitConsent(
+        "நான் உதவ முடியும் என்று நினைக்கிறேன். பழைய ரேடியோக்களை பழுதுபார்க்க விரும்புகிறேன்.",
+        MODEL_OFFERS,
+        MODEL_WANTS,
+        "ta",
+      );
+      expect(result.offers).toEqual(MODEL_OFFERS);
+    });
+
+    it("ta multi-clause positive control: want at end of memory with no following sentence at all is kept", () => {
+      const result = keepExplicitConsent("இது ஒரு நல்ல நாள். நான் கற்க விரும்புகிறேன்.", MODEL_OFFERS, MODEL_WANTS, "ta");
+      expect(result.wants).toEqual(MODEL_WANTS);
+    });
+  });
 });
