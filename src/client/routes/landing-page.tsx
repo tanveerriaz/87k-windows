@@ -114,6 +114,10 @@ export function LandingPage() {
             <a href="https://github.com/tanveerriaz/87k-windows" rel="noopener noreferrer" target="_blank">
               GitHub · 87k-windows
             </a>
+            <span aria-hidden="true">·</span>
+            <a href="https://youtu.be/i25aSrIREx4" rel="noopener noreferrer" target="_blank">
+              Story film · YouTube
+            </a>
           </p>
         </div>
       </footer>

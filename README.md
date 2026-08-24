@@ -6,7 +6,7 @@
 
 87K Windows helps older people turn joyful lived experience into a consented offer—something another person can hear, learn from or share—so memory becomes social connection.
 
-[**Open the live app**](https://87k-windows.up.railway.app/) · [Submission video](output/video/87k-windows-submission-final.mp4) · [Landing story film](public/landing-story.mp4) · [Join](https://87k-windows.up.railway.app/join/demo87) · [Wall](https://87k-windows.up.railway.app/wall/demo87) · [Admin](https://87k-windows.up.railway.app/admin/demo87) · [Architecture](docs/ARCHITECTURE.md) · [Demo story](docs/DEMO_SCRIPT.md)
+[**Open the live app**](https://87k-windows.up.railway.app/) · [Story film on YouTube](https://youtu.be/i25aSrIREx4) · [Submission video](output/video/87k-windows-submission-final.mp4) · [Join](https://87k-windows.up.railway.app/join/demo87) · [Wall](https://87k-windows.up.railway.app/wall/demo87) · [Admin](https://87k-windows.up.railway.app/admin/demo87) · [Architecture](docs/ARCHITECTURE.md) · [Demo story](docs/DEMO_SCRIPT.md)
 
 The landing page opens with an ~83-second parallel story film — an elder with a story and a newcomer who needs it, in the same block — that explains why the product is named for Singapore's ~87,000 seniors living alone. Real HDB window lights loop in the façade band above the film. Script and sources: [docs/video/landing-story-script.md](docs/video/landing-story-script.md).
 
