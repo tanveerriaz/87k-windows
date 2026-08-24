@@ -1,4 +1,5 @@
 import type { RoomSnapshot } from "../../shared/schemas";
+import type { UiStringKey } from "./i18n";
 
 export type JoinStage =
   | "welcome"
@@ -16,7 +17,7 @@ export type JoinStage =
 
 export type JoinDisplacement = {
   stage: JoinStage;
-  error: string | null;
+  error: UiStringKey | null;
 };
 
 type JoinDisplacementInput = {
@@ -26,9 +27,9 @@ type JoinDisplacementInput = {
   snapshot: Pick<RoomSnapshot, "phase" | "activeSourceId" | "activeCandidateId" | "connectionConsent"> | null;
 };
 
-const ROOM_MOVED_ERROR = "This room has moved to another story. Your completed result is no longer active; review your memory and try again when the room is ready.";
-const LISTENER_ROOM_MOVED_ERROR = "This room has moved to another story. When a new window is lit, you can offer to listen again.";
-const DISPLACED_ERROR = "Another participant shared after you. Your story was not matched; review it and try again when the room is ready.";
+const ROOM_MOVED_ERROR: UiStringKey = "errorRoomMoved";
+const LISTENER_ROOM_MOVED_ERROR: UiStringKey = "errorListenerRoomMoved";
+const DISPLACED_ERROR: UiStringKey = "errorDisplaced";
 
 export function resolveJoinDisplacement({
   stage,

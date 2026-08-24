@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { adminSecret } from "../../playwright.config";
+import { PREPARED_RADIO_MEMORY_ZH } from "../../src/shared/demo";
 
 async function submitStory(page: Page, role: "share" | "listen" = "share") {
   if (role === "share") {
@@ -187,6 +188,38 @@ test("review panel meets AA contrast and offers read-aloud", async ({ page }) =>
   expect(editBox?.height).toBeGreaterThanOrEqual(48);
 });
 
+test("the storyteller welcome panel renders in the selected language", async ({ page }) => {
+  await page.goto("/join/demo87?lang=zh");
+  await expect(page.getByText("小时候，什么小事让你开心？")).toBeVisible();
+  await expect(page.getByRole("button", { name: "分享一段预设的记忆" })).toBeVisible();
+
+  await page.goto("/join/demo87?lang=en");
+  await expect(page.getByText("What small thing made you happy when you were young?")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Share a prepared memory" })).toBeVisible();
+});
+
+test("landing renders the headline and role-card subtitles in the selected language", async ({ page }) => {
+  await page.goto("/?lang=zh");
+  await expect(page.getByRole("heading", { name: "什么故事不该消失？" })).toBeVisible();
+  await expect(page.getByText("用你自己的话分享一段记忆。")).toBeVisible();
+  await expect(page.getByText("花一点时间，聆听别人的记忆。")).toBeVisible();
+  const shareLink = page.getByRole("link", { name: /我有一个故事想要分享/ });
+  await expect(shareLink).toHaveAttribute("href", "/join/demo87?role=share&lang=zh");
+  const listenLink = page.getByRole("link", { name: /我想聆听/ });
+  await expect(listenLink).toHaveAttribute("href", "/join/demo87?role=listen&lang=zh");
+
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "What story should not disappear?" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "I have a story to share" })).toHaveAttribute("href", "/join/demo87?role=share");
+
+  const selector = page.locator(".landing-lang-field select");
+  await expect(selector).toBeVisible();
+  const selectorBox = await selector.boundingBox();
+  expect(selectorBox?.height).toBeGreaterThanOrEqual(48);
+  await selector.selectOption("zh");
+  await expect(page.getByRole("link", { name: /我有一个故事想要分享/ })).toHaveAttribute("href", "/join/demo87?role=share&lang=zh");
+});
+
 test("admin labels the development harness honestly", async ({ page }) => {
   const roomCode = `admin-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -200,4 +233,148 @@ test("admin labels the development harness honestly", async ({ page }) => {
   await expect(page.getByText("1", { exact: true })).toBeVisible();
   await expect(page.getByText("Development test harness", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("never judging", { exact: false })).toBeVisible();
+});
+
+// --- Task 6 QA sweep: multilingual journey, voice feature-detection ---------
+
+/**
+ * Replaces speechSynthesis.getVoices before any page script runs, so the
+ * read-aloud feature detection sees exactly the voice list we specify.
+ * Headless Chromium ships no voices at all, so both the empty and the
+ * populated case have to be stubbed to be meaningful.
+ */
+async function stubVoices(page: Page, voices: Array<{ lang: string; localService?: boolean }>) {
+  await page.addInitScript((list) => {
+    const fake = list.map((voice) => ({
+      lang: voice.lang,
+      name: `Stub ${voice.lang}`,
+      localService: voice.localService ?? true,
+      default: false,
+      voiceURI: `stub-${voice.lang}`,
+    }));
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    Object.defineProperty(synth, "getVoices", { configurable: true, value: () => fake });
+  }, voices);
+}
+
+async function reachZhReview(page: Page, roomCode: string) {
+  await page.goto(`/join/${roomCode}?role=share&lang=zh`);
+  await page.getByRole("button", { name: "分享一段预设的记忆" }).click();
+  await page.getByRole("textbox", { name: "你的话" }).fill(PREPARED_RADIO_MEMORY_ZH);
+  await page.getByRole("button", { name: "创建我的安全摘要" }).click();
+  await expect(page.getByRole("heading", { name: "由你决定哪些内容进入匹配。" })).toBeVisible({ timeout: 15_000 });
+}
+
+test("read-aloud stays hidden when no voice matches the selected language", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await stubVoices(page, []);
+  await reachZhReview(page, `voice-none-${Date.now()}`);
+
+  await expect(page.locator(".review-panel")).toBeVisible();
+  await expect(page.getByRole("button", { name: "读给我听" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "停止朗读" })).toHaveCount(0);
+  // The capsule itself stays fully readable on screen — hiding the button
+  // must never hide the content it would have read.
+  await expect(page.getByText("你的话")).toBeVisible();
+});
+
+test("read-aloud stays hidden when only a non-matching language voice exists", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await stubVoices(page, [{ lang: "en-US" }, { lang: "en-GB" }]);
+  await reachZhReview(page, `voice-en-${Date.now()}`);
+
+  await expect(page.locator(".review-panel")).toBeVisible();
+  await expect(page.getByRole("button", { name: "读给我听" })).toHaveCount(0);
+});
+
+test("read-aloud appears when a Mandarin voice exists, via the zh-SG to zh-CN fallback", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  // SPEECH_LOCALE.zh is zh-SG, which almost never ships on-device; the picker
+  // is expected to fall back to zh-CN rather than hide the button.
+  await stubVoices(page, [{ lang: "en-US" }, { lang: "zh-CN" }]);
+  await reachZhReview(page, `voice-zh-${Date.now()}`);
+
+  const readAloud = page.getByRole("button", { name: "读给我听" });
+  await expect(readAloud).toBeVisible();
+  const box = await readAloud.boundingBox();
+  expect(box?.height).toBeGreaterThanOrEqual(48);
+});
+
+test("a Mandarin storyteller and an English listener complete the whole journey", async ({ browser }) => {
+  const roomCode = `zh-flow-${Date.now()}`;
+  const storytellerContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const listenerContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const wallContext = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  const storyteller = await storytellerContext.newPage();
+  const listener = await listenerContext.newPage();
+  const wall = await wallContext.newPage();
+  await Promise.all([
+    storyteller.goto(`/join/${roomCode}?role=share&lang=zh`),
+    listener.goto(`/join/${roomCode}?role=listen`),
+    wall.goto(`/wall/${roomCode}`),
+  ]);
+
+  await storyteller.getByRole("button", { name: "分享一段预设的记忆" }).click();
+  await storyteller.getByRole("textbox", { name: "你的话" }).fill(PREPARED_RADIO_MEMORY_ZH);
+  await storyteller.getByRole("button", { name: "创建我的安全摘要" }).click();
+  await expect(storyteller.getByRole("heading", { name: "由你决定哪些内容进入匹配。" })).toBeVisible({ timeout: 15_000 });
+
+  // The point of Task 4: the summary the participant reads is Mandarin, while
+  // the fields that enter matching stay canonical English.
+  await expect(storyteller.getByText("一段关于1970年代在女皇镇修理收音机的虚构记忆，并愿意分享这项技能。")).toBeVisible();
+  const evidence = storyteller.locator(".capsule-evidence");
+  await expect(evidence).toContainText("Queenstown");
+  await expect(evidence).toContainText("1970s");
+  await expect(evidence).toContainText("radio repair");
+
+  await storyteller.getByRole("button", { name: "批准并点亮我的窗口" }).click();
+  await expect(storyteller.getByText("你的故事现在以温暖的灯光呈现。")).toBeVisible();
+  await expect(wall.getByText("1 WINDOW LIT", { exact: true })).toBeVisible();
+
+  await submitStory(listener, "listen");
+  await expect(storyteller.getByRole("heading", { name: "你希望这段对话开始吗？" })).toBeVisible({ timeout: 15_000 });
+  await expect(listener.getByRole("heading", { name: "Would you like this conversation to begin?" })).toBeVisible({ timeout: 15_000 });
+
+  await storyteller.getByRole("button", { name: "是的，我想继续" }).click();
+  await expect(storyteller.getByRole("heading", { name: "正在等待对方。" })).toBeVisible();
+  await listener.getByRole("button", { name: "Yes, I would like to continue" }).click();
+
+  // Wall lights for both, and the guide arrives on the storyteller's screen.
+  await expect(wall.getByText("2 WINDOWS LIT", { exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(wall.locator("canvas")).toHaveAttribute("data-wall-state", "matched");
+  const bridge = storyteller.locator(".senior-bridge");
+  await expect(bridge).toBeVisible({ timeout: 15_000 });
+  // QA F4: the mock facilitator now echoes the storyteller's language, so
+  // the guide body itself is genuinely Mandarin, not just its chrome.
+  await expect(storyteller.getByText("GEMINI · 长者连接向导")).toBeVisible();
+  await expect(storyteller.getByText("两个可选问题，为一场从容的对话而写：")).toBeVisible();
+  await expect(bridge.locator("ol li")).toHaveCount(2);
+  const bridgeIntro = await bridge.locator("h2").innerText();
+  expect(bridgeIntro).toMatch(/[一-鿿]/);
+  // The storyteller already reads Mandarin, so no English fallback is
+  // shown to them — the fallback exists for the listener, whose language
+  // differs from the guide's.
+  await expect(bridge.locator(".guide-english-fallback")).toHaveCount(0);
+
+  // The listener never sees .senior-bridge (only the storyteller/source
+  // participant does) — they see the mutual-yes preview instead, which
+  // must show the English fallback since their language (en) differs from
+  // the guide's (zh).
+  await expect(listener.getByRole("heading", { name: "A listening conversation is ready." })).toBeVisible({ timeout: 15_000 });
+  const listenerPreview = listener.locator(".conversation-starter");
+  await expect(listenerPreview.getByText("IN ENGLISH")).toBeVisible();
+  const listenerQuestions = await listenerPreview.locator("p").allInnerTexts();
+  expect(listenerQuestions.some((text) => /[一-鿿]/.test(text))).toBe(false);
+
+  // No layout breakage anywhere on the Mandarin journey.
+  for (const page of [storyteller, listener]) {
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  }
+  const bridgeClipped = await bridge.evaluate((el) => el.scrollHeight > el.clientHeight + 1);
+  expect(bridgeClipped).toBe(false);
+
+  await storytellerContext.close();
+  await listenerContext.close();
+  await wallContext.close();
 });

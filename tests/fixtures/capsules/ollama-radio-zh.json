@@ -1,0 +1,30 @@
+{
+  "id": "cfcb7271-3741-49e6-9614-2032c27e1462",
+  "language": "zh",
+  "observed": [
+    "repairing radios",
+    "basic radio repair"
+  ],
+  "place": "Queenstown",
+  "era": "1970s",
+  "skills": [
+    "radio repair"
+  ],
+  "interests": [
+    "fixing old radios"
+  ],
+  "offers": [
+    "teaching basic radio repair"
+  ],
+  "wants": [
+    "meeting people who like to fix old radios"
+  ],
+  "safeSummary": "一段关于在女皇镇修理收音机的记忆。",
+  "containsPII": false,
+  "redactions": [
+    "[redacted]"
+  ],
+  "uncertain": [
+    "null"
+  ]
+}

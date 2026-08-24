@@ -1,8 +1,9 @@
-import type { StoryCapsule } from "../../shared/schemas";
+import type { Language, StoryCapsule } from "../../shared/schemas";
 
 export type ExtractInput = {
   memory: string;
   fixture?: "radio" | "no-match";
+  language?: Language;
 };
 
 export interface InferenceProvider {

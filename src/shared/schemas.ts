@@ -2,18 +2,36 @@ import { z } from "zod";
 
 export const ProviderSchema = z.enum(["mock", "gemma-api", "openrouter", "ollama"]);
 export const FacilitatorSchema = z.enum(["disabled", "gemini", "mock"]);
+export const LanguageSchema = z.enum(["en", "zh", "ms", "ta"]);
 
 export const SeniorBridgeSchema = z.object({
+  // The storyteller's language — the language introduction/questions/
+  // consentReminder are actually written in. Lets the client pick the
+  // right read-aloud voice and decide when to show englishFallback.
+  language: LanguageSchema.default("en"),
   introduction: z.string().trim().min(1).max(240),
   questions: z.tuple([
     z.string().trim().min(1).max(200),
     z.string().trim().min(1).max(200),
   ]),
   consentReminder: z.string().trim().min(1).max(180),
+  // Requested only when the listener's language differs from the
+  // storyteller's, so a viewer whose language differs from the guide's can
+  // still read it. Absent (not just empty) otherwise — no wasted output.
+  englishFallback: z
+    .object({
+      introduction: z.string().trim().min(1).max(240),
+      questions: z.tuple([
+        z.string().trim().min(1).max(200),
+        z.string().trim().min(1).max(200),
+      ]),
+    })
+    .optional(),
 });
 
 export const StoryCapsuleSchema = z.object({
   id: z.string().min(1),
+  language: LanguageSchema.default("en"),
   observed: z.array(z.string()),
   place: z.string().nullable(),
   era: z.string().nullable(),
@@ -32,7 +50,21 @@ export const MatchResultSchema = z.object({
   candidateId: z.string().nullable(),
   confidence: z.number().min(0).max(1),
   evidencePath: z.array(z.string()),
+  // English rationale — kept for the wall (which stays English) and as the
+  // context Gemini reads for the guide prompt. Non-English join-page.tsx
+  // renders its own translated sentence from whyEvidence instead of this.
   why: z.string(),
+  // Structured evidence behind `why`, so the client can render it in the
+  // participant's language without the server generating per-viewer prose
+  // (QA F2). null for NO_MATCH, where there is no evidence to report.
+  whyEvidence: z
+    .object({
+      place: z.string().nullable(),
+      era: z.string().nullable(),
+      skill: z.string().nullable(),
+      hasComplement: z.boolean(),
+    })
+    .nullable(),
   invitation: z.string().nullable(),
   scene: z
     .object({
@@ -88,6 +120,7 @@ export const ExtractRequestSchema = z.object({
   roomCode: z.string().trim().min(3).max(24).regex(/^[a-zA-Z0-9-]+$/),
   memory: z.string().trim().min(8).max(600),
   fixture: z.enum(["radio", "no-match"]).optional(),
+  language: LanguageSchema.default("en"),
 });
 
 export const MatchRequestSchema = z.object({
@@ -134,6 +167,7 @@ export const ProviderChangedPayloadSchema = z.object({
 
 export type Provider = z.infer<typeof ProviderSchema>;
 export type Facilitator = z.infer<typeof FacilitatorSchema>;
+export type Language = z.infer<typeof LanguageSchema>;
 export type SeniorBridge = z.infer<typeof SeniorBridgeSchema>;
 export type StoryCapsule = z.infer<typeof StoryCapsuleSchema>;
 export type MatchResult = z.infer<typeof MatchResultSchema>;

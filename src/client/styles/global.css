@@ -104,6 +104,15 @@ h2 {
   text-wrap: balance;
 }
 
+/* CJK/Tamil glyphs (full-square characters, Tamil vowel signs above/below the baseline)
+   collide at the Latin display font's .97 leading once headings wrap to multiple lines. */
+.join-shell[data-lang="zh"] h1,
+.join-shell[data-lang="zh"] h2,
+.join-shell[data-lang="ta"] h1,
+.join-shell[data-lang="ta"] h2 {
+  line-height: 1.3;
+}
+
 p {
   text-wrap: pretty;
 }
@@ -158,6 +167,23 @@ p {
 .eyebrow,
 .mono-label {
   color: var(--blue-soft);
+}
+
+/* QA report F5: mono-labels/eyebrows and evidence-path chips render at
+   9-11px on every join-page screen in every language — well under the
+   Global Constraint's >=18px body text on mobile, and worse for Tamil
+   (conjuncts, above/below-base marks) and Mandarin (dense glyphs) than
+   the Latin baseline the base rule was tuned against. Scoped to
+   .join-page only: wall already has its own explicit font-size overrides
+   (e.g. .wall-evidence .evidence-path span at 20px) that win regardless,
+   and landing/admin are unaffected. */
+.join-page .mono-label,
+.join-page .eyebrow {
+  font-size: 14px;
+}
+
+.join-page .evidence-path span {
+  font-size: 16px;
 }
 
 .button {
@@ -307,10 +333,21 @@ p {
   min-height: 76px;
   display: flex;
   align-items: center;
+  gap: 16px;
   justify-content: space-between;
   width: min(1280px, calc(100vw - 48px));
   margin-inline: auto;
   border-bottom: 1px solid var(--line);
+}
+
+.landing-lang-field select {
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1px solid #626a71;
+  border-radius: 0;
+  background: var(--raised);
+  color: var(--white);
+  font-size: 16px;
 }
 
 .landing-hero {
@@ -575,8 +612,8 @@ p {
   text-align: center;
 }
 
-.prepared-image-status::before {
-  content: "SELECTED";
+.prepared-image-badge {
+  display: inline-block;
   margin-right: 8px;
   color: var(--blue-soft);
   font-size: 9px;
@@ -936,6 +973,27 @@ p {
   background: rgba(0, 0, 0, .18);
   color: var(--white);
   font-weight: 700;
+}
+
+.guide-english-fallback {
+  margin: 18px 0;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(101, 188, 167, .5);
+}
+
+.guide-english-fallback h3 {
+  margin: 10px 0;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.guide-english-fallback ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 24px;
+  color: var(--white);
+  font-size: 17px;
 }
 
 .read-aloud-actions {

@@ -70,7 +70,7 @@ describe("resolveJoinDisplacement", () => {
       }),
     });
     expect(next).toMatchObject({ stage: "capture" });
-    expect(next?.error).toContain("moved to another story");
+    expect(next?.error).toBe("errorRoomMoved");
   });
 
   it("returns a displaced listener to the listening profile, not the storyteller form", () => {
@@ -85,7 +85,7 @@ describe("resolveJoinDisplacement", () => {
       }),
     });
     expect(next).toMatchObject({ stage: "listen-profile" });
-    expect(next?.error).toContain("moved to another story");
+    expect(next?.error).toBe("errorListenerRoomMoved");
   });
 
   it("shows the storyteller their own no-match instead of calling it displacement", () => {

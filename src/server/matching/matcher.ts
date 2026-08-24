@@ -134,6 +134,7 @@ export class StoryMatcher {
         confidence: best?.score ?? 0,
         evidencePath: [],
         why: "The prepared stories do not contain enough shared and complementary evidence yet.",
+        whyEvidence: null,
         invitation: null,
         scene: null,
       });
@@ -150,6 +151,12 @@ export class StoryMatcher {
       confidence: best.score,
       evidencePath: best.evidencePath,
       why,
+      whyEvidence: {
+        place: capsule.place,
+        era: capsule.era,
+        skill: capsule.skills[0] ?? capsule.interests[0] ?? null,
+        hasComplement,
+      },
       invitation: "Kopi and a radio repair story?",
       scene: { fromWindow: 27, toWindow: 64, colour: "amber" },
     });
@@ -164,6 +171,7 @@ export class StoryMatcher {
         confidence: ranked.score,
         evidencePath: [],
         why: "These two approved memories do not contain enough shared and complementary evidence yet.",
+        whyEvidence: null,
         invitation: null,
         scene: null,
       });
@@ -178,6 +186,12 @@ export class StoryMatcher {
       why: hasComplement
         ? `These memories connect through ${source.place ?? "a place"} and ${skill}. One person offered to share; the other asked to learn.`
         : `These memories connect through ${source.place ?? "a place"}, ${source.era ?? "a shared era"} and ${skill}.`,
+      whyEvidence: {
+        place: source.place,
+        era: source.era,
+        skill: source.skills[0] ?? source.interests[0] ?? null,
+        hasComplement,
+      },
       invitation: "Would you both like to listen and continue this story together?",
       scene: { fromWindow: 27, toWindow: 64, colour: "amber" },
     });

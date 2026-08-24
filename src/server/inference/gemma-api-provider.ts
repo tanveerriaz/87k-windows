@@ -108,11 +108,12 @@ export class GemmaApiProvider implements InferenceProvider {
     const candidate = StoryCapsuleSchema.parse({
       ...parsed,
       id: randomUUID(),
+      language: input.language ?? "en",
       place: parsed.place == null ? null : nullableText(parsed.place),
       era: parsed.era == null ? null : nullableText(parsed.era),
       containsPII: merged.containsPII,
       redactions: merged.redactions,
-      ...keepExplicitConsent(input.memory, parsed.offers, parsed.wants),
+      ...keepExplicitConsent(input.memory, parsed.offers, parsed.wants, input.language),
     });
     const summaryRedaction = redactMemory(candidate.safeSummary);
     return StoryCapsuleSchema.parse({
@@ -125,12 +126,12 @@ export class GemmaApiProvider implements InferenceProvider {
 
   async extract(input: ExtractInput): Promise<StoryCapsule> {
     const safeInput = redactMemory(input.memory).safeText;
-    const firstOutput = await this.generate(buildCapsulePrompt({ memory: safeInput, dialect: "hosted" }));
+    const firstOutput = await this.generate(buildCapsulePrompt({ memory: safeInput, dialect: "hosted", language: input.language }));
     try {
       return this.parse(firstOutput, input);
     } catch {
       const repairedOutput = await this.generate(
-        buildCapsulePrompt({ memory: safeInput, repairOutput: firstOutput, dialect: "hosted" }),
+        buildCapsulePrompt({ memory: safeInput, repairOutput: firstOutput, dialect: "hosted", language: input.language }),
       );
       try {
         return this.parse(repairedOutput, input);

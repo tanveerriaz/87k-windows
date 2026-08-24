@@ -93,11 +93,14 @@ Selection state lives in `join-page.tsx` (`useState<Lang>` initialised from `?la
 
 ### Task 6: QA sweep (Opus pane owns this)
 
-- [ ] Full gates + e2e; new e2e: complete two-tab flow with storyteller `?lang=zh` typing the prepared zh memory (add a zh prepared fixture string to `src/shared/demo.ts`), listener in English — wall lights, guide arrives, no layout breakage.
-- [ ] Manual matrix at 390×844 and 1280×720 for all four languages: screenshots of welcome, capture, review, consent, guide; check ≥18px/≥48px/AA hold (CJK line-height, Tamil descenders).
-- [ ] Voice matrix on the demo Mac + one phone: recognition + read-aloud per language; record which languages had voices available and how fallback behaved.
-- [ ] File a QA report at `docs/superpowers/plans/2026-08-23-multilingual-qa.md`: pass/fail per cell, screenshots, defects filed as findings for the controller.
-- [ ] **User review gate:** the `// TRANSLATION REVIEW` strings go to Tanveer (or a native speaker) before public deploy — machine-drafted Tamil/Malay/Mandarin must not ship silently.
+- [x] Full gates + e2e; new e2e: complete two-tab flow with storyteller `?lang=zh` typing the prepared zh memory (add a zh prepared fixture string to `src/shared/demo.ts`), listener in English — wall lights, guide arrives, no layout breakage. *(gates green: 148 unit / 13 e2e; `PREPARED_RADIO_MEMORY_ZH` added)*
+- [x] Manual matrix at 390×844 and 1280×720 for all four languages: screenshots of welcome, capture, review, consent, guide; check ≥18px/≥48px/AA hold (CJK line-height, Tamil descenders). *(40 cells in `qa/screens/`; 0 overflow, 0 sub-48px targets; sub-18px labels filed as F5)*
+- [x] Voice matrix on the demo Mac — recognition + read-aloud per language; record which languages had voices available and how fallback behaved. *(all four resolve; `zh-SG→zh-CN` and `ta-SG→ta-IN` fallbacks load-bearing)*
+- [ ] Voice matrix on one phone. **Not run — no device available to the QA session.** Must be done on the demo phone before the event.
+- [x] File a QA report at `docs/superpowers/plans/2026-08-23-multilingual-qa.md`: pass/fail per cell, screenshots, defects filed as findings for the controller. *(6 findings: 3 High, 2 Medium, 1 Low)*
+- [x] Folded-in CR requirements: guide-fallback unit coverage (T5 CR merge blocker) and the `getVoices` stub e2e (T3 CR).
+- [ ] Live hosted-path zh extraction. **BLOCKED** — no `OPENROUTER_API_KEY`; the available `GEMINI_API_KEY` is rejected as `API_KEY_INVALID`. Local-model substitute evidence recorded in the QA report §D.1.
+- [ ] **User review gate:** the `// TRANSLATION REVIEW` strings go to Tanveer (or a native speaker) before public deploy — machine-drafted Tamil/Malay/Mandarin must not ship silently. *(package ready: `.superpowers/sdd/2026-08-23-multilingual/translation-review.md`, 190 rows)*
 
 ## Out of scope (explicit)
 
