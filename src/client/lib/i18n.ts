@@ -21,6 +21,21 @@ export const LANG_LABELS: Record<Lang, string> = {
 };
 
 const EN_STRINGS = {
+  landingNavBadge: "PRIVATE UNTIL YOU CHOOSE TO SHARE",
+  landingEyebrow: "A story needs a willing listener",
+  landingHeadline: "What story should not disappear?",
+  landingVideoAriaLabel: "The story of 87K Windows: why the product is named for the roughly 87,000 seniors living alone in Singapore, told through a storyteller and a listener in the same block",
+  landingCopy: "87K Windows helps one person share a memory and another choose to listen. Gemma protects the story. Gemini helps the conversation begin, then steps away.",
+  landingShareTitle: "I have a story to share",
+  landingShareSubtitle: "Share a memory in your own words.",
+  landingListenSubtitle: "Offer a little time to listen to someone else's memory.",
+  landingAssuranceContact: "No contact details are shared.",
+  landingAssuranceConsent: "Both people choose yes.",
+  landingFooterGemma: "GEMMA PROTECTS THE STORY",
+  landingFooterGemini: "GEMINI HELPS THE FIRST MINUTE",
+  landingViewWallLink: "View the living wall",
+  landingRoleChoicesAriaLabel: "Choose how you want to take part",
+
   memoryQuestion: "What small thing made you happy when you were young?",
   welcomeEyebrow: "Your words stay private until you choose to light a window",
   welcomeHeading: "There is one question worth asking.",
@@ -198,6 +213,21 @@ export type UiStringKey = keyof typeof EN_STRINGS;
 
 // TRANSLATION REVIEW: machine-drafted, needs native check (Singapore Mandarin)
 const ZH_STRINGS: Record<UiStringKey, string> = {
+  landingNavBadge: "分享之前，始终私密",
+  landingEyebrow: "故事需要一个愿意倾听的人",
+  landingHeadline: "什么故事不该消失？",
+  landingVideoAriaLabel: "87K Windows的故事：为什么这个产品以新加坡约87,000名独居长者命名，通过同一栋组屋里的讲述者和聆听者讲述",
+  landingCopy: "87K Windows帮助一个人分享记忆，另一个人选择聆听。Gemma保护这个故事。Gemini帮助对话开始，然后退出。",
+  landingShareTitle: "我有一个故事想要分享",
+  landingShareSubtitle: "用你自己的话分享一段记忆。",
+  landingListenSubtitle: "花一点时间，聆听别人的记忆。",
+  landingAssuranceContact: "不会分享任何联系方式。",
+  landingAssuranceConsent: "双方都需要说是。",
+  landingFooterGemma: "GEMMA保护故事",
+  landingFooterGemini: "GEMINI协助开场",
+  landingViewWallLink: "查看实时故事墙",
+  landingRoleChoicesAriaLabel: "选择你想参与的方式",
+
   memoryQuestion: "小时候，什么小事让你开心？",
   welcomeEyebrow: "在你点亮窗口之前，你的话是私密的",
   welcomeHeading: "有一个值得问的问题。",
@@ -373,6 +403,21 @@ const ZH_STRINGS: Record<UiStringKey, string> = {
 
 // TRANSLATION REVIEW: machine-drafted, needs native check (Bahasa Melayu)
 const MS_STRINGS: Record<UiStringKey, string> = {
+  landingNavBadge: "Peribadi sehingga anda kongsi",
+  landingEyebrow: "Cerita memerlukan pendengar yang rela",
+  landingHeadline: "Cerita apa yang tidak patut hilang?",
+  landingVideoAriaLabel: "Kisah 87K Windows: kenapa produk ini dinamakan sempena kira-kira 87,000 warga emas yang tinggal bersendirian di Singapura, diceritakan melalui seorang penutur cerita dan seorang pendengar di blok yang sama",
+  landingCopy: "87K Windows membantu seorang berkongsi kenangan dan seorang lagi memilih untuk mendengar. Gemma melindungi cerita itu. Gemini membantu perbualan bermula, kemudian berundur.",
+  landingShareTitle: "Saya ada cerita untuk dikongsi",
+  landingShareSubtitle: "Kongsi kenangan dengan kata-kata anda sendiri.",
+  landingListenSubtitle: "Luangkan sedikit masa untuk mendengar kenangan orang lain.",
+  landingAssuranceContact: "Tiada butiran hubungan dikongsikan.",
+  landingAssuranceConsent: "Kedua-dua pihak perlu berkata ya.",
+  landingFooterGemma: "GEMMA MELINDUNGI CERITA",
+  landingFooterGemini: "GEMINI MEMBANTU MINIT PERTAMA",
+  landingViewWallLink: "Lihat dinding cerita langsung",
+  landingRoleChoicesAriaLabel: "Pilih cara anda ingin mengambil bahagian",
+
   memoryQuestion: "Apakah perkara kecil yang membuat anda gembira semasa kecil?",
   welcomeEyebrow: "Kata-kata anda kekal peribadi sehingga anda memilih untuk menyalakan tingkap",
   welcomeHeading: "Ada satu soalan yang patut ditanya.",
@@ -548,6 +593,21 @@ const MS_STRINGS: Record<UiStringKey, string> = {
 
 // TRANSLATION REVIEW: machine-drafted, needs native check (Tamil)
 const TA_STRINGS: Record<UiStringKey, string> = {
+  landingNavBadge: "நீங்கள் பகிரும் வரை தனிப்பட்டது",
+  landingEyebrow: "ஒரு கதைக்கு விரும்பும் கேட்பவர் தேவை",
+  landingHeadline: "எந்த கதை மறைந்துவிடக் கூடாது?",
+  landingVideoAriaLabel: "87K Windows-இன் கதை: சிங்கப்பூரில் தனியாக வசிக்கும் சுமார் 87,000 மூத்த குடிமக்களுக்காக இந்த தயாரிப்புக்கு ஏன் இப்பெயர் சூட்டப்பட்டது என்பது, ஒரே தொகுதியில் உள்ள ஒரு கதை சொல்பவர் மற்றும் ஒரு கேட்பவர் மூலம் சொல்லப்படுகிறது",
+  landingCopy: "87K Windows ஒருவர் ஒரு நினைவைப் பகிரவும் மற்றொருவர் கேட்பதைத் தேர்ந்தெடுக்கவும் உதவுகிறது. Gemma கதையைப் பாதுகாக்கிறது. Gemini உரையாடலைத் தொடங்க உதவி, பின்பு விலகிச் செல்கிறது.",
+  landingShareTitle: "என்னிடம் பகிர விரும்பும் ஒரு கதை உள்ளது",
+  landingShareSubtitle: "உங்கள் சொந்த வார்த்தைகளில் ஒரு நினைவைப் பகிரவும்.",
+  landingListenSubtitle: "மற்றவரின் நினைவைக் கேட்க சிறிது நேரம் ஒதுக்குங்கள்.",
+  landingAssuranceContact: "தொடர்பு விவரங்கள் எதுவும் பகிரப்படாது.",
+  landingAssuranceConsent: "இருவரும் ஆம் என்று சொல்ல வேண்டும்.",
+  landingFooterGemma: "GEMMA கதையைப் பாதுகாக்கிறது",
+  landingFooterGemini: "GEMINI முதல் நிமிடத்திற்கு உதவுகிறது",
+  landingViewWallLink: "நேரடி கதைச் சுவரைப் பார்க்கவும்",
+  landingRoleChoicesAriaLabel: "நீங்கள் எவ்வாறு பங்கேற்க விரும்புகிறீர்கள் என்பதைத் தேர்ந்தெடுக்கவும்",
+
   memoryQuestion: "நீங்கள் சிறுவயதில் இருந்தபோது எந்த சிறிய விஷயம் உங்களை மகிழ்ச்சியடையச் செய்தது?",
   welcomeEyebrow: "நீங்கள் ஒரு ஜன்னலை ஒளிரச் செய்யும் வரை உங்கள் வார்த்தைகள் தனிப்பட்டவையாகவே இருக்கும்",
   welcomeHeading: "கேட்கத் தகுந்த ஒரு கேள்வி உள்ளது.",

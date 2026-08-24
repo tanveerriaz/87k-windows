@@ -42,6 +42,20 @@ describe("i18n dictionary", () => {
 // A representative, hand-maintained subset of UiStringKey used to drive the
 // "every key resolves" assertion without importing implementation internals.
 const ENGLISH_KEYS: Record<UiStringKey, true> = {
+  landingNavBadge: true,
+  landingEyebrow: true,
+  landingHeadline: true,
+  landingVideoAriaLabel: true,
+  landingCopy: true,
+  landingShareTitle: true,
+  landingShareSubtitle: true,
+  landingListenSubtitle: true,
+  landingAssuranceContact: true,
+  landingAssuranceConsent: true,
+  landingFooterGemma: true,
+  landingFooterGemini: true,
+  landingViewWallLink: true,
+  landingRoleChoicesAriaLabel: true,
   memoryQuestion: true,
   welcomeEyebrow: true,
   welcomeHeading: true,

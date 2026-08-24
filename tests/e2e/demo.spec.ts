@@ -197,6 +197,28 @@ test("the storyteller welcome panel renders in the selected language", async ({ 
   await expect(page.getByRole("button", { name: "Share a prepared memory" })).toBeVisible();
 });
 
+test("landing renders the headline and role-card subtitles in the selected language", async ({ page }) => {
+  await page.goto("/?lang=zh");
+  await expect(page.getByRole("heading", { name: "什么故事不该消失？" })).toBeVisible();
+  await expect(page.getByText("用你自己的话分享一段记忆。")).toBeVisible();
+  await expect(page.getByText("花一点时间，聆听别人的记忆。")).toBeVisible();
+  const shareLink = page.getByRole("link", { name: /我有一个故事想要分享/ });
+  await expect(shareLink).toHaveAttribute("href", "/join/demo87?role=share&lang=zh");
+  const listenLink = page.getByRole("link", { name: /我想聆听/ });
+  await expect(listenLink).toHaveAttribute("href", "/join/demo87?role=listen&lang=zh");
+
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "What story should not disappear?" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "I have a story to share" })).toHaveAttribute("href", "/join/demo87?role=share");
+
+  const selector = page.locator(".landing-lang-field select");
+  await expect(selector).toBeVisible();
+  const selectorBox = await selector.boundingBox();
+  expect(selectorBox?.height).toBeGreaterThanOrEqual(48);
+  await selector.selectOption("zh");
+  await expect(page.getByRole("link", { name: /我有一个故事想要分享/ })).toHaveAttribute("href", "/join/demo87?role=share&lang=zh");
+});
+
 test("admin labels the development harness honestly", async ({ page }) => {
   const roomCode = `admin-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 800 });
