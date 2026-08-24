@@ -206,6 +206,15 @@ const EN_STRINGS = {
   invitationImageAlt: "Fictional keepsakes including a radio and a kopi cup",
   previewImageAlt: "Chosen preview; it has not been shared",
   memoryObjectsImageAlt: "Fictional memory objects including a radio, kopi cup and keepsakes",
+  matchWhyComplement: "These memories connect through {place} and {skill}. One person offered to share; the other asked to learn.",
+  matchWhyShared: "These memories connect through {place}, {era} and {skill}.",
+  matchWhyNoMatch: "These two approved memories do not contain enough shared and complementary evidence yet.",
+  matchPlaceFallback: "a place",
+  matchEraFallback: "a shared era",
+  matchSkillFallback: "a shared interest",
+  resultMutualYesTitle: "You both said yes.",
+  kopiInvitationLine: "Would you both like to listen and continue this story together?",
+  kopiActivityLine: "A gentle conversation can begin. Either person may pause or stop at any time.",
   dismissButton: "Dismiss",
 } as const;
 
@@ -398,6 +407,15 @@ const ZH_STRINGS: Record<UiStringKey, string> = {
   invitationImageAlt: "虚构的纪念物，包括收音机和咖啡杯",
   previewImageAlt: "已选择的预览；尚未分享",
   memoryObjectsImageAlt: "虚构的记忆物品，包括收音机、咖啡杯和纪念品",
+  matchWhyComplement: "这段记忆通过{place}和{skill}相连。一方提出分享，另一方想要学习。",
+  matchWhyShared: "这段记忆通过{place}、{era}和{skill}相连。",
+  matchWhyNoMatch: "这两份已批准的记忆尚未包含足够的共同和互补证据。",
+  matchPlaceFallback: "一个地方",
+  matchEraFallback: "一个共同的年代",
+  matchSkillFallback: "一个共同的兴趣",
+  resultMutualYesTitle: "双方都说了是。",
+  kopiInvitationLine: "你们想一起聆听并继续这段故事吗？",
+  kopiActivityLine: "一次温和的对话可以开始了。任何一方都可以随时暂停或停止。",
   dismissButton: "关闭",
 };
 
@@ -588,6 +606,15 @@ const MS_STRINGS: Record<UiStringKey, string> = {
   invitationImageAlt: "Barangan kenangan fiksyen termasuk radio dan cawan kopi",
   previewImageAlt: "Pratonton yang dipilih; ia belum dikongsikan",
   memoryObjectsImageAlt: "Objek kenangan fiksyen termasuk radio, cawan kopi dan barangan kenangan",
+  matchWhyComplement: "Kenangan ini berhubung melalui {place} dan {skill}. Seorang menawarkan untuk berkongsi; seorang lagi ingin belajar.",
+  matchWhyShared: "Kenangan ini berhubung melalui {place}, {era} dan {skill}.",
+  matchWhyNoMatch: "Kedua-dua kenangan yang diluluskan ini belum mengandungi bukti yang cukup dikongsi dan saling melengkapi.",
+  matchPlaceFallback: "satu tempat",
+  matchEraFallback: "satu era yang dikongsi",
+  matchSkillFallback: "satu minat yang dikongsi",
+  resultMutualYesTitle: "Kedua-dua pihak berkata ya.",
+  kopiInvitationLine: "Adakah anda berdua ingin mendengar dan meneruskan cerita ini bersama-sama?",
+  kopiActivityLine: "Perbualan yang lembut boleh bermula. Sesiapa boleh berhenti seketika atau berhenti pada bila-bila masa.",
   dismissButton: "Tutup",
 };
 
@@ -778,6 +805,15 @@ const TA_STRINGS: Record<UiStringKey, string> = {
   invitationImageAlt: "ரேடியோ மற்றும் கோப்பி கப் உள்ளிட்ட கற்பனை நினைவுப் பொருட்கள்",
   previewImageAlt: "தேர்ந்தெடுக்கப்பட்ட முன்னோட்டம்; இது இன்னும் பகிரப்படவில்லை",
   memoryObjectsImageAlt: "ரேடியோ, கோப்பி கப் மற்றும் நினைவுப் பொருட்கள் உள்ளிட்ட கற்பனை நினைவு பொருட்கள்",
+  matchWhyComplement: "இந்த நினைவுகள் {place} மற்றும் {skill} மூலம் இணைகின்றன. ஒருவர் பகிர முன்வந்தார்; மற்றவர் கற்க விரும்பினார்.",
+  matchWhyShared: "இந்த நினைவுகள் {place}, {era} மற்றும் {skill} மூலம் இணைகின்றன.",
+  matchWhyNoMatch: "ஒப்புதல் பெற்ற இந்த இரண்டு நினைவுகளும் இன்னும் போதுமான பொதுவான மற்றும் கூடுதலான ஆதாரத்தைக் கொண்டிருக்கவில்லை.",
+  matchPlaceFallback: "ஒரு இடம்",
+  matchEraFallback: "ஒரு பொதுவான காலம்",
+  matchSkillFallback: "ஒரு பொதுவான ஆர்வம்",
+  resultMutualYesTitle: "இருவரும் ஆம் என்றனர்.",
+  kopiInvitationLine: "நீங்கள் இருவரும் ஒன்றாகக் கேட்டு இந்தக் கதையைத் தொடர விரும்புகிறீர்களா?",
+  kopiActivityLine: "ஒரு மென்மையான உரையாடல் தொடங்கலாம். யாரும் எப்போது வேண்டுமானாலும் இடைநிறுத்தலாம் அல்லது நிறுத்தலாம்.",
   dismissButton: "மூடு",
 };
 

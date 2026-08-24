@@ -10,6 +10,7 @@ import { resolveGuidePresentation } from "../lib/guide-presentation";
 import { compressImage } from "../lib/image";
 import { isLang, LANG_LABELS, SPEECH_LOCALE, t, type Lang, type UiStringKey } from "../lib/i18n";
 import { resolveJoinDisplacement, type JoinStage } from "../lib/join-stage";
+import { formatMatchWhy } from "../lib/match-why";
 import { useRoomSocket } from "../lib/use-room-socket";
 import { pickVoice } from "../lib/voice-picker";
 
@@ -131,6 +132,13 @@ export function JoinPage() {
     [availableVoices, guideReadingLang],
   );
   const canReadGuideAloud = guideVoice !== null;
+  // The mutual-yes panel is what a listener actually sees (the full
+  // .senior-bridge guide panel below only ever renders for the storyteller,
+  // who by definition already reads the guide's own language) — so it needs
+  // the same English-fallback substitution, not the raw guide.questions.
+  const mutualPreviewQuestions = guide
+    ? (showGuideEnglishFallback && guide.englishFallback ? guide.englishFallback.questions : guide.questions)
+    : [t(lang, "mutualFallbackQuestion1"), t(lang, "mutualFallbackQuestion2")];
 
   useEffect(() => {
     document.documentElement.lang = SPEECH_LOCALE[lang];
@@ -465,7 +473,7 @@ export function JoinPage() {
           <div className="join-panel listener-panel consent-state-panel">
             <p className="eyebrow">{t(lang, "consentEyebrow")}</p>
             <h1>{t(lang, "consentHeading")}</h1>
-            <p>{room.snapshot?.match?.why}</p>
+            <p>{formatMatchWhy(lang, room.snapshot?.match)}</p>
             <div className="story-pair">
               <article><span className="mono-label">{t(lang, "storytellerLabel")}</span><p>{sourceStory?.safeSummary}</p></article>
               <article><span className="mono-label">{t(lang, "listenerLabel")}</span><p>{listenerStory?.safeSummary}</p></article>
@@ -493,11 +501,9 @@ export function JoinPage() {
             <div className="mutual-cards"><article><span className="mono-label">{t(lang, "storytellerLabel")}</span><strong>{t(lang, "mutualStorytellerYes")}</strong></article><article><span className="mono-label">{t(lang, "listenerLabel")}</span><strong>{t(lang, "mutualListenerYes")}</strong></article></div>
             <section className="conversation-starter">
               <span className="mono-label">{t(lang, "conversationStarterLabel")}</span>
-              {(room.snapshot?.guide?.questions ?? [
-                t(lang, "mutualFallbackQuestion1"),
-                t(lang, "mutualFallbackQuestion2"),
-              ]).map((question) => <p key={question}>“{question}”</p>)}
-              <small>{room.snapshot?.guide ? t(lang, "geminiOffersLine") : t(lang, "simpleBeginningLine")}</small>
+              {mutualPreviewQuestions.map((question) => <p key={question}>“{question}”</p>)}
+              {showGuideEnglishFallback && guide?.englishFallback && <span className="mono-label">{t(lang, "englishFallbackLabel")}</span>}
+              <small>{guide ? t(lang, "geminiOffersLine") : t(lang, "simpleBeginningLine")}</small>
             </section>
             <button className="button button-primary button-block" onClick={() => setStage("listen-profile")}>{t(lang, "offerAnotherButton")}</button>
           </div>
@@ -625,8 +631,8 @@ export function JoinPage() {
         {stage === "result" && room.snapshot?.phase === "matched" && room.snapshot.activeSourceId === participantId && room.snapshot.match && room.snapshot.invite && (
           <div className="join-panel result-panel">
             <p className="eyebrow">{t(lang, "resultEyebrow")}</p>
-            <h1>{room.snapshot.invite.title}</h1>
-            <p className="result-summary">{room.snapshot.match.why}</p>
+            <h1>{t(lang, "resultMutualYesTitle")}</h1>
+            <p className="result-summary">{formatMatchWhy(lang, room.snapshot.match)}</p>
             <div className="story-pair">
               <article>
                 <span className="mono-label">{t(lang, "yourMemoryLabel")}</span>
@@ -674,8 +680,8 @@ export function JoinPage() {
             {error && <div className="error-banner" role="alert">{error}</div>}
             <article className="kopi-card">
               <span className="mono-label">{t(lang, "kopiCardLabel")}</span>
-              <h2>{room.snapshot.invite.invitation}</h2>
-              <p>{room.snapshot.invite.activity}</p>
+              <h2>{t(lang, "kopiInvitationLine")}</h2>
+              <p>{t(lang, "kopiActivityLine")}</p>
               <small>{t(lang, "kopiDisclaimer")}</small>
             </article>
             <button className="button button-secondary button-block" onClick={startAgain}>{t(lang, "runAgainButton")}</button>
@@ -687,7 +693,7 @@ export function JoinPage() {
             <p className="eyebrow">{t(lang, "honestDesignEyebrow")}</p>
             <h1>{t(lang, "noMatchYetHeading")}</h1>
             <p className="no-match-human">{t(lang, "noMatchHumanLine")}</p>
-            <p>{room.snapshot.match?.why}</p>
+            <p>{formatMatchWhy(lang, room.snapshot.match)}</p>
             <div className="no-match-rule">{t(lang, "noMatchRuleLine")}</div>
             <button className="button button-primary button-block" onClick={startAgain}>{t(lang, "tryPreparedStoryButton")}</button>
           </div>

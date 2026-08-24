@@ -345,11 +345,27 @@ test("a Mandarin storyteller and an English listener complete the whole journey"
   await expect(wall.locator("canvas")).toHaveAttribute("data-wall-state", "matched");
   const bridge = storyteller.locator(".senior-bridge");
   await expect(bridge).toBeVisible({ timeout: 15_000 });
-  // Chrome around the guide is Mandarin even though the mock facilitator
-  // writes the guide body itself in English.
+  // QA F4: the mock facilitator now echoes the storyteller's language, so
+  // the guide body itself is genuinely Mandarin, not just its chrome.
   await expect(storyteller.getByText("GEMINI · 长者连接向导")).toBeVisible();
   await expect(storyteller.getByText("两个可选问题，为一场从容的对话而写：")).toBeVisible();
   await expect(bridge.locator("ol li")).toHaveCount(2);
+  const bridgeIntro = await bridge.locator("h2").innerText();
+  expect(bridgeIntro).toMatch(/[一-鿿]/);
+  // The storyteller already reads Mandarin, so no English fallback is
+  // shown to them — the fallback exists for the listener, whose language
+  // differs from the guide's.
+  await expect(bridge.locator(".guide-english-fallback")).toHaveCount(0);
+
+  // The listener never sees .senior-bridge (only the storyteller/source
+  // participant does) — they see the mutual-yes preview instead, which
+  // must show the English fallback since their language (en) differs from
+  // the guide's (zh).
+  await expect(listener.getByRole("heading", { name: "A listening conversation is ready." })).toBeVisible({ timeout: 15_000 });
+  const listenerPreview = listener.locator(".conversation-starter");
+  await expect(listenerPreview.getByText("IN ENGLISH")).toBeVisible();
+  const listenerQuestions = await listenerPreview.locator("p").allInnerTexts();
+  expect(listenerQuestions.some((text) => /[一-鿿]/.test(text))).toBe(false);
 
   // No layout breakage anywhere on the Mandarin journey.
   for (const page of [storyteller, listener]) {

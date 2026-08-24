@@ -50,7 +50,21 @@ export const MatchResultSchema = z.object({
   candidateId: z.string().nullable(),
   confidence: z.number().min(0).max(1),
   evidencePath: z.array(z.string()),
+  // English rationale — kept for the wall (which stays English) and as the
+  // context Gemini reads for the guide prompt. Non-English join-page.tsx
+  // renders its own translated sentence from whyEvidence instead of this.
   why: z.string(),
+  // Structured evidence behind `why`, so the client can render it in the
+  // participant's language without the server generating per-viewer prose
+  // (QA F2). null for NO_MATCH, where there is no evidence to report.
+  whyEvidence: z
+    .object({
+      place: z.string().nullable(),
+      era: z.string().nullable(),
+      skill: z.string().nullable(),
+      hasComplement: z.boolean(),
+    })
+    .nullable(),
   invitation: z.string().nullable(),
   scene: z
     .object({

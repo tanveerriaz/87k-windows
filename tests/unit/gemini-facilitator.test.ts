@@ -33,6 +33,7 @@ const match: MatchResult = {
   confidence: 0.87,
   evidencePath: ["Queenstown", "1970s", "radio repair", "teach ↔ learn"],
   why: "The safe capsules contain complementary radio-repair evidence.",
+  whyEvidence: { place: "Queenstown", era: "1970s", skill: "radio repair", hasComplement: true },
   invitation: "Kopi and a radio repair story?",
   scene: { fromWindow: 27, toWindow: 64, colour: "amber" },
 };
