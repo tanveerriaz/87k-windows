@@ -1,5 +1,5 @@
 {
-  "id": "68e61c88-19eb-4deb-a575-b9415140cc9d",
+  "id": "cfcb7271-3741-49e6-9614-2032c27e1462",
   "language": "zh",
   "observed": [
     "repairing radios",
@@ -10,13 +10,21 @@
   "skills": [
     "radio repair"
   ],
-  "interests": [],
+  "interests": [
+    "fixing old radios"
+  ],
   "offers": [
     "teaching basic radio repair"
   ],
-  "wants": [],
-  "safeSummary": "A memory of ... repairing radios near Queenstown in the 1970s.",
+  "wants": [
+    "meeting people who like to fix old radios"
+  ],
+  "safeSummary": "一段关于在女皇镇修理收音机的记忆。",
   "containsPII": false,
-  "redactions": [],
-  "uncertain": []
+  "redactions": [
+    "[redacted]"
+  ],
+  "uncertain": [
+    "null"
+  ]
 }

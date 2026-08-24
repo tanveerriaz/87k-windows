@@ -3,7 +3,33 @@ import { buildCapsulePrompt, CAPSULE_PROMPT_VERSION } from "../../src/server/inf
 
 describe("buildCapsulePrompt", () => {
   it("pins the shared prompt version", () => {
-    expect(CAPSULE_PROMPT_VERSION).toBe(3);
+    expect(CAPSULE_PROMPT_VERSION).toBe(4);
+  });
+
+  // QA report F3: the shared base told every language to open safeSummary
+  // with the fixed English phrase "A memory of ...", directly contradicting
+  // the per-language instruction to write safeSummary in the participant's
+  // own language. Each language now gets its own (or no) opening template.
+  it("instructs English to open safeSummary with 'A memory of ...'", () => {
+    const prompt = buildCapsulePrompt({ memory: "test memory", dialect: "hosted", language: "en" });
+    expect(prompt).toMatch(/A memory of/);
+  });
+
+  it("does not tell zh to open safeSummary with the English phrase 'A memory of'", () => {
+    const prompt = buildCapsulePrompt({ memory: "test memory", dialect: "hosted", language: "zh" });
+    expect(prompt).not.toMatch(/A memory of/);
+    expect(prompt).toContain("一段关于");
+  });
+
+  it("does not tell ms to open safeSummary with the English phrase 'A memory of'", () => {
+    const prompt = buildCapsulePrompt({ memory: "test memory", dialect: "hosted", language: "ms" });
+    expect(prompt).not.toMatch(/A memory of/);
+    expect(prompt).toContain("Kenangan tentang");
+  });
+
+  it("does not tell ta to open safeSummary with the English phrase 'A memory of'", () => {
+    const prompt = buildCapsulePrompt({ memory: "test memory", dialect: "hosted", language: "ta" });
+    expect(prompt).not.toMatch(/A memory of/);
   });
 
   it("instructs the model that the memory may be in any language", () => {
