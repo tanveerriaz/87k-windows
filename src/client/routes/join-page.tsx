@@ -6,6 +6,7 @@ import type { StoryCapsule } from "../../shared/schemas";
 import { SiteWordmark } from "../components/site-wordmark";
 import { StatusBadge } from "../components/status-badge";
 import { ApiError, extractCapsule } from "../lib/api";
+import { resolveGuidePresentation } from "../lib/guide-presentation";
 import { compressImage } from "../lib/image";
 import { isLang, LANG_LABELS, SPEECH_LOCALE, t, type Lang, type UiStringKey } from "../lib/i18n";
 import { resolveJoinDisplacement, type JoinStage } from "../lib/join-stage";
@@ -117,12 +118,14 @@ export function JoinPage() {
   const ttsVoice = useMemo(() => pickVoice(availableVoices, SPEECH_LOCALE[lang]), [availableVoices, lang]);
   const canReadAloudNow = ttsVoice !== null;
   const guide = room.snapshot?.guide ?? null;
-  // The guide is written in the storyteller's language; show the English
-  // fallback (when the facilitator provided one) only to a viewer whose own
-  // selected language differs from it — the storyteller sees their own
-  // language guide with no fallback needed.
-  const showGuideEnglishFallback = Boolean(guide && guide.language !== lang && guide.englishFallback);
-  const guideReadingLang: Lang | null = guide ? (showGuideEnglishFallback ? "en" : guide.language) : null;
+  // The guide is written in the storyteller's language; showing the English
+  // fallback and picking the read-aloud language is pure logic, so it lives in
+  // guide-presentation.ts where it can be unit-tested.
+  const {
+    showEnglishFallback: showGuideEnglishFallback,
+    readingLang: guideReadingLang,
+    spokenText: guideSpokenText,
+  } = useMemo(() => resolveGuidePresentation(guide, lang), [guide, lang]);
   const guideVoice = useMemo(
     () => (guideReadingLang ? pickVoice(availableVoices, SPEECH_LOCALE[guideReadingLang]) : null),
     [availableVoices, guideReadingLang],
@@ -346,14 +349,12 @@ export function JoinPage() {
   };
 
   const speakGuide = () => {
-    if (!guide || !guideReadingLang) return;
+    if (!guide || !guideReadingLang || !guideSpokenText) return;
     if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
       setError(t(lang, "errorReadAloudUnavailableGuide"));
       return;
     }
-    const spokenText = showGuideEnglishFallback && guide.englishFallback
-      ? [guide.englishFallback.introduction, ...guide.englishFallback.questions].join(" ")
-      : [guide.introduction, ...guide.questions, guide.consentReminder].join(" ");
+    const spokenText = guideSpokenText;
     setError(null);
     setIsSpeaking(true);
     speakText(spokenText, SPEECH_LOCALE[guideReadingLang], guideVoice, () => setIsSpeaking(false));
