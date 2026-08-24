@@ -60,9 +60,11 @@ Do not add native mobile apps, authentication, payments, contact exchange, perma
 - Landing facade window lights must be real windows lighting in the actual glass with continuous natural animation aligned to the frames, not synthetic overlay or canvas glows that miss the frames.
 - Landing page and landing-story audio must use natural human voiceover, not robotic system TTS (e.g. macOS Samantha).
 - Landing story film should use parallel split-screen action (two windows in the same block), not a stiff slideshow assembly.
+- Social/Open Graph link previews should use theme-matching icon and graphics (HDB windows / product look), not generic defaults.
 
 ## Learned Workspace Facts
 
 - Public GitHub repository: https://github.com/tanveerriaz/87k-windows
 - Creator site for attribution: https://tanveerriaz.me/
 - Public app: https://87k-windows.up.railway.app/ (Railway project `052f7a55-c85f-45d7-8247-f635829b09d0`; see `docs/RAILWAY_DEPLOYMENT.md`).
+- Cross-session Cursor ↔ Claude Code sync uses `docs/CURSOR_SESSION_HANDOFF.md` so hosting/deploy work is not duplicated.

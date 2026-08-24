@@ -1,0 +1,17 @@
+node_modules
+dist
+coverage
+playwright-report
+test-results
+screenshots
+output
+assets/video
+docs
+tests
+.claude
+.cursor
+.git
+.vite
+.cache
+*.log
+.DS_Store

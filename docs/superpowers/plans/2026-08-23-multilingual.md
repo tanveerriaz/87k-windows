@@ -108,3 +108,20 @@ Selection state lives in `join-page.tsx` (`useState<Lang>` initialised from `?la
 ## Workflow
 
 Sonnet pane (`ml-coder`) implements Tasks 1–5 sequentially, one commit per task, report per task. Controller (Fable) CRs each task before the next. Opus pane (`ml-qa`) runs Task 6 after Task 5, and additionally smoke-tests after Tasks 2 and 4. Final whole-branch review by Fable, then user reviews translations + merge decision. Work happens on branch `feature/multilingual` in a worktree; main is untouched until CR + QA + user translation review pass.
+
+---
+
+### Task 5b (added 2026-08-23, user-directed): Landing joins the language system + humanized English copy
+
+**Why:** (a) The live landing page has no language choice — a senior meets a page of English before the selector exists (user-reported gap). (b) All English source strings must read as natural human writing before translations are user-reviewed, so translation happens once. Method: the 35 patterns of github.com/blader/humanizer (Wikipedia "Signs of AI writing") — notably: no dramatic clipped fragments ("Be heard."), no forced parallel pairs, simple verbs over "serves as/boasts", no inflated significance, no generic aspirational endings, sentence-case headings, concrete facts over vague claims. Preserve the writer's established voice: the headline "What story should not disappear?" and the two role-card titles are the user's voice — keep them.
+
+**Files:**
+- Modify: `src/client/routes/landing-page.tsx` (strings → dictionary; language selector in the nav, native-script labels, ≥48px; `?lang=` carried into the join links), `src/client/lib/i18n.ts` (new landing keys; humanize ALL EN strings; re-align zh/ms/ta translations to the new English), `tests/e2e/demo.spec.ts` (landing language assertions)
+- The wall and admin stay English (unchanged scope).
+
+**Steps:**
+- [ ] Failing e2e: landing `?lang=zh` renders the headline block and role-card subtitles in Mandarin; selector visible in nav; choosing 中文 rewrites the join links to `?role=…&lang=zh`.
+- [ ] Move landing strings into the dictionary; add the nav selector (same `Lang` control as join).
+- [ ] Humanizer pass over every EN string (landing + journey): apply the 35 patterns; keep meaning, names, numbers exact; keep the user's voice lines verbatim. List every changed string in the report as `before → after` for the controller to spot-check.
+- [ ] Re-align zh/ms/ta for changed strings (TRANSLATION REVIEW comments; translation review gate unchanged).
+- [ ] Gates + full e2e green → commit `feat: landing speaks four languages; copy reads human`.

@@ -1,43 +1,51 @@
-# Cursor → Claude Code session handoff
+# Cursor ↔ Claude Code session handoff
 
-**Updated:** 2026-08-23 (Cursor). Read this before continuing deploy or hosting work so you do not redo or conflict with in-flight changes.
+**Updated:** 2026-08-23 late evening.
 
-## Live app
+## Live production (stable — do not redeploy unless intentional)
 
 **https://87k-windows.up.railway.app/**
 
-Railway project ID: `052f7a55-c85f-45d7-8247-f635829b09d0`
+- Railway project: `052f7a55-c85f-45d7-8247-f635829b09d0`
+- Inference: **OpenRouter-hosted Gemma 3 27B + Gemini 3.6 Flash** via `OPENROUTER_API_KEY` (configured in Railway)
+- `/health` → `{ "status": "ok" }` only (no provider/model leak)
+- OG image + favicons in `public/og-image.png`, `index.html` meta tags
 
-## ⚠️ Action needed: inference env vars
+Hackathon Cloud Run is dead (~24h project). Ignore old `run.app` URLs.
 
-Site serves static UI (200 on `/`, join, wall, landing film) but **`/health` currently reports `provider: mock` and `facilitator: disabled`**. Set Railway variables per `docs/RAILWAY_DEPLOYMENT.md` (especially `INFERENCE_PROVIDER=openrouter` and `OPENROUTER_API_KEY`), then redeploy. Target health:
+## What Claude Code is doing now (separate worktree)
 
-`"provider":"openrouter"`, `"facilitator":"gemini"`
+Branch: **`feature/multilingual`** in `.claude/worktrees/multilingual/`
 
-## Background
+Active plan: `docs/superpowers/plans/2026-08-23-multilingual.md`
 
-Hackathon Cloud Run (`windows-87k-5etw2y36yq-as.a.run.app`) is **503** — GCP project was ~24h only.
+Recent commits on that branch:
+- Language on capsules; canonical English match fields
+- Speech input + read-aloud per selected language (en/zh/ms/ta)
+- Join UI translation gaps
 
-## Cursor repo changes (may be uncommitted)
+**In progress / uncommitted in worktree:** `consent-evidence.ts`, ollama tests, plan doc edits.
 
-| File | Change |
-| --- | --- |
-| `railway.toml` | Dockerfile build, `/health` check |
-| `docs/RAILWAY_DEPLOYMENT.md` | Deploy guide + env vars |
-| `docs/CURSOR_SESSION_HANDOFF.md` | This file |
-| `.dockerignore` | Exclude heavy `assets/video/`, etc. |
-| `.env.example` | `RAILWAY_DEMO_URL` |
-| `scripts/verify-demo-machine.sh` | `RAILWAY_DEMO_URL` support |
-| `README.md` / `AGENTS.md` / `CLAUDE.md` | Live Railway URL + handoff pointers |
+**Do not merge or deploy multilingual until** plan tasks + quality gates + e2e pass. Wall/admin stay English per plan.
 
-## Verify after env fix
+## What Cursor already landed on `main`
+
+Commit `a673937`: Railway migration, hardened `/health`, social preview, favicons, handoff docs, configure script.
+
+## Coordination rules
+
+| Area | Owner | Notes |
+| --- | --- | --- |
+| Railway hosting / env | Done | User ran `railway-configure-production.sh` |
+| Multilingual feature | Claude worktree | Isolated; merge to `main` when ready |
+| Landing film / video assets | Local only | Large files untracked; not blockers |
+| Secrets | Railway variables + local `.env` | Never commit |
+
+## Verify production
 
 ```bash
 curl -fsS https://87k-windows.up.railway.app/health
-RAILWAY_DEMO_URL=https://87k-windows.up.railway.app ./scripts/verify-demo-machine.sh
+# → {"status":"ok"}
 ```
 
-## Coordination
-
-- Do not redeploy GCP. Set secrets only in Railway variables, never in repo.
-- Preserve unrelated user files unless user requests commit.
+Provider labels visible on Join / Wall / Admin UI only — not on `/health`.
