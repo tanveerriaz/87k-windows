@@ -10,18 +10,21 @@
 
 The landing page opens with an ~83-second parallel story film — an elder with a story and a newcomer who needs it, in the same block — that explains why the product is named for Singapore's ~87,000 seniors living alone. Real HDB window lights loop in the façade band above the film. Script and sources: [docs/video/landing-story-script.md](docs/video/landing-story-script.md).
 
+The whole journey runs in Singapore's four official languages — English, 中文, Bahasa Melayu, தமிழ் — and stories still match across languages.
+
 [![Quality gates](https://github.com/tanveerriaz/87k-windows/actions/workflows/ci.yml/badge.svg)](https://github.com/tanveerriaz/87k-windows/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-0b1118?logo=typescript&logoColor=white)
 ![Gemma](https://img.shields.io/badge/Gemma-real%20inference-c86c43)
 ![Gemini](https://img.shields.io/badge/Gemini%203.6-senior%20facilitator-82b6e8)
+![Languages](https://img.shields.io/badge/languages-EN%20%C2%B7%20%E4%B8%AD%E6%96%87%20%C2%B7%20MS%20%C2%B7%20%E0%AE%A4%E0%AE%AE%E0%AE%BF%E0%AE%B4%E0%AF%8D-eda94b)
 ![Railway](https://img.shields.io/badge/Railway-hosted-0B0D0E?logo=railway&logoColor=white)
 ![Data](https://img.shields.io/badge/demo%20data-fictional-83b9a0)
 
 </div>
 
-![Current 87K Windows landing page with the photographic Singapore housing block and warm amber entrance](assets/video/captures/01-landing-photographic-1920x1080.png)
+![Live 87K Windows landing page with the photographic Singapore housing block, language selector and story film](assets/video/captures/06-landing-live-multilingual-1920x1080.png)
 
-<p align="center"><sub>Live Railway surface (after deploy): sitewide <strong>87K WINDOWS 🇸🇬</strong> home link, real-window façade lights, parallel landing film, then storyteller / listener choice. The building is fictional generated artwork; live Canvas light on Wall Mode shows when approved evidence connects two lives.</sub></p>
+<p align="center"><sub>The live Railway surface (captured 2026-08-24): sitewide <strong>87K WINDOWS 🇸🇬</strong> home link, real-window façade lights, parallel landing film, language choice in the nav, then storyteller / listener choice. The building is fictional generated artwork; live Canvas light on Wall Mode shows when approved evidence connects two lives.</sub></p>
 
 ## Why this exists
 
@@ -47,6 +50,24 @@ The prepared demo is intentionally simple:
 - **Their interest:** learning how old radios worked.
 - **Evidence:** `Queenstown` · `1970s` · `radio repair` · `teach ↔ learn`.
 - **Human outcome:** **A potential listener match was found.** The shipped listener is a clearly labelled fictional fixture, not a simulated acceptance from a real person.
+
+## 🌏 Four languages, one wall
+
+A senior chooses their language once — on the landing nav or the join screen — and everything follows: the questions on screen, voice input, the read-aloud voice, Gemma's summary of their memory, and Gemini's conversation guide.
+
+![Live Join Mode in Mandarin: the full journey — question, journey rail, language selector and buttons — rendered in Chinese](assets/video/captures/07-join-mandarin-1920x1080.png)
+
+<p align="center"><sub>The live join screen in Mandarin (captured 2026-08-24). The same screen exists in English, Bahasa Melayu and Tamil.</sub></p>
+
+How it stays matchable across languages:
+
+- Gemma writes the **safe summary in the participant's language**, but always writes the matching evidence (`place` · `era` · `skills` · `offers` · `wants`) in **canonical English** — so a Mandarin memory about 女皇镇 and an English listener who wants to learn radio repair still connect through `Queenstown`.
+- The Gemini guide is written in the **storyteller's language**, with an English rendering added only when the two participants chose different languages.
+- The consent gate checks the participant's **raw words** for explicit offer/want phrases in their own language, with negation-aware, fail-closed matching — "我不愿意教" ("I am *not* willing to teach") never counts as an offer.
+- Voice input and read-aloud follow the chosen language, and hide honestly on phones that lack a matching voice instead of failing silently.
+- Dialects (Hokkien, Teochew, Cantonese) are out of scope: browser speech recognition cannot transcribe them.
+
+> ⚠️ The non-English strings are machine-drafted and pending native-speaker review — see [TRANSLATION-REVIEW.md](TRANSLATION-REVIEW.md). The consent phrase lists in its §1.1 are the rows that matter most.
 
 ![Current matched Wall Mode: two amber windows connected by a fine blue evidence thread](assets/video/captures/04-wall-matched-two-lights-1920x1080.png)
 
@@ -184,7 +205,9 @@ If neither real model is available, the judged demo stops honestly. It never sil
 - Gemini receives only approved safe capsules after a valid match; no-match never calls it.
 - Model output is schema-constrained, validated and safely rejected when malformed.
 - Weak evidence returns `NO MATCH YET`; no invitation is invented.
+- Offers and wants only enter matching when the participant's raw words contain an explicit consent phrase in their own language; the check is deterministic, negation-aware and fails closed.
 - No hidden chain-of-thought is shown—only evidence, uncertainty and missing information.
+- Contact-detail redaction patterns are English-oriented today; extending them per language is a named prerequisite before any non-synthetic multilingual data.
 
 ## Repository map
 
