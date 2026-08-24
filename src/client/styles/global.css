@@ -169,6 +169,23 @@ p {
   color: var(--blue-soft);
 }
 
+/* QA report F5: mono-labels/eyebrows and evidence-path chips render at
+   9-11px on every join-page screen in every language — well under the
+   Global Constraint's >=18px body text on mobile, and worse for Tamil
+   (conjuncts, above/below-base marks) and Mandarin (dense glyphs) than
+   the Latin baseline the base rule was tuned against. Scoped to
+   .join-page only: wall already has its own explicit font-size overrides
+   (e.g. .wall-evidence .evidence-path span at 20px) that win regardless,
+   and landing/admin are unaffected. */
+.join-page .mono-label,
+.join-page .eyebrow {
+  font-size: 14px;
+}
+
+.join-page .evidence-path span {
+  font-size: 16px;
+}
+
 .button {
   min-height: 48px;
   display: inline-flex;
