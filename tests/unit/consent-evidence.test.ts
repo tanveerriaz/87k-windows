@@ -98,4 +98,71 @@ describe("keepExplicitConsent", () => {
     expect(result.offers).toEqual([]);
     expect(result.wants).toEqual([]);
   });
+
+  // QA report F1 (docs/superpowers/plans/2026-08-23-multilingual-qa.md):
+  // 12 probes, each asserting the QA-stated expected outcome. 6 leaked
+  // before this fix (offer/want incorrectly kept); 4 held already
+  // (en/ms negate in a way their phrase patterns don't survive); 2 are
+  // positive controls confirming the fix didn't also break genuine consent.
+  describe("F1 negation probes", () => {
+    it("en: 'I cannot teach anyone.' already held — offer rejected", () => {
+      const result = keepExplicitConsent("I cannot teach anyone.", MODEL_OFFERS, MODEL_WANTS, "en");
+      expect(result.offers).toEqual([]);
+    });
+
+    it("en: 'I would not like to continue.' already held — want rejected", () => {
+      const result = keepExplicitConsent("I would not like to continue.", MODEL_OFFERS, MODEL_WANTS, "en");
+      expect(result.wants).toEqual([]);
+    });
+
+    it("ms: 'saya tidak sudi mengajar.' already held — offer rejected", () => {
+      const result = keepExplicitConsent("saya tidak sudi mengajar.", MODEL_OFFERS, MODEL_WANTS, "ms");
+      expect(result.offers).toEqual([]);
+    });
+
+    it("ms: 'saya tidak mahu belajar.' already held — want rejected", () => {
+      const result = keepExplicitConsent("saya tidak mahu belajar.", MODEL_OFFERS, MODEL_WANTS, "ms");
+      expect(result.wants).toEqual([]);
+    });
+
+    it("zh: '我不愿意教别人。' (I am NOT willing to teach) — offer rejected", () => {
+      const result = keepExplicitConsent("我不愿意教别人。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.offers).toEqual([]);
+    });
+
+    it("zh: '我不想学。' (I do NOT want to learn) — want rejected", () => {
+      const result = keepExplicitConsent("我不想学。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.wants).toEqual([]);
+    });
+
+    it("zh: '我想那是1970年代。' (I THINK that was the 1970s — 我想 ≠ want here) — want rejected", () => {
+      const result = keepExplicitConsent("我想那是1970年代。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.wants).toEqual([]);
+    });
+
+    it("zh: '我希望他好。' (I hope HE is well — not a wish to connect) — want rejected", () => {
+      const result = keepExplicitConsent("我希望他好。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.wants).toEqual([]);
+    });
+
+    it("ta: 'நான் உதவ முடியும் என்று நினைக்கவில்லை.' (I do NOT think I can help) — offer rejected", () => {
+      const result = keepExplicitConsent("நான் உதவ முடியும் என்று நினைக்கவில்லை.", MODEL_OFFERS, MODEL_WANTS, "ta");
+      expect(result.offers).toEqual([]);
+    });
+
+    it("ta: 'நான் விரும்புகிறேன் என்று சொல்லவில்லை.' (I did NOT say I want to) — want rejected", () => {
+      const result = keepExplicitConsent("நான் விரும்புகிறேன் என்று சொல்லவில்லை.", MODEL_OFFERS, MODEL_WANTS, "ta");
+      expect(result.wants).toEqual([]);
+    });
+
+    it("zh positive control: genuine unnegated 我愿意 still keeps the offer", () => {
+      const result = keepExplicitConsent("我愿意教别人基本的收音机维修。", MODEL_OFFERS, MODEL_WANTS, "zh");
+      expect(result.offers).toEqual(MODEL_OFFERS);
+    });
+
+    it("ta positive control: genuine unnegated விரும்புகிறேன் still keeps the want", () => {
+      const result = keepExplicitConsent("நான் கற்க விரும்புகிறேன். பழைய ரேடியோக்களை பழுதுபார்க்க விரும்புகிறேன்.", MODEL_OFFERS, MODEL_WANTS, "ta");
+      expect(result.wants).toEqual(MODEL_WANTS);
+    });
+  });
 });
